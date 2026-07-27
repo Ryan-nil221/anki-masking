@@ -1,5 +1,0 @@
-[[redirects]]
-  from = "/__/auth/*"
-  to = "https://anki-d8d5c.firebaseapp.com/__/auth/:splat"
-  status = 200
-  force = true

@@ -33,16 +33,100 @@
     </script>
 
     <style>
+        /* =========================================================
+           デザイントークン（色・角丸・影を一元管理）
+           - ライト値を :root に定義し、prefers-color-scheme: dark で差し替える
+           - アクセント色（青/緑/赤）とユーザー描画色は原則そのまま
+           ========================================================= */
+        :root {
+            /* サーフェス（面） */
+            --c-canvas: #e5e7eb;        /* ワークスペースの背景（ページの外側） */
+            --c-body-bg: #f3f4f6;       /* アプリ全体の背景 */
+            --c-surface: #ffffff;       /* パネル・ボタン・カード */
+            --c-surface-2: #f9fafb;     /* わずかに沈んだ面／ホバー */
+            --c-surface-3: #f3f4f6;     /* インセット・ホバー塗り */
+            --c-glass: rgba(255, 255, 255, 0.95);      /* すりガラス風パネル */
+            --c-glass-border: rgba(229, 231, 235, 0.8);
+            /* テキスト */
+            --c-text: #374151;
+            --c-text-strong: #111827;
+            --c-text-muted: #6b7280;
+            --c-text-sub: #4b5563;
+            --c-on-accent: #ffffff;     /* アクセント上の文字 */
+            /* ボーダー */
+            --c-border: #e5e7eb;
+            --c-border-input: #d1d5db;
+            --c-border-strong: #9ca3af;
+            /* アクセント（ライト/ダーク共通） */
+            --c-accent: #3b82f6;
+            --c-accent-hover: #2563eb;
+            --c-accent-weak: rgba(59, 130, 246, 0.3);
+            --c-accent-tint: #eff6ff;   /* 青系ホバー塗り */
+            --c-success: #10b981;
+            --c-success-hover: #059669;
+            --c-danger: #ef4444;
+            --c-danger-border: #fca5a5;
+            --c-danger-bg: #fef2f2;
+            --c-danger-hover-bg: #fee2e2;
+            --c-danger-hover-border: #f87171;
+            --c-project-bg: #eef2ff;
+            --c-project-text: #4338ca;
+            --c-project-border: #c7d2fe;
+            --c-project-hover-bg: #e0e7ff;
+            --c-project-hover-border: #a5b4fc;
+            /* 影 */
+            --sh-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --sh-panel: 0 1px 3px rgba(0,0,0,0.05);
+            --sh-md: 0 4px 15px rgba(0,0,0,0.1);
+            --sh-lg: 0 10px 25px rgba(0,0,0,0.1);
+            /* 角丸スケール */
+            --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px; --r-pill: 100px;
+            /* ツールチップ */
+            --c-tooltip-bg: rgba(17, 24, 39, 0.85);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --c-canvas: #0f1115;
+                --c-body-bg: #16181d;
+                --c-surface: #1f2228;
+                --c-surface-2: #262a31;
+                --c-surface-3: #2b2f37;
+                --c-glass: rgba(31, 34, 40, 0.95);
+                --c-glass-border: rgba(255, 255, 255, 0.08);
+                --c-text: #e5e7eb;
+                --c-text-strong: #f9fafb;
+                --c-text-muted: #9ca3af;
+                --c-text-sub: #cbd5e1;
+                --c-border: #333842;
+                --c-border-input: #3a3f4a;
+                --c-border-strong: #565d6a;
+                --c-accent-tint: #1e3a5f;
+                --c-danger-bg: #3a1f1f;
+                --c-danger-hover-bg: #4a2626;
+                --c-project-bg: #26294a;
+                --c-project-text: #c7d2fe;
+                --c-project-border: #3a3f6a;
+                --c-project-hover-bg: #2f3358;
+                --c-project-hover-border: #4a5088;
+                --sh-sm: 0 1px 2px rgba(0,0,0,0.4);
+                --sh-panel: 0 1px 3px rgba(0,0,0,0.4);
+                --sh-md: 0 4px 15px rgba(0,0,0,0.5);
+                --sh-lg: 0 10px 25px rgba(0,0,0,0.6);
+                --c-tooltip-bg: rgba(0, 0, 0, 0.9);
+            }
+        }
+
         /* --- モダンリセット & ベースレイアウト --- */
-        body { 
-            margin: 0; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            background-color: #f3f4f6; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            color: #374151; 
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: var(--c-body-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--c-text);
         }
 
         /* アイコンのベーススタイル */
@@ -59,56 +143,73 @@
         }
 
         /* --- ヘッダー --- */
-        #app-header { 
-            flex-shrink: 0; 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(10px); 
-            border-bottom: 1px solid #e5e7eb; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-            z-index: 1000; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
+        #app-header {
+            flex-shrink: 0;
+            background: var(--c-glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--c-border);
+            box-shadow: var(--sh-panel);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             padding: 12px 20px;
         }
         
         .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .header-title-group { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .header-title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .header-brand { display: flex; align-items: center; gap: 8px; }
         .header-logo { height: 26px; width: auto; object-fit: contain; }
-        h1 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+        h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--c-text-strong); letter-spacing: -0.5px; }
+
+        /* 縦ディバイダー（ヘッダー等の区切り線・旧インラインstyleを共通化） */
+        .v-divider { width: 1px; height: 20px; background: var(--c-border); margin: 0 5px; align-self: center; }
+        .v-divider-sm { width: 1px; height: 16px; background: var(--c-border-input); margin: 0 4px; align-self: center; }
+
+        /* UI（ツールバー等）はドラッグしても文字選択されないようにする（入力欄は除く） */
+        #app-header, #floating-tools-container, #floating-top-left, #floating-bottom-right,
+        #btn-focus-mode, .dropdown-menu, #restore-banner, #pdf-sidebar {
+            -webkit-user-select: none; user-select: none;
+        }
         
         .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
         /* --- ボタンデザイン --- */
-        .btn { 
-            padding: 8px 14px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            border-radius: 6px; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 6px; 
-            transition: all 0.2s ease; 
+        .btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--r-md);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
             border: 1px solid transparent;
-            background-color: #ffffff;
-            color: #374151;
-            border-color: #d1d5db;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            background-color: var(--c-surface);
+            color: var(--c-text);
+            border-color: var(--c-border-input);
+            box-shadow: var(--sh-sm);
         }
-        .btn:hover { background-color: #f9fafb; border-color: #9ca3af; }
+        .btn:hover { background-color: var(--c-surface-2); border-color: var(--c-border-strong); }
         .btn:active { transform: scale(0.97); }
-        .btn-icon { padding: 6px 10px; } 
+        .btn-icon { padding: 6px 10px; }
 
-        .btn-primary { background-color: #3b82f6; color: white; border-color: #3b82f6; }
-        .btn-primary:hover { background-color: #2563eb; border-color: #2563eb; color: white; }
-        
-        .btn-danger { color: #ef4444; border-color: #fca5a5; background-color: #fef2f2; }
-        .btn-danger:hover { background-color: #fee2e2; border-color: #f87171; }
+        .btn-primary { background-color: var(--c-accent); color: var(--c-on-accent); border-color: var(--c-accent); }
+        .btn-primary:hover { background-color: var(--c-accent-hover); border-color: var(--c-accent-hover); color: var(--c-on-accent); }
 
-        .btn-project { background-color: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
-        .btn-project:hover { background-color: #e0e7ff; border-color: #a5b4fc; }
+        .btn-success { background-color: var(--c-success); color: var(--c-on-accent); border-color: var(--c-success); }
+        .btn-success:hover { background-color: var(--c-success-hover); border-color: var(--c-success-hover); color: var(--c-on-accent); }
+
+        .btn-danger { color: var(--c-danger); border-color: var(--c-danger-border); background-color: var(--c-danger-bg); }
+        .btn-danger:hover { background-color: var(--c-danger-hover-bg); border-color: var(--c-danger-hover-border); }
+
+        .btn-project { background-color: var(--c-project-bg); color: var(--c-project-text); border-color: var(--c-project-border); }
+        .btn-project:hover { background-color: var(--c-project-hover-bg); border-color: var(--c-project-hover-border); }
+
+        /* ゴーストボタン（枠・背景なし。旧インラインstyleを共通化） */
+        .btn-ghost { border-color: transparent; background-color: transparent; box-shadow: none; }
+        .btn-ghost:hover { background-color: var(--c-surface-3); border-color: transparent; }
 
         .custom-file-upload { display: inline-flex; cursor: pointer; }
         #imageInput, #projectInput { display: none; }
@@ -116,18 +217,18 @@
         /* --- ドロップダウンメニュー --- */
         .dropdown { position: relative; display: inline-block; }
         .dropdown-menu {
-            position: absolute; top: 100%; right: 0; margin-top: 8px; background: white;
-            border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            position: absolute; top: 100%; right: 0; margin-top: 8px; background: var(--c-surface);
+            border: 1px solid var(--c-border); border-radius: var(--r-lg); box-shadow: var(--sh-lg);
             list-style: none; padding: 5px; display: none; flex-direction: column; gap: 2px;
             min-width: 220px; z-index: 3000;
         }
         .dropdown-menu.show { display: flex; }
         .dropdown-menu li {
-            padding: 10px 15px; cursor: pointer; border-radius: 6px; font-size: 13px;
-            font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;
+            padding: 10px 15px; cursor: pointer; border-radius: var(--r-md); font-size: 13px;
+            font-weight: 600; color: var(--c-text); display: flex; align-items: center; gap: 8px;
             transition: 0.2s;
         }
-        .dropdown-menu li:hover { background-color: #f3f4f6; color: #3b82f6; }
+        .dropdown-menu li:hover { background-color: var(--c-surface-3); color: var(--c-accent); }
 
         /* --- フローティングツールバー (下部中央) --- */
         #floating-tools-container {
@@ -136,125 +237,132 @@
             z-index: 2000; pointer-events: none;
         }
 
-        .tool-switch { 
-            display: inline-flex; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-radius: 100px; padding: 8px; gap: 6px; border: 1px solid rgba(229, 231, 235, 0.8);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); pointer-events: auto; align-items: center;
+        .tool-switch {
+            display: inline-flex; background: var(--c-glass); backdrop-filter: blur(10px);
+            border-radius: var(--r-pill); padding: 8px; gap: 6px; border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-lg); pointer-events: auto; align-items: center;
         }
-        
-        .tool-switch label { 
+
+        .tool-switch label {
             display: flex; justify-content: center; align-items: center; width: 44px; height: 44px;
-            cursor: pointer; border-radius: 50%; color: #6b7280; transition: all 0.2s ease; position: relative;
+            cursor: pointer; border-radius: 50%; color: var(--c-text-muted); transition: all 0.2s ease; position: relative;
         }
         .tool-switch label .material-symbols-outlined { font-size: 24px; }
-        
+
         .tool-switch label::after, .btn[title]::after, .slider-label[title]::after {
-            content: attr(title); position: absolute; top: -35px; background: rgba(17, 24, 39, 0.8);
-            color: white; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px;
+            content: attr(title); position: absolute; top: -35px; background: var(--c-tooltip-bg);
+            color: #fff; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: var(--r-sm);
             white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
             transform: translateY(5px); z-index: 5000;
         }
         .tool-switch label:hover::after { opacity: 1; transform: translateY(0); }
-        .tool-switch label:hover { background-color: #f3f4f6; color: #374151; }
+        .tool-switch label:hover { background-color: var(--c-surface-3); color: var(--c-text); }
         .tool-switch input[type="radio"] { display: none; }
-        .tool-switch input[type="radio"]:checked + label { 
-            background-color: #3b82f6; color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); 
+        .tool-switch input[type="radio"]:checked + label {
+            background-color: var(--c-accent); color: var(--c-on-accent); box-shadow: 0 4px 10px var(--c-accent-weak);
             transform: translateY(-2px);
         }
-        .tool-divider { width: 1px; height: 24px; background: #e5e7eb; margin: 0 4px; }
+        .tool-divider { width: 1px; height: 24px; background: var(--c-glass-border); margin: 0 4px; }
 
         /* --- フローティングプロパティパネル --- */
         #floating-properties {
-            display: none; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-radius: 12px; padding: 10px 20px; gap: 15px; border: 1px solid rgba(229, 231, 235, 0.8);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08); pointer-events: auto; flex-wrap: wrap; justify-content: center;
+            display: none; background: var(--c-glass); backdrop-filter: blur(10px);
+            border-radius: var(--r-xl); padding: 10px 20px; gap: 12px; border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-md); pointer-events: auto; flex-wrap: wrap; justify-content: center;
         }
 
-        .prop-group { display: none; align-items: center; gap: 8px; padding: 0 10px; border-left: 2px solid #e5e7eb; }
+        .prop-group { display: none; align-items: center; gap: 8px; padding: 0 10px; border-left: 2px solid var(--c-border); }
         .prop-group:first-child { border-left: none; padding-left: 0; }
-        
-        .slider-label { color: #6b7280; position: relative; cursor: help; }
-        .slider-label:hover { color: #374151; }
+
+        .slider-label { color: var(--c-text-muted); position: relative; cursor: help; }
+        .slider-label:hover { color: var(--c-text); }
         .slider-label:hover::after { opacity: 1; transform: translateY(0); }
 
-        .mini-switch { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-        .mini-switch label { display: flex; justify-content: center; align-items: center; width: 32px; height: 32px; cursor: pointer; border-radius: 6px; color: #6b7280; transition: 0.2s; position: relative;}
+        .mini-switch { display: inline-flex; background: var(--c-surface-3); border-radius: var(--r-lg); padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--c-border); }
+        .mini-switch label { display: flex; justify-content: center; align-items: center; width: 32px; height: 32px; cursor: pointer; border-radius: var(--r-md); color: var(--c-text-muted); transition: 0.2s; position: relative;}
         .mini-switch label .material-symbols-outlined { font-size: 20px; }
-        .mini-switch label:hover { color: #111827; }
+        .mini-switch label:hover { color: var(--c-text-strong); }
         .mini-switch label:hover::after { opacity: 1; transform: translateY(0); }
         .mini-switch input[type="radio"] { display: none; }
-        .mini-switch input[type="radio"]:checked + label { background: white; color: #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
+        .mini-switch input[type="radio"]:checked + label { background: var(--c-surface); color: var(--c-accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
         .color-palette { display: flex; gap: 6px; align-items: center; }
         .swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); transition: 0.15s; }
         .swatch:hover { transform: scale(1.15); }
-        .swatch.active { outline: 2px solid #3b82f6; outline-offset: 2px; transform: scale(1.15); }
+        .swatch.active { outline: 2px solid var(--c-accent); outline-offset: 2px; transform: scale(1.15); }
         .swatch.custom-swatch { background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); }
 
-        .combo-box { position: relative; display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 6px; background: white; height: 32px; overflow: hidden; }
-        .combo-input { border: none; outline: none; width: 40px; text-align: center; background: transparent; font-size: 13px; font-family: inherit; font-weight: 600; }
+        .combo-box { position: relative; display: inline-flex; align-items: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); background: var(--c-surface); height: 32px; overflow: hidden; }
+        .combo-input { border: none; outline: none; width: 40px; text-align: center; background: transparent; font-size: 13px; font-family: inherit; font-weight: 600; color: var(--c-text); }
         .combo-input::-webkit-inner-spin-button, .combo-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        
-        .combo-dropdown-btn { border: none; background: #f9fafb; cursor: pointer; padding: 0 4px; border-left: 1px solid #d1d5db; height: 100%; color: #6b7280; }
-        .combo-dropdown-btn:hover { background: #f3f4f6; }
-        
-        .combo-list { position: absolute; top: calc(100% + 4px); left: 0; background: white; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); list-style: none; padding: 5px; margin: 0; display: none; flex-direction: column; max-height: 200px; overflow-y: auto; z-index: 2000; width: 100%; border-radius: 8px; box-sizing: border-box; }
-        .combo-list li { padding: 8px 5px; cursor: pointer; font-size: 13px; text-align: center; border-radius: 4px; font-weight: 600; color: #374151; }
-        .combo-list li:hover { background: #eff6ff; color: #3b82f6; }
 
-        .number-input { height: 32px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 5px; font-size: 13px; background-color: white; text-align: center; font-weight: 600; width: 45px; }
+        .combo-dropdown-btn { border: none; background: var(--c-surface-2); cursor: pointer; padding: 0 4px; border-left: 1px solid var(--c-border-input); height: 100%; color: var(--c-text-muted); }
+        .combo-dropdown-btn:hover { background: var(--c-surface-3); }
 
-        /* --- 集中モード --- */
+        .combo-list { position: absolute; top: calc(100% + 4px); left: 0; background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: var(--sh-lg); list-style: none; padding: 5px; margin: 0; display: none; flex-direction: column; max-height: 200px; overflow-y: auto; z-index: 2000; width: 100%; border-radius: var(--r-lg); box-sizing: border-box; }
+        .combo-list li { padding: 8px 5px; cursor: pointer; font-size: 13px; text-align: center; border-radius: var(--r-sm); font-weight: 600; color: var(--c-text); }
+        .combo-list li:hover { background: var(--c-accent-tint); color: var(--c-accent); }
+
+        .number-input { height: 32px; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 0 5px; font-size: 13px; background-color: var(--c-surface); color: var(--c-text); text-align: center; font-weight: 600; width: 45px; }
+
+        /* --- 学習モード（閲覧のみ・UI非表示） --- */
         .hideable-ui { transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease; }
         body.focus-mode .hideable-ui { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-        
+
+        /* 学習モード中は編集を無効化し、マスクのめくり（ホバー）だけを許可する */
+        body.focus-mode #workspace-container .canvas-element { pointer-events: none !important; }
+        body.focus-mode #workspace-container .mask { pointer-events: auto !important; cursor: default; }
+        body.focus-mode #btn-focus-mode { color: var(--c-accent); }
+
         #btn-focus-mode {
             position: absolute; bottom: 30px; left: 30px; width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(229, 231, 235, 0.8);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); color: #6b7280; cursor: pointer; z-index: 3000;
+            background: var(--c-glass); backdrop-filter: blur(10px); border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-md); color: var(--c-text-muted); cursor: pointer; z-index: 3000;
             display: flex; justify-content: center; align-items: center; transition: all 0.2s ease;
         }
-        #btn-focus-mode:hover { background: #f3f4f6; color: #374151; transform: scale(1.05); }
+        #btn-focus-mode:hover { background: var(--c-surface-3); color: var(--c-text); transform: scale(1.05); }
 
         /* --- メインワークスペース --- */
         #main-area { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
         
-        #pdf-sidebar { width: 220px; height: 100%; background: #ffffff; border-right: 1px solid #e5e7eb; overflow-y: auto; display: none; flex-direction: column; align-items: center; padding: 20px 0; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
-        .pdf-thumb { width: 80%; background: white; margin-bottom: 20px; border: 2px solid transparent; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: 0.2s; display: flex; flex-direction: column; align-items: center; padding-bottom: 8px; overflow: hidden; flex-shrink: 0; min-height: 100px; }
+        #pdf-sidebar { width: 220px; height: 100%; background: var(--c-surface); border-right: 1px solid var(--c-border); overflow-y: auto; display: none; flex-direction: column; align-items: center; padding: 20px 0; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
+        .pdf-thumb { width: 80%; background: var(--c-surface); margin-bottom: 20px; border: 2px solid transparent; border-radius: var(--r-lg); cursor: pointer; box-shadow: var(--sh-md); transition: 0.2s; display: flex; flex-direction: column; align-items: center; padding-bottom: 8px; overflow: hidden; flex-shrink: 0; min-height: 100px; }
         .pdf-thumb:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .pdf-thumb.active { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.3); }
-        .pdf-thumb canvas { width: 100%; height: auto; border-bottom: 1px solid #f3f4f6; margin-bottom: 8px; object-fit: contain; background: #f9fafb; }
-        .pdf-thumb span { font-size: 12px; font-weight: 700; color: #4b5563; }
+        .pdf-thumb.active { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-weak); }
+        .pdf-thumb canvas { width: 100%; height: auto; border-bottom: 1px solid var(--c-border); margin-bottom: 8px; object-fit: contain; background: #ffffff; }
+        .pdf-thumb span { font-size: 12px; font-weight: 700; color: var(--c-text-sub); }
 
-        #workspace-outer { flex-grow: 1; position: relative; display: flex; overflow: hidden; background-color: #e5e7eb; }
+        #workspace-outer { flex-grow: 1; position: relative; display: flex; overflow: hidden; background-color: var(--c-canvas); }
         #workspace-container { flex-grow: 1; overflow: auto; position: relative; touch-action: none; user-select: none; }
         #workspace-wrapper { position: relative; }
-        #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: 4px; }
-        
-        .floating-ui { 
-            position: absolute; z-index: 100; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); 
-            padding: 8px 12px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 10px; 
+        #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
+
+        .floating-ui {
+            position: absolute; z-index: 100; background: var(--c-glass); backdrop-filter: blur(8px);
+            padding: 8px 12px; border-radius: var(--r-lg); box-shadow: var(--sh-md); border: 1px solid var(--c-glass-border); display: flex; align-items: center; gap: 10px;
         }
         #floating-top-left { top: 20px; left: 20px; }
         #floating-bottom-right { bottom: 25px; right: 25px; }
 
-        #page-navigation { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: #374151; }
-        #page-input { width: 40px; text-align: center; border: 1px solid #d1d5db; border-radius: 6px; padding: 4px; font-size: 14px; font-weight: 700; }
-        #zoom-text { font-weight: 700; width: 55px; text-align: center; font-size: 14px; color: #374151; }
+        #page-navigation { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--c-text); }
+        #page-input { width: 40px; text-align: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 4px; font-size: 14px; font-weight: 700; background-color: var(--c-surface); color: var(--c-text); }
+        #zoom-text { font-weight: 700; width: 55px; text-align: center; font-size: 14px; color: var(--c-text); }
 
         #uploaded-image { display: block; max-width: none; max-height: none; -webkit-touch-callout: none !important; -webkit-user-drag: none; user-drag: none; border-radius: 4px; }
         #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; -webkit-touch-callout: none; }
+        /* ペン/消しゴムはベクター(SVG)で描画し、ズームしても滲まず再描画も不要 */
+        .drawing-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
         #pdf-container { display: none; -webkit-touch-callout: none; }
         .pdf-page { position: relative; margin-bottom: 20px; background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.05); -webkit-touch-callout: none; border-radius: 4px; overflow: hidden; }
         .textLayer { opacity: 0.2; pointer-events: none !important; } 
         .textLayer span { pointer-events: auto !important; -webkit-touch-callout: default !important; -webkit-user-select: text !important; user-select: text !important; cursor: text; }
 
         /* ツールごとのポインターイベント（当たり判定）の制御 */
-        #workspace-container.tool-pan { cursor: grab; }
-        #workspace-container.tool-pan:active { cursor: grabbing; }
-        #workspace-container.tool-pan .canvas-element { pointer-events: none !important; }
-
         #workspace-container.tool-select .textLayer span { pointer-events: none !important; user-select: none !important; -webkit-user-select: none !important; }
+        /* マウスツールでシフトを押している間だけ、背景（PDF）の文字を選択できる */
+        #workspace-container.tool-select.text-select-on .textLayer span { pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
+        #workspace-container.tool-select.text-select-on .textLayer { opacity: 0.35; }
+        #workspace-container.tool-select.text-select-on .canvas-element { pointer-events: none !important; }
         
         #workspace-container.tool-mask .textLayer span, 
         #workspace-container.tool-text .textLayer span, 
@@ -262,7 +370,8 @@
         #workspace-container.tool-highlight .textLayer span, 
         #workspace-container.tool-shape .textLayer span { pointer-events: none !important; }
         
-        #workspace-container.tool-pen, #workspace-container.tool-pen * { cursor: none !important; }
+        /* 丸いブラシカーソルを出している間は、OSのカーソルを消す */
+        #workspace-container.hide-cursor, #workspace-container.hide-cursor * { cursor: none !important; }
         
         /* 選択中ツール以外の要素の当たり判定を消す（★ただし .mask は常に判定を残す） */
 #workspace-container.tool-mask .canvas-element:not(.mask),
@@ -272,6 +381,14 @@
 #workspace-container.tool-pen .canvas-element:not(.mask) { 
     pointer-events: none !important; 
 }
+
+        /* パンは専用ツールではなく、中ボタン／スペース押しで全ツール共通に発動する。
+           tool-pen の cursor:none より後に置いて優先させる */
+        #workspace-container.pan-ready, #workspace-container.pan-ready * { cursor: grab !important; }
+        #workspace-container.panning, #workspace-container.panning * { cursor: grabbing !important; }
+        /* パン中は要素を掴まないよう当たり判定を消す */
+        #workspace-container.pan-ready .canvas-element,
+        #workspace-container.pan-ready .textLayer span { pointer-events: none !important; }
 
         #brush-cursor { position: fixed; border: 1px solid rgba(0, 0, 0, 0.6); background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; pointer-events: none; display: none; z-index: 9999; transform: translate(-50%, -50%); }
 
@@ -284,19 +401,28 @@
         .mask:not(.selected):hover { opacity: 0; }
         
         div.mask-rect { background-color: black; }
-        div.mask-rect.selected { background-color: rgba(0, 0, 0, 0.7); outline: 2px solid #3b82f6; cursor: move; }
+        div.mask-rect.selected { background-color: rgba(0, 0, 0, 0.7); outline: 2px solid var(--c-accent); cursor: move; }
         
         div.mask-freehand-wrapper { background-color: transparent; }
         div.mask-freehand-wrapper svg { display: block; overflow: visible; }
         div.mask-freehand-wrapper path { stroke: black; fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; transition: stroke 0.3s; }
-        div.mask-freehand-wrapper.selected { outline: 2px solid #3b82f6; cursor: move; }
+        div.mask-freehand-wrapper.selected { outline: 2px solid var(--c-accent); cursor: move; }
         div.mask-freehand-wrapper.selected path { stroke: rgba(0, 0, 0, 0.7); }
 
+        /* マスキングツール中は、既存のマスクを最初から半透明（選択時と同じ濃さ）で表示し、
+           重ねてもホバーで消えないようにする */
+        #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 1; }
+        #workspace-container.tool-mask div.mask-rect { background-color: rgba(0, 0, 0, 0.7); }
+        #workspace-container.tool-mask div.mask-freehand-wrapper path { stroke: rgba(0, 0, 0, 0.7); }
+
         .highlight-box { cursor: pointer; mix-blend-mode: multiply; -webkit-touch-callout: none; border-radius: 2px; } 
-        .highlight-box.selected { outline: 2px dashed #3b82f6; cursor: move; }
+        .highlight-box.selected { outline: 2px dashed var(--c-accent); cursor: move; }
+        div.highlight-freehand-wrapper { background-color: transparent; }
+        div.highlight-freehand-wrapper svg { display: block; overflow: visible; }
+        div.highlight-freehand-wrapper path { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
         
         .text-wrapper { min-width: 30px; min-height: 30px; font-size: 20px; padding: 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
-        .text-wrapper.selected { outline: 2px solid #3b82f6; background-color: rgba(255, 255, 255, 0.6); }
+        .text-wrapper.selected { outline: 2px solid var(--c-accent); background-color: rgba(255, 255, 255, 0.6); }
         .text-content { width: 100%; height: 100%; outline: none; white-space: pre-wrap; word-wrap: break-word; overflow: visible; pointer-events: none; font-weight: normal; text-orientation: upright; margin: 0;}
         .text-wrapper.selected .text-content { pointer-events: auto; cursor: text; }
         .canvas-element.selected { transition: none; }
@@ -309,7 +435,7 @@
         .shape-element svg * { pointer-events: visibleStroke; cursor: pointer; }
         
         /* 【改修】直線以外の図形は四角い枠線を出す */
-        .shape-element:not([data-shape-type="line"]).selected { outline: 2px dashed #3b82f6; cursor: move; }
+        .shape-element:not([data-shape-type="line"]).selected { outline: 2px dashed var(--c-accent); cursor: move; }
         
         /* 【改修】直線の場合は枠線を消し、カーソルを移動用にする */
         .shape-element[data-shape-type="line"].selected { outline: none; cursor: move; }
@@ -317,10 +443,27 @@
         /* --- 画像エレメント --- */
         .image-element { background-color: transparent; border-radius: 4px; }
         .image-element img { display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; border-radius: 4px; overflow: hidden; }
-        .image-element.selected { outline: 2px solid #3b82f6; cursor: move; }
+        .image-element.selected { outline: 2px solid var(--c-accent); cursor: move; }
+
+        /* --- 手書き線（マスキング・ハイライト）の当たり判定と選択表示 ---
+           外接四角形ではなく、線そのものの上でしか反応しないようにする */
+        div.mask-freehand-wrapper, div.highlight-freehand-wrapper { pointer-events: none; }
+        div.mask-freehand-wrapper .fh-stroke, div.highlight-freehand-wrapper .fh-stroke { pointer-events: stroke; }
+        div.mask-freehand-wrapper.selected, div.highlight-freehand-wrapper.selected { outline: none; }
+        /* 選択中に出る中心線 */
+        .fh-center { display: none; pointer-events: none; }
+        .selected > svg > .fh-center { display: block; }
+        /* 両端のつまみ（ドラッグで線を拡大・縮小） */
+        .fh-handle {
+            position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+            background-color: var(--c-surface); border: 2px solid var(--c-accent); border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; display: none;
+            pointer-events: auto; cursor: crosshair;
+        }
+        .canvas-element.selected > .fh-handle { display: block; }
 
         /* 通常の四隅のハンドル */
-        .resize-handle { position: absolute; width: 10px; height: 10px; background-color: white; border: 2px solid #3b82f6; display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
+        .resize-handle { position: absolute; width: 10px; height: 10px; background-color: white; border: 2px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
         .canvas-element.selected .resize-handle { display: block; }
         .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
         .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
@@ -336,13 +479,30 @@
         .shape-element[data-shape-type="line"][data-line-dir="/"] .handle-p1 { top: 0; left: 100%; cursor: crosshair; }
         .shape-element[data-shape-type="line"][data-line-dir="/"] .handle-p2 { top: 100%; left: 0; cursor: crosshair; }
         
-        #drawing-box { position: absolute; border: 2px dashed #ef4444; background-color: rgba(239, 68, 68, 0.1); pointer-events: none; display: none; z-index: 10; border-radius: 2px; }
-        
+        #drawing-box { position: absolute; border: 2px dashed var(--c-danger); background-color: rgba(239, 68, 68, 0.1); pointer-events: none; display: none; z-index: 10; border-radius: var(--r-xs); }
+        /* マスキング作成中は、出来上がりと同じ半透明の黒で見せる */
+        #workspace-container.tool-mask #drawing-box { border: none; background-color: rgba(0, 0, 0, 0.7); }
+        /* ハイライト作成中も破線を出さない。色は選択中の色をJSで直接指定する */
+        #workspace-container.tool-highlight #drawing-box { border: none; mix-blend-mode: multiply; }
+
         /* 範囲選択用ボックス */
-        #selection-box { position: absolute; border: 1px solid #3b82f6; background-color: rgba(59, 130, 246, 0.2); pointer-events: none; display: none; z-index: 10000; border-radius: 2px; }
+        #selection-box { position: absolute; border: 1px solid var(--c-accent); background-color: var(--c-accent-weak); pointer-events: none; display: none; z-index: 10000; border-radius: var(--r-xs); }
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; }
         .overlay-loading { color: white; font-size: 20px; font-weight: bold; flex-direction: column; gap: 10px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- 前回作業の復元バナー --- */
+        #restore-banner {
+            position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+            box-shadow: var(--sh-lg);
+            padding: 10px 16px; z-index: 10001; max-width: calc(100% - 32px);
+            font-size: 14px; color: var(--c-text);
+        }
+        #restore-banner .material-symbols-outlined { color: var(--c-accent); }
     </style>
 </head>
 <body>
@@ -361,7 +521,7 @@
                     <h1>暗記マスキング</h1>
                     <img src="favicon.png" alt="ロゴ" class="header-logo">
                 </div>
-                <div style="width: 1px; height: 20px; background: #e5e7eb; margin: 0 5px;"></div>
+                <div class="v-divider"></div>
                 
                 <label for="imageInput" class="btn btn-primary custom-file-upload">
                     <span class="material-symbols-outlined">add_photo_alternate</span> 新規作成
@@ -381,10 +541,10 @@
                 <button class="btn btn-icon" id="btn-redo" title="やり直し (Ctrl+Shift+Z または Ctrl+Y)">
                     <span class="material-symbols-outlined">redo</span>
                 </button>
-                <div style="width: 1px; height: 20px; background: #e5e7eb; margin: 0 5px;"></div>
+                <div class="v-divider"></div>
                 
                 <div class="dropdown" id="save-dropdown-container">
-                    <button class="btn btn-primary" id="btn-save-menu" style="background-color: #10b981; border-color: #10b981;">
+                    <button class="btn btn-success" id="btn-save-menu">
                         <span class="material-symbols-outlined">save</span> 保存 ▼
                     </button>
                     <ul class="dropdown-menu" id="save-dropdown-menu">
@@ -393,6 +553,12 @@
                         </li>
                         <li id="btn-download-menu">
                             <span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し
+                        </li>
+                        <li id="btn-export-question">
+                            <span class="material-symbols-outlined">quiz</span> 問題版（マスクあり）で書き出し
+                        </li>
+                        <li id="btn-export-answer">
+                            <span class="material-symbols-outlined">lightbulb</span> 解答版（マスクなし）で書き出し
                         </li>
                     </ul>
                 </div>
@@ -407,7 +573,7 @@
         <div id="pdf-sidebar" class="hideable-ui"></div>
 
         <div id="workspace-outer">
-            <button id="btn-focus-mode" title="集中モード (UI非表示)">
+            <button id="btn-focus-mode" title="学習モード（閲覧のみ）">
                 <span class="material-symbols-outlined">visibility</span>
             </button>
 
@@ -428,9 +594,13 @@
                 <button class="btn btn-icon" id="btn-zoom-in" title="拡大">
                     <span class="material-symbols-outlined">add</span>
                 </button>
-                <div style="width: 1px; height: 16px; background: #d1d5db; margin: 0 2px;"></div>
+                <div class="v-divider-sm"></div>
                 <button class="btn btn-icon" id="btn-zoom-reset" title="ズームリセット">
                     <span class="material-symbols-outlined">fit_screen</span>
+                </button>
+                <div class="v-divider-sm"></div>
+                <button class="btn btn-icon" id="btn-toggle-masks" title="すべての黒塗りを隠す（答え合わせ）">
+                    <span class="material-symbols-outlined" id="icon-toggle-masks">visibility_off</span>
                 </button>
             </div>
 
@@ -444,10 +614,15 @@
                             <input type="radio" id="mask-type-free" name="maskType" value="free">
                             <label for="mask-type-free" title="手書き"><span class="material-symbols-outlined">draw</span></label>
                         </div>
-                        <div style="width: 1px; height: 16px; background: #d1d5db; margin: 0 8px;"></div>
-                        <button class="btn btn-icon" id="btn-toggle-masks" title="すべての黒塗りを隠す">
-                            <span class="material-symbols-outlined" id="icon-toggle-masks">visibility_off</span>
-                        </button>
+                    </span>
+
+                    <span class="prop-group" id="prop-highlight-type">
+                        <div class="mini-switch">
+                            <input type="radio" id="highlight-type-rect" name="highlightType" value="rect" checked>
+                            <label for="highlight-type-rect" title="四角形"><span class="material-symbols-outlined icon-filled">rectangle</span></label>
+                            <input type="radio" id="highlight-type-free" name="highlightType" value="free">
+                            <label for="highlight-type-free" title="手書き"><span class="material-symbols-outlined">draw</span></label>
+                        </div>
                     </span>
 
                     <span class="prop-group" id="prop-shape-type">
@@ -500,8 +675,7 @@
 
                     <span class="prop-group" id="prop-text-direction">
                         <button class="btn btn-icon" id="btn-dir-horiz" title="横書き"><span class="material-symbols-outlined">notes</span></button>
-                        <button class="btn btn-icon" id="btn-dir-vert-rl" title="縦書き (右から左)"><span class="material-symbols-outlined" style="transform: rotate(90deg);">notes</span></button>
-                        <button class="btn btn-icon" id="btn-dir-vert-lr" title="縦書き (左から右)"><span class="material-symbols-outlined" style="transform: rotate(-90deg);">notes</span></button>
+                        <button class="btn btn-icon" id="btn-dir-vert-rl" title="縦書き"><span class="material-symbols-outlined" style="transform: rotate(90deg);">notes</span></button>
                     </span>
 
                     <span class="prop-group" id="prop-text-size">
@@ -532,9 +706,6 @@
                 </div>
 
                 <div class="tool-switch">
-                    <input type="radio" id="tool-pan" name="currentTool" value="pan">
-                    <label for="tool-pan" title="画面移動"><span class="material-symbols-outlined">pan_tool</span></label>
-
                     <input type="radio" id="tool-select" name="currentTool" value="select">
                     <label for="tool-select" title="選択"><span class="material-symbols-outlined">highlight_alt</span></label>
                     
@@ -555,16 +726,19 @@
                     
                     <div class="tool-divider"></div>
 
-                    <button class="btn btn-icon" id="btn-add-image" title="画像を追加" style="border:none; background:transparent;">
+                    <button class="btn btn-icon btn-ghost" id="btn-add-image" title="画像を追加">
                         <span class="material-symbols-outlined">add_photo_alternate</span>
                     </button>
                     <input type="file" id="overlayImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;">
                     <div class="tool-divider"></div>
 
-                    <button class="btn btn-icon btn-danger" id="btn-delete" title="選択したものを消す" style="border:none; background:transparent;">
+                    <button class="btn btn-icon btn-ghost" id="btn-duplicate" title="複製 (Ctrl+D)">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
+                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-delete" title="選択したものを消す">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
-                    <button class="btn btn-icon btn-danger" id="btn-clear-all" title="すべて消す" style="border:none; background:transparent;">
+                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-clear-all" title="すべて消す">
                         <span class="material-symbols-outlined">delete_forever</span>
                     </button>
                 </div>
@@ -601,7 +775,12 @@
             saveDropdownMenu.classList.remove('show');
         });
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // CDN(pdf.js)が読み込めなくても他機能（画像モード等）は動くようガード
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        } else {
+            console.error('pdf.js の読み込みに失敗しました（PDF機能は利用できません）');
+        }
 
         // 解像度のベーススケール。遅延再描画の最大倍率を考慮し、上限を設けます。
         const RENDER_SCALE = Math.min(window.devicePixelRatio || 2, 2.0); 
@@ -642,6 +821,16 @@
         const penWidthInput = document.getElementById('pen-width-input'); 
         const penOpacityInput = document.getElementById('pen-opacity');
 
+        // 直前のポインターダウンが「選択解除」を伴ったか（マスキングの空きクリック判定に使う）
+        let clearedSelectionOnDown = false;
+        // 手書き線の端をドラッグして拡大・縮小するときの情報
+        let freehandScale = null;
+        let strokeScale = null;
+
+        // マスキング矩形をワンクリックで置いたときの既定サイズ（ワークスペース座標＝ズーム非依存）
+        const DEFAULT_MASK_W = 120;
+        const DEFAULT_MASK_H = 28;
+
         const customSwatch = document.getElementById('custom-color-swatch');
         const nativeColorPicker = document.getElementById('native-color-picker');
         const btnToggleMasks = document.getElementById('btn-toggle-masks');
@@ -668,6 +857,10 @@
         let activeCanvas = null;
         let activeCtx = null;
         let activeCanvasIndex = null;
+        let activeDrawSvg = null;   // 現在描画中のSVGレイヤー
+        let liveStrokePath = null;  // ドラッグ中のプレビュー用path
+        let selectedStroke = null;  // 選択中のペン線 { svg, index }
+        let strokeMoveStart = null; // ペン線ドラッグ開始情報
         
         let tempMaskSvg = null;
         let tempMaskPath = null;
@@ -682,33 +875,41 @@
         const toolColors = { text: '#ef4444', highlight: '#ffff00', pen: '#ef4444', shape: '#ef4444' };
         
         // 【改修】図形のデフォルトの太さを2pxに変更
-        const toolWidths = { pen: 15, eraser: 30, mask: 15, shape: 2 };
+        const toolWidths = { pen: 15, eraser: 30, mask: 15, shape: 2, highlight: 20 };
+
+        // ハイライトの形状モード（四角形 / 手書き）
+        function currentHighlightType() {
+            const r = document.querySelector('input[name="highlightType"]:checked');
+            return r ? r.value : 'rect';
+        }
 
         document.getElementById('btn-focus-mode').addEventListener('click', function() {
             document.body.classList.toggle('focus-mode');
             const icon = this.querySelector('.material-symbols-outlined');
             if (document.body.classList.contains('focus-mode')) {
                 icon.innerText = 'visibility_off';
-                this.title = 'UIを表示する';
+                this.title = '学習モードを終了';
+                window.deselectCurrent(); // 選択を解除して閲覧専用に
             } else {
                 icon.innerText = 'visibility';
-                this.title = '集中モード (UI非表示)';
+                this.title = '学習モード（閲覧のみ）';
             }
         });
         
+        function setMasksHidden(hidden) {
+            window.isMasksHidden = hidden;
+            if (hidden) {
+                workspaceContainer.classList.add('masks-hidden');
+                if (iconToggleMasks) iconToggleMasks.innerText = 'visibility';
+                if (btnToggleMasks) btnToggleMasks.title = 'すべての黒塗りを表示する';
+            } else {
+                workspaceContainer.classList.remove('masks-hidden');
+                if (iconToggleMasks) iconToggleMasks.innerText = 'visibility_off';
+                if (btnToggleMasks) btnToggleMasks.title = 'すべての黒塗りを隠す（答え合わせ）';
+            }
+        }
         if (btnToggleMasks) {
-            btnToggleMasks.addEventListener('click', () => {
-                window.isMasksHidden = !window.isMasksHidden;
-                if (window.isMasksHidden) {
-                    workspaceContainer.classList.add('masks-hidden');
-                    iconToggleMasks.innerText = 'visibility';
-                    btnToggleMasks.title = 'すべての黒塗りを表示する';
-                } else {
-                    workspaceContainer.classList.remove('masks-hidden');
-                    iconToggleMasks.innerText = 'visibility_off';
-                    btnToggleMasks.title = 'すべての黒塗りを隠す';
-                }
-            });
+            btnToggleMasks.addEventListener('click', () => setMasksHidden(!window.isMasksHidden));
         }
 
         function hexToRgba(hex, alpha) {
@@ -724,27 +925,31 @@
 
         document.addEventListener('pointercancel', function(e) {
             if (action) {
-                if (action === 'draw_pen' && activeCtx) {
-                    if (activeCanvas && activeCanvasIndex !== null) {
+                if (action === 'draw_pen' && activeDrawSvg) {
+                    if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+                    if (activeCanvasIndex != null) {
+                        const idx = parseInt(activeCanvasIndex);
                         const actualTool = document.querySelector('input[name="penMode"]:checked').value;
-                        window.canvasDrawings[activeCanvasIndex].push({
+                        if (!window.canvasDrawings[idx]) window.canvasDrawings[idx] = [];
+                        window.canvasDrawings[idx].push({
                             tool: actualTool,
                             points: rawPenPoints,
                             width: parseFloat(penWidthInput.value),
                             color: toolColors['pen'],
                             opacity: penOpacityInput.value
                         });
+                        renderStrokesToSVG(activeDrawSvg, window.canvasDrawings[idx]);
                     }
                     window.saveState();
-                    savedCanvasState = null;
-                } else if (action === 'draw_freehand_mask' && tempMaskSvg) {
+                    liveStrokePath = null;
+                } else if ((action === 'draw_freehand_mask' || action === 'draw_freehand_highlight') && tempMaskSvg) {
                     tempMaskSvg.remove(); tempMaskSvg = null; tempMaskPath = null;
                 } else if (action === 'draw_shape' && currentDrawingShape) {
                     currentDrawingShape.remove(); currentDrawingShape = null;
                 } else if (action === 'box_select') {
                     selectionBox.style.display = 'none';
                 }
-                action = null; penPoints = []; rawPenPoints = []; activeCanvas = null; activeCtx = null; activeCanvasIndex = null;
+                action = null; penPoints = []; rawPenPoints = []; activeCanvas = null; activeCtx = null; activeCanvasIndex = null; activeDrawSvg = null; liveStrokePath = null;
                 drawingBox.style.display = 'none';
             }
         });
@@ -758,10 +963,10 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElements.length > 0) {
-                if (!e.target.classList.contains('text-content') && e.target.tagName.toLowerCase() !== 'input') { 
-                    selectedElements.forEach(el => el.remove());
-                    window.deselectCurrent(); window.saveState(); 
+            if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedElements.length > 0 || selectedStroke)) {
+                if (!e.target.classList.contains('text-content') && e.target.tagName.toLowerCase() !== 'input') {
+                    if (selectedStroke) { deleteSelectedStroke(); }
+                    else { selectedElements.forEach(el => el.remove()); window.deselectCurrent(); window.saveState(); }
                     e.preventDefault();
                 }
             }
@@ -780,34 +985,208 @@
             }
         });
 
+        // --- スペース押しでの一時パン（全ツール共通） ---
+        let spaceHeld = false;
+        function setSpaceHeld(on) {
+            if (spaceHeld === on) return;
+            spaceHeld = on;
+            workspaceContainer.classList.toggle('pan-ready', on);
+            if (on) brushCursor.style.display = 'none';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.code !== 'Space' || e.repeat) return;
+            const t = e.target;
+            const tag = (t && t.tagName || '').toLowerCase();
+            // 入力欄やボタン等にフォーカスがある間は、スペース本来の動作を邪魔しない
+            if (tag === 'input' || tag === 'textarea' || tag === 'button' || tag === 'select' || t.isContentEditable) return;
+            e.preventDefault(); // スペースでのページスクロールを抑止
+            setSpaceHeld(true);
+        });
+        document.addEventListener('keyup', function(e) {
+            if (e.code === 'Space') setSpaceHeld(false);
+        });
+        // フォーカスが外れたらキーアップを取り逃すので解除しておく
+        window.addEventListener('blur', () => setSpaceHeld(false));
+
+        // --- シフト押しで背景（PDF）の文字選択を一時的に有効化（マウスツール時） ---
+        let shiftHeld = false;
+        function setShiftHeld(on) {
+            if (shiftHeld === on) return;
+            shiftHeld = on;
+            workspaceContainer.classList.toggle('text-select-on', on);
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Shift') setShiftHeld(true); });
+        document.addEventListener('keyup', (e) => { if (e.key === 'Shift') setShiftHeld(false); });
+        window.addEventListener('blur', () => setShiftHeld(false));
+
+        // 中ボタンのオートスクロール（丸いスクロールアイコン）を抑止
+        workspaceContainer.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+        workspaceContainer.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
+
+        // --- ツール切替・Esc・複製・微調整・保存のショートカット ---
+        function selectToolByName(name) {
+            const radio = document.getElementById('tool-' + name);
+            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+        }
+        const TOOL_HOTKEYS = { '1':'select','2':'mask','3':'highlight','4':'text','5':'shape','6':'pen',
+                               'v':'select','m':'mask','h':'highlight','t':'text','g':'shape','p':'pen' };
+
+        function duplicateSelection() {
+            if (selectedStroke) { duplicateSelectedStroke(); return; }
+            if (!selectedElements.length) return;
+            const clones = [];
+            selectedElements.forEach(el => {
+                const clone = el.cloneNode(true);
+                clone.classList.remove('selected');
+                clone.style.left = (parseFloat(el.style.left || 0) + 12) + 'px';
+                clone.style.top = (parseFloat(el.style.top || 0) + 12) + 'px';
+                workspace.appendChild(clone);
+                window.bringToFront(clone);
+                clones.push(clone);
+            });
+            window.deselectCurrent();
+            selectedElements = clones;
+            clones.forEach(c => c.classList.add('selected'));
+            window.saveState();
+        }
+
+        // 内部クリップボード（Ctrl+C / Ctrl+V）
+        let internalClipboard = [];
+        let pasteCount = 0;
+        function copySelection() {
+            if (!selectedElements.length) return;
+            internalClipboard = selectedElements.map(el => el.cloneNode(true));
+            internalClipboard.forEach(c => c.classList.remove('selected'));
+            pasteCount = 0;
+        }
+        function pasteClipboard() {
+            if (!internalClipboard.length) return;
+            pasteCount++;
+            const offset = 12 * pasteCount;
+            const clones = [];
+            internalClipboard.forEach(tpl => {
+                const clone = tpl.cloneNode(true);
+                clone.classList.remove('selected');
+                clone.style.left = (parseFloat(tpl.style.left || 0) + offset) + 'px';
+                clone.style.top = (parseFloat(tpl.style.top || 0) + offset) + 'px';
+                workspace.appendChild(clone);
+                window.bringToFront(clone);
+                clones.push(clone);
+            });
+            window.deselectCurrent();
+            selectedElements = clones;
+            clones.forEach(c => c.classList.add('selected'));
+            updateToolbar();
+            window.saveState();
+        }
+
+        let nudgeSaveTimer = null;
+        function nudgeSelection(dx, dy) {
+            if (!selectedElements.length) return;
+            selectedElements.forEach(el => {
+                el.style.left = (parseFloat(el.style.left || 0) + dx) + 'px';
+                el.style.top = (parseFloat(el.style.top || 0) + dy) + 'px';
+            });
+            clearTimeout(nudgeSaveTimer);
+            nudgeSaveTimer = setTimeout(() => window.saveState(), 400);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            const isTyping = e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea' || e.target.isContentEditable || e.target.classList.contains('text-content');
+            const cmdOrCtrl = e.metaKey || e.ctrlKey;
+
+            // Ctrl+S = .amk保存（ブラウザのページ保存を抑止）
+            if (cmdOrCtrl && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                document.getElementById('btn-save-project-menu').click();
+                return;
+            }
+            if (isTyping) return;
+
+            if (cmdOrCtrl && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
+            if (cmdOrCtrl && e.key.toLowerCase() === 'c') { if (selectedElements.length) { copySelection(); } return; }
+            if (cmdOrCtrl && e.key.toLowerCase() === 'v') { if (internalClipboard.length) { e.preventDefault(); pasteClipboard(); } return; }
+            if (cmdOrCtrl) return; // 他のCtrl系(Z/Y)は既存ハンドラに委譲
+
+            if (e.key === 'Escape') {
+                // 何か選択中なら、まず選択を解除するだけ。
+                // 選択が無い状態でもう一度押すとマウスツールへ戻る。
+                const hadSelection = selectedElements.length > 0 || !!selectedStroke;
+                window.deselectCurrent();
+                drawingBox.style.display = 'none'; drawingBox.style.backgroundColor = ''; selectionBox.style.display = 'none';
+                if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+                action = null; liveStrokePath = null; freehandScale = null; strokeScale = null;
+                if (!hadSelection) window.returnToSelectTool();
+                return;
+            }
+
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key) && (selectedElements.length || selectedStroke)) {
+                e.preventDefault();
+                const step = e.shiftKey ? 10 : 1;
+                let dx = 0, dy = 0;
+                if (e.key === 'ArrowUp') dy = -step; else if (e.key === 'ArrowDown') dy = step;
+                else if (e.key === 'ArrowLeft') dx = -step; else dx = step;
+                if (selectedStroke) nudgeSelectedStroke(dx, dy); else nudgeSelection(dx, dy);
+                return;
+            }
+
+            const t = TOOL_HOTKEYS[e.key.toLowerCase()];
+            if (t) selectToolByName(t);
+        });
+
+        // ダブルクリックでテキスト編集に入る
+        workspace.addEventListener('dblclick', (e) => {
+            if (document.body.classList.contains('focus-mode')) return;
+            if (currentTool !== 'select') return; // 選択はマウスツール限定
+            const wrapper = e.target.closest('.text-wrapper');
+            if (wrapper) {
+                const tc = wrapper.querySelector('.text-content');
+                if (tc) {
+                    window.deselectCurrent();
+                    selectedElements = [wrapper]; wrapper.classList.add('selected');
+                    tc.focus();
+                }
+            }
+        });
+
+        // 色は「今のツール」ではなく「選択中の要素の種類」に対して適用する
         function applyColorToSelection(color) {
             let saved = false;
+            // ペン線が選択されていれば、その線の色を変更
+            if (selectedStroke) {
+                const cmd = currentStrokeCmd();
+                if (cmd) { cmd.color = color; reRenderStrokeSvg(); window.saveState(); }
+                return;
+            }
             selectedElements.forEach(selectedElement => {
-                if (currentTool === 'text' && selectedElement.classList.contains('text-wrapper')) {
+                if (selectedElement.classList.contains('text-wrapper')) {
                     if (savedSelectionRange && selectedElement.contains(savedSelectionRange.commonAncestorContainer)) {
-                        // ★修正1: 確実にフォーカスを戻してから色を適用して保存させる
                         const textContent = selectedElement.querySelector('.text-content');
-                        if (textContent) textContent.focus(); 
-                        
+                        if (textContent) textContent.focus();
                         const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedSelectionRange); document.execCommand('foreColor', false, color);
-                    } else { selectedElement.style.color = color; }
+                    } else {
+                        selectedElement.style.color = color;
+                        const tc = selectedElement.querySelector('.text-content'); if (tc) tc.style.color = color;
+                    }
                     saved = true;
-                } else if (currentTool === 'highlight' && selectedElement.classList.contains('highlight-box')) {
-                    selectedElement.style.backgroundColor = hexToRgba(color, penOpacityInput.value); 
+                } else if (selectedElement.classList.contains('highlight-freehand-wrapper')) {
+                    const p = selectedElement.querySelector('.fh-stroke');
+                    if (p) { p.style.stroke = hexToRgba(color, penOpacityInput.value); updateFreehandUI(selectedElement); saved = true; }
+                } else if (selectedElement.classList.contains('highlight-box')) {
+                    selectedElement.style.backgroundColor = hexToRgba(color, penOpacityInput.value);
                     saved = true;
-                } else if (currentTool === 'shape' && selectedElement.classList.contains('shape-element')) {
+                } else if (selectedElement.classList.contains('shape-element')) {
                     const shapeNode = selectedElement.querySelector('svg > *');
                     if (shapeNode) { shapeNode.setAttribute('stroke', color); saved = true; }
+                } else if (selectedElement.classList.contains('mask-rect')) {
+                    selectedElement.style.backgroundColor = color; saved = true;
+                } else if (selectedElement.classList.contains('mask-freehand-wrapper')) {
+                    const p = selectedElement.querySelector('.fh-stroke');
+                    if (p) { p.style.stroke = color; updateFreehandUI(selectedElement); saved = true; }
                 }
             });
             if (saved) window.saveState();
         }
-
-        /* パレットのUI更新などのコードがこの間にあります（ここはそのまま） */
-        function updatePaletteUI() { /* 略 */ }
-        document.querySelectorAll('.swatch:not(.custom-swatch)').forEach(swatch => { /* 略 */ });
-        customSwatch.addEventListener('click', () => { /* 略 */ });
-        nativeColorPicker.addEventListener('input', (e) => { /* 略 */ });
 
         function applyTextCommand(command) {
             let saved = false;
@@ -839,36 +1218,29 @@
             else { customSwatch.classList.remove('active'); customSwatch.style.background = ''; }
         }
 
+        // 色パレットは、対応ツール使用中か、要素が選択されている時に機能する
+        function colorPaletteActive() {
+            return ['text', 'highlight', 'pen', 'shape'].includes(currentTool) || selectedElements.length > 0 || !!selectedStroke;
+        }
         document.querySelectorAll('.swatch:not(.custom-swatch)').forEach(swatch => {
             swatch.addEventListener('pointerdown', (e) => {
-                e.preventDefault(); if (!['text', 'highlight', 'pen', 'shape'].includes(currentTool)) return;
-                const newColor = e.target.dataset.color; toolColors[currentTool] = newColor; 
-                updatePaletteUI(); applyColorToSelection(newColor); 
+                e.preventDefault(); if (!colorPaletteActive()) return;
+                const newColor = e.target.dataset.color;
+                if (['text', 'highlight', 'pen', 'shape'].includes(currentTool)) toolColors[currentTool] = newColor;
+                updatePaletteUI(); applyColorToSelection(newColor);
             });
         });
 
         customSwatch.addEventListener('click', () => {
-            if (!['text', 'highlight', 'pen', 'shape'].includes(currentTool)) return;
-            nativeColorPicker.value = toolColors[currentTool]; nativeColorPicker.click(); 
+            if (!colorPaletteActive()) return;
+            nativeColorPicker.value = toolColors[currentTool] || '#ef4444'; nativeColorPicker.click();
         });
 
         nativeColorPicker.addEventListener('input', (e) => {
-            const newColor = e.target.value; toolColors[currentTool] = newColor; updatePaletteUI(); applyColorToSelection(newColor); 
+            const newColor = e.target.value;
+            if (['text', 'highlight', 'pen', 'shape'].includes(currentTool)) toolColors[currentTool] = newColor;
+            updatePaletteUI(); applyColorToSelection(newColor);
         });
-
-        function applyTextCommand(command) {
-            let saved = false;
-            selectedElements.forEach(selectedElement => {
-                if (currentTool === 'text' && selectedElement.classList.contains('text-wrapper')) {
-                    if (savedSelectionRange && selectedElement.contains(savedSelectionRange.commonAncestorContainer)) {
-                        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedSelectionRange);
-                    }
-                    document.execCommand(command, false, null); 
-                    saved = true;
-                }
-            });
-            if (saved) window.saveState();
-        }
 
         document.getElementById('btn-text-bold').addEventListener('pointerdown', (e) => { e.preventDefault(); applyTextCommand('bold'); });
         document.getElementById('btn-text-underline').addEventListener('pointerdown', (e) => { e.preventDefault(); applyTextCommand('underline'); });
@@ -903,14 +1275,19 @@
         }
         document.getElementById('btn-dir-horiz').addEventListener('pointerdown', (e) => { e.preventDefault(); setTextDirection('horizontal-tb'); });
         document.getElementById('btn-dir-vert-rl').addEventListener('pointerdown', (e) => { e.preventDefault(); setTextDirection('vertical-rl'); });
-        document.getElementById('btn-dir-vert-lr').addEventListener('pointerdown', (e) => { e.preventDefault(); setTextDirection('vertical-lr'); });
 
         function updateToolbar() {
             const maskType = document.querySelector('input[name="maskType"]:checked') ? document.querySelector('input[name="maskType"]:checked').value : 'rect';
             
+            const highlightType = currentHighlightType();
+
             document.getElementById('prop-mask-type').style.display = (currentTool === 'mask') ? 'flex' : 'none';
+            document.getElementById('prop-highlight-type').style.display = (currentTool === 'highlight') ? 'flex' : 'none';
             document.getElementById('prop-shape-type').style.display = (currentTool === 'shape') ? 'flex' : 'none';
-            document.getElementById('prop-color').style.display = ['text', 'highlight', 'pen', 'shape'].includes(currentTool) ? 'flex' : 'none';
+            const penModeNow = document.querySelector('input[name="penMode"]:checked') ? document.querySelector('input[name="penMode"]:checked').value : 'pen';
+            const isErasing = (currentTool === 'pen' && penModeNow === 'eraser');
+            const hasSel = selectedElements.length > 0 || !!selectedStroke;
+            document.getElementById('prop-color').style.display = ((['text', 'highlight', 'pen', 'shape'].includes(currentTool) && !isErasing) || hasSel) ? 'flex' : 'none';
             document.getElementById('prop-text-style').style.display = (currentTool === 'text') ? 'flex' : 'none'; 
             document.getElementById('prop-text-align').style.display = (currentTool === 'text') ? 'flex' : 'none';
             document.getElementById('prop-text-direction').style.display = (currentTool === 'text') ? 'flex' : 'none';
@@ -918,11 +1295,11 @@
             
             document.getElementById('prop-pen-mode').style.display = (currentTool === 'pen') ? 'flex' : 'none';
             
-            document.getElementById('prop-pen-width').style.display = ['pen', 'shape'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free') ? 'flex' : 'none';
+            document.getElementById('prop-pen-width').style.display = ['pen', 'shape'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free') || (currentTool === 'highlight' && highlightType === 'free') ? 'flex' : 'none';
             
             document.getElementById('prop-opacity').style.display = ['highlight', 'pen'].includes(currentTool) ? 'flex' : 'none';
             
-            if (['pen', 'mask', 'shape'].includes(currentTool)) {
+            if (['pen', 'mask', 'shape', 'highlight'].includes(currentTool)) {
                 if (currentTool === 'pen') {
                     const mode = document.querySelector('input[name="penMode"]:checked').value;
                     penWidthSlider.value = toolWidths[mode];
@@ -935,7 +1312,7 @@
 
             const floatingProps = document.getElementById('floating-properties');
             if(floatingProps) {
-                floatingProps.style.display = ['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) ? 'flex' : 'none';
+                floatingProps.style.display = (['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) || hasSel) ? 'flex' : 'none';
             }
 
             updatePaletteUI(); updateBrushCursor(); 
@@ -944,14 +1321,31 @@
         toolRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 currentTool = e.target.value; updateToolbar();
-                workspaceContainer.className = ''; workspaceContainer.classList.add('tool-' + currentTool);
-                if (window.isMasksHidden) {
-            workspaceContainer.classList.add('masks-hidden');
-        }
+                applyToolClasses();
                 if (selectedElements.length > 0) window.deselectCurrent();
             });
         });
+
+        // ツール由来のクラスを貼り直す（スペース押し・シフト押しの一時状態も維持する）
+        function applyToolClasses() {
+            workspaceContainer.className = '';
+            workspaceContainer.classList.add('tool-' + currentTool);
+            if (window.isMasksHidden) workspaceContainer.classList.add('masks-hidden');
+            if (spaceHeld) workspaceContainer.classList.add('pan-ready');
+            if (shiftHeld) workspaceContainer.classList.add('text-select-on');
+        }
+
+        // 図形を置いた直後にマウスツールへ戻す。直前の要素は選択したままにする
+        window.returnToSelectTool = function() {
+            if (currentTool === 'select') return;
+            const radio = document.getElementById('tool-select');
+            if (radio) radio.checked = true;
+            currentTool = 'select';
+            applyToolClasses();
+            updateToolbar();
+        };
         maskTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
+        document.querySelectorAll('input[name="highlightType"]').forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         shapeTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         penModeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         
@@ -971,9 +1365,30 @@
             updateBrushCursor();
         });
 
-        function updateBrushCursor() {
+        // 今のツールで選択できる要素の種類
+        function currentPickSelector() {
+            if (currentTool === 'mask') return '.mask';
+            if (currentTool === 'highlight') return '.highlight-box';
+            return '.mask, .text-wrapper, .highlight-box, .shape-element, .image-element';
+        }
+        // カーソルの下に「選択できるもの」があるか（つまみを含む）
+        function isPickableAt(target) {
+            if (!target || !target.closest) return false;
+            if (target.classList && (target.classList.contains('fh-handle') || target.classList.contains('stroke-handle') || target.classList.contains('resize-handle'))) return true;
+            if (!['select', 'mask', 'highlight'].includes(currentTool)) return false;
+            return !!target.closest(currentPickSelector());
+        }
+
+        // 丸いブラシカーソルを出す＝手書きで描くツールを使っているとき
+        function isFreehandDrawing() {
             const maskType = document.querySelector('input[name="maskType"]:checked') ? document.querySelector('input[name="maskType"]:checked').value : 'rect';
-            if (['pen'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free')) {
+            return currentTool === 'pen'
+                || (currentTool === 'mask' && maskType === 'free')
+                || (currentTool === 'highlight' && currentHighlightType() === 'free');
+        }
+
+        function updateBrushCursor() {
+            if (isFreehandDrawing()) {
                 const visualSize = parseFloat(penWidthInput.value) * zoomLevel;
                 brushCursor.style.width = visualSize + 'px'; brushCursor.style.height = visualSize + 'px';
             } else {
@@ -981,18 +1396,22 @@
             }
         }
 
-        function setZoom(newZoom) {
-            if (newZoom < 0.2) newZoom = 0.2; if (newZoom > 5.0) newZoom = 5.0; 
-            
-            const containerW = workspaceContainer.clientWidth; 
+        function setZoom(newZoom, focalX, focalY) {
+            if (newZoom < 0.2) newZoom = 0.2; if (newZoom > 5.0) newZoom = 5.0;
+
+            const containerW = workspaceContainer.clientWidth;
             const containerH = workspaceContainer.clientHeight;
-            
+
+            // 焦点（コンテナ左上からのビューポート座標）。未指定なら中央。
+            const fx = (focalX === undefined) ? containerW / 2 : focalX;
+            const fy = (focalY === undefined) ? containerH / 2 : focalY;
+
             const oldZoom = zoomLevel;
-            const oldMarginLeft = parseFloat(workspaceWrapper.style.marginLeft) || 0; 
+            const oldMarginLeft = parseFloat(workspaceWrapper.style.marginLeft) || 0;
             const oldMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
-            
-            const centerX = (workspaceContainer.scrollLeft + containerW / 2 - oldMarginLeft) / oldZoom;
-            const centerY = (workspaceContainer.scrollTop + containerH / 2 - oldMarginTop) / oldZoom;
+
+            const centerX = (workspaceContainer.scrollLeft + fx - oldMarginLeft) / oldZoom;
+            const centerY = (workspaceContainer.scrollTop + fy - oldMarginTop) / oldZoom;
 
             zoomLevel = newZoom; 
             workspace.style.transform = `scale(${zoomLevel})`; 
@@ -1010,8 +1429,8 @@
             workspaceWrapper.style.marginLeft = newMarginLeft + 'px'; 
             workspaceWrapper.style.marginTop = newMarginTop + 'px';
             
-            workspaceContainer.scrollLeft = (centerX * zoomLevel) + newMarginLeft - (containerW / 2);
-            workspaceContainer.scrollTop = (centerY * zoomLevel) + newMarginTop - (containerH / 2);
+            workspaceContainer.scrollLeft = (centerX * zoomLevel) + newMarginLeft - fx;
+            workspaceContainer.scrollTop = (centerY * zoomLevel) + newMarginTop - fy;
             
             updateBrushCursor(); 
 
@@ -1023,20 +1442,8 @@
                         const pDiv = document.getElementById(`pdf-page-${i}`);
                         if (pDiv) renderPdfPageAsync(pDiv, zoomLevel);
                     }
-                } else if (currentBackground && currentBackground.type !== 'pdf') {
-                    const drawCanvas = workspace.querySelector('.drawing-canvas');
-                    if (drawCanvas) {
-                        const actualScale = Math.min(RENDER_SCALE * zoomLevel, 4.0);
-                        drawCanvas.width = workspace.offsetWidth * actualScale; 
-                        drawCanvas.height = workspace.offsetHeight * actualScale;
-                        const ctx = drawCanvas.getContext('2d');
-                        ctx.setTransform(1, 0, 0, 1, 0, 0); 
-                        ctx.scale(actualScale, actualScale);
-                        ctx.clearRect(0, 0, workspace.offsetWidth, workspace.offsetHeight);
-                        const cmds = window.canvasDrawings[drawCanvas.dataset.canvasIndex || 0] || [];
-                        cmds.forEach(cmd => executeCanvasCommand(ctx, cmd));
-                    }
                 }
+                // 画像モードの手描きはSVGベクターのため、ズームでの再描画は不要
             }, 500);
         }
 
@@ -1046,12 +1453,270 @@
         document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(zoomLevel - 0.1));
         document.getElementById('btn-zoom-reset').addEventListener('click', () => setZoom(1.0));
 
+        // Ctrl + マウスホイールでカーソル位置を中心にズーム（トラックパッドのピンチも同扱い）
+        workspaceContainer.addEventListener('wheel', (e) => {
+            if (!e.ctrlKey) return;
+            e.preventDefault(); // ブラウザのページズームを抑止
+            const rect = workspaceContainer.getBoundingClientRect();
+            const fx = e.clientX - rect.left;
+            const fy = e.clientY - rect.top;
+            const step = e.deltaY < 0 ? 0.1 : -0.1;
+            setZoom(zoomLevel + step, fx, fy);
+        }, { passive: false });
+
         window.deselectCurrent = function() {
             selectedElements.forEach(el => el.classList.remove('selected'));
             selectedElements = [];
             savedSelectionRange = null;
+            if (typeof deselectStroke === 'function') deselectStroke();
+            if (typeof updateToolbar === 'function') updateToolbar();
         }
         
+        // ===== 手描きレイヤー（ベクターSVG） =====
+        const SVGNS = 'http://www.w3.org/2000/svg';
+        let drawSvgUid = 0;
+
+        // 座標配列から、canvas描画と同じ曲線ロジックでSVGパス文字列を生成
+        function strokePathD(pts) {
+            if (!pts || pts.length === 0) return '';
+            if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y} L ${pts[0].x + 0.01} ${pts[0].y + 0.01}`;
+            let d = `M ${pts[0].x} ${pts[0].y}`;
+            if (pts.length < 3) {
+                d += ` L ${pts[1].x} ${pts[1].y}`;
+            } else {
+                for (let i = 1; i < pts.length - 1; i++) {
+                    const midX = (pts[i].x + pts[i + 1].x) / 2;
+                    const midY = (pts[i].y + pts[i + 1].y) / 2;
+                    d += ` Q ${pts[i].x} ${pts[i].y} ${midX} ${midY}`;
+                }
+                d += ` L ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
+            }
+            return d;
+        }
+
+        // 手描きSVGレイヤーを生成（viewBoxはページのCSS座標系）
+        function createDrawSVG(vw, vh) {
+            const svg = document.createElementNS(SVGNS, 'svg');
+            svg.setAttribute('class', 'drawing-svg');
+            svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+            svg.setAttribute('preserveAspectRatio', 'none');
+            svg.dataset.uid = (drawSvgUid++);
+            return svg;
+        }
+
+        // コマンド列からSVGを再構築。消しゴムは時系列マスクで扱い、
+        // 「消した後に引いた線は消えない」というラスターと同じ挙動を保つ。
+        function renderStrokesToSVG(svg, cmds) {
+            if (!svg) return;
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            const vb = svg.viewBox.baseVal;
+            const vw = vb.width, vh = vb.height;
+            const defs = document.createElementNS(SVGNS, 'defs');
+            svg.appendChild(defs);
+            const uid = svg.dataset.uid;
+
+            const layers = [];
+            let layerCount = 0;
+            function addLayer() {
+                const maskId = `dm-${uid}-${layerCount++}`;
+                const mask = document.createElementNS(SVGNS, 'mask');
+                mask.setAttribute('id', maskId);
+                mask.setAttribute('maskUnits', 'userSpaceOnUse');
+                mask.setAttribute('x', 0); mask.setAttribute('y', 0);
+                mask.setAttribute('width', vw); mask.setAttribute('height', vh);
+                const base = document.createElementNS(SVGNS, 'rect');
+                base.setAttribute('x', 0); base.setAttribute('y', 0);
+                base.setAttribute('width', vw); base.setAttribute('height', vh);
+                base.setAttribute('fill', 'white');
+                mask.appendChild(base);
+                defs.appendChild(mask);
+                const g = document.createElementNS(SVGNS, 'g');
+                g.setAttribute('mask', `url(#${maskId})`);
+                svg.appendChild(g);
+                const layer = { g, mask };
+                layers.push(layer);
+                return layer;
+            }
+            let current = addLayer();
+
+            function makePath(d, w, stroke, opacity) {
+                const p = document.createElementNS(SVGNS, 'path');
+                p.setAttribute('d', d);
+                p.setAttribute('fill', 'none');
+                p.setAttribute('stroke-linecap', 'round');
+                p.setAttribute('stroke-linejoin', 'round');
+                p.setAttribute('stroke-width', w);
+                p.setAttribute('stroke', stroke);
+                if (opacity != null) p.setAttribute('stroke-opacity', opacity);
+                return p;
+            }
+
+            (cmds || []).forEach(cmd => {
+                if (cmd.tool === 'legacy_base64') {
+                    const img = document.createElementNS(SVGNS, 'image');
+                    img.setAttribute('href', cmd.dataURL);
+                    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', cmd.dataURL);
+                    img.setAttribute('x', 0); img.setAttribute('y', 0);
+                    img.setAttribute('width', vw); img.setAttribute('height', vh);
+                    img.setAttribute('preserveAspectRatio', 'none');
+                    current.g.appendChild(img);
+                    return;
+                }
+                if (!cmd.points || cmd.points.length === 0) return;
+                const d = strokePathD(cmd.points);
+                if (cmd.tool === 'pen') {
+                    current.g.appendChild(makePath(d, cmd.width, cmd.color, cmd.opacity));
+                } else {
+                    // 消しゴム：既存の全レイヤーを黒で削り、以後の描画は新レイヤーへ
+                    layers.forEach(layer => layer.mask.appendChild(makePath(d, cmd.width, 'black', 1)));
+                    current = addLayer();
+                }
+            });
+        }
+
+        // 全ての手描きSVGを canvasDrawings から再構築
+        function redrawAllStrokeLayers() {
+            workspace.querySelectorAll('.drawing-svg').forEach(svg => {
+                const idx = parseInt(svg.dataset.canvasIndex);
+                renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
+            });
+        }
+
+        // ===== ペン線の選択（JSによる距離判定。消しゴムの部分削りは不変） =====
+        function eventToSvgLocal(svg, e) {
+            const rect = svg.getBoundingClientRect();
+            const vb = svg.viewBox.baseVal;
+            const sx = rect.width ? vb.width / rect.width : 1;
+            const sy = rect.height ? vb.height / rect.height : 1;
+            return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
+        }
+        function distToSeg(px, py, ax, ay, bx, by) {
+            const dx = bx - ax, dy = by - ay;
+            const len2 = dx * dx + dy * dy;
+            let t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            const cx = ax + t * dx, cy = ay + t * dy;
+            return Math.hypot(px - cx, py - cy);
+        }
+        // クリック位置にあるペン線を探す（上に描いた線を優先）
+        function findStrokeAt(e) {
+            const page = e.target.closest('.pdf-page');
+            const svg = page ? page.querySelector('.drawing-svg') : workspace.querySelector('.drawing-svg');
+            if (!svg) return null;
+            const loc = eventToSvgLocal(svg, e);
+            const idx = parseInt(svg.dataset.canvasIndex);
+            const cmds = window.canvasDrawings[idx] || [];
+            for (let i = cmds.length - 1; i >= 0; i--) {
+                const cmd = cmds[i];
+                if (cmd.tool !== 'pen' || !cmd.points || !cmd.points.length) continue;
+                const thresh = (parseFloat(cmd.width) || 4) / 2 + 6;
+                let hit = false;
+                if (cmd.points.length === 1) {
+                    const p = cmd.points[0];
+                    if (Math.hypot(loc.x - p.x, loc.y - p.y) <= thresh) hit = true;
+                } else {
+                    for (let j = 0; j < cmd.points.length - 1; j++) {
+                        if (distToSeg(loc.x, loc.y, cmd.points[j].x, cmd.points[j].y, cmd.points[j + 1].x, cmd.points[j + 1].y) <= thresh) { hit = true; break; }
+                    }
+                }
+                if (hit) return { svg, index: i };
+            }
+            return null;
+        }
+        function currentStrokeCmd() {
+            if (!selectedStroke) return null;
+            const idx = parseInt(selectedStroke.svg.dataset.canvasIndex);
+            return (window.canvasDrawings[idx] || [])[selectedStroke.index] || null;
+        }
+        function clearStrokeHighlight() {
+            document.querySelectorAll('.stroke-sel-box, .stroke-center, .stroke-handle').forEach(n => n.remove());
+        }
+        // 選択中のペン線には、中心線と両端のつまみを出す（外接四角形は出さない）
+        function showStrokeHighlight() {
+            clearStrokeHighlight();
+            const cmd = currentStrokeCmd();
+            if (!cmd || !cmd.points || !cmd.points.length) return;
+            const svg = selectedStroke.svg;
+
+            const center = document.createElementNS(SVGNS, 'path');
+            center.setAttribute('class', 'stroke-center');
+            center.setAttribute('d', cmd.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' '));
+            center.setAttribute('fill', 'none');
+            center.setAttribute('stroke', centerLineColorFor(hexToRgba(cmd.color || '#000000', cmd.opacity === undefined ? 1 : cmd.opacity)));
+            center.setAttribute('stroke-width', '1');
+            center.setAttribute('vector-effect', 'non-scaling-stroke');
+            center.setAttribute('pointer-events', 'none');
+            svg.appendChild(center);
+
+            // つまみの見た目の大きさを画面上で一定に保つ
+            const rect = svg.getBoundingClientRect();
+            const vb = svg.viewBox.baseVal;
+            const unit = rect.width ? vb.width / rect.width : 1;
+            const ends = [{ pos: 'start', p: cmd.points[0] }, { pos: 'end', p: cmd.points[cmd.points.length - 1] }];
+            ends.forEach(({ pos, p }) => {
+                const c = document.createElementNS(SVGNS, 'circle');
+                c.setAttribute('class', 'stroke-handle');
+                c.dataset.end = pos;
+                c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+                c.setAttribute('r', 6 * unit);
+                c.setAttribute('fill', '#ffffff');
+                c.setAttribute('stroke', '#3b82f6');
+                c.setAttribute('stroke-width', '2');
+                c.setAttribute('vector-effect', 'non-scaling-stroke');
+                c.style.pointerEvents = 'auto';
+                c.style.cursor = 'crosshair';
+                svg.appendChild(c);
+            });
+        }
+        function selectStroke(hit) {
+            window.deselectCurrent();
+            selectedStroke = hit;
+            showStrokeHighlight();
+            updateToolbar();
+        }
+        function deselectStroke() {
+            selectedStroke = null;
+            clearStrokeHighlight();
+        }
+        function reRenderStrokeSvg() {
+            if (!selectedStroke) return;
+            const idx = parseInt(selectedStroke.svg.dataset.canvasIndex);
+            renderStrokesToSVG(selectedStroke.svg, window.canvasDrawings[idx] || []);
+            showStrokeHighlight();
+        }
+        function deleteSelectedStroke() {
+            if (!selectedStroke) return false;
+            const idx = parseInt(selectedStroke.svg.dataset.canvasIndex);
+            const cmds = window.canvasDrawings[idx];
+            if (cmds && selectedStroke.index < cmds.length) cmds.splice(selectedStroke.index, 1);
+            const svg = selectedStroke.svg;
+            deselectStroke();
+            renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
+            window.saveState();
+            return true;
+        }
+        function nudgeSelectedStroke(dx, dy) {
+            const cmd = currentStrokeCmd();
+            if (!cmd) return;
+            cmd.points = cmd.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+            reRenderStrokeSvg();
+            clearTimeout(nudgeSaveTimer);
+            nudgeSaveTimer = setTimeout(() => window.saveState(), 400);
+        }
+        function duplicateSelectedStroke() {
+            const cmd = currentStrokeCmd();
+            if (!cmd) return;
+            const idx = parseInt(selectedStroke.svg.dataset.canvasIndex);
+            const copy = JSON.parse(JSON.stringify(cmd));
+            copy.points = copy.points.map(p => ({ x: p.x + 12, y: p.y + 12 }));
+            window.canvasDrawings[idx].push(copy);
+            const svg = selectedStroke.svg;
+            selectedStroke = { svg, index: window.canvasDrawings[idx].length - 1 };
+            renderStrokesToSVG(svg, window.canvasDrawings[idx]);
+            showStrokeHighlight();
+            window.saveState();
+        }
+
         function executeCanvasCommand(ctx, cmd) {
             if (cmd.tool === 'legacy_base64') {
                 const img = new Image();
@@ -1095,37 +1760,129 @@
             ctx.stroke();
         }
 
-        window.saveState = function() {
-            const elements = Array.from(workspace.querySelectorAll('.canvas-element')).map(el => {
-                const isText = el.classList.contains('text-wrapper'); 
-                const isHighlight = el.classList.contains('highlight-box');
+        // --- ワークスペースのシリアライズ（履歴・.amk保存・自動保存で共通利用） ---
+        function serializeElements() {
+            return Array.from(workspace.querySelectorAll('.canvas-element')).map(el => {
+                const isText = el.classList.contains('text-wrapper');
+                const isFreehandHighlight = el.classList.contains('highlight-freehand-wrapper');
+                const isHighlight = el.classList.contains('highlight-box') && !isFreehandHighlight;
                 const isFreehandMask = el.classList.contains('mask-freehand-wrapper');
                 const isShape = el.classList.contains('shape-element');
                 const isImage = el.classList.contains('image-element');
-                
+                const isMaskRect = el.classList.contains('mask-rect');
+
                 return {
-                    type: isText ? 'text' : (isHighlight ? 'highlight' : (isFreehandMask ? 'freehand-mask' : (isShape ? 'shape' : (isImage ? 'image' : 'mask')))),
+                    type: isText ? 'text' : (isFreehandHighlight ? 'freehand-highlight' : (isHighlight ? 'highlight' : (isFreehandMask ? 'freehand-mask' : (isShape ? 'shape' : (isImage ? 'image' : 'mask'))))),
                     left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height,
-                    content: isText ? el.querySelector('.text-content').innerHTML : null, 
-                    fontSize: isText ? el.style.fontSize : null, 
-                    color: isText ? el.style.color : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke') : null), 
+                    content: isText ? el.querySelector('.text-content').innerHTML : null,
+                    fontSize: isText ? el.style.fontSize : null,
+                    color: isText ? el.style.color
+                        : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke')
+                        : (isMaskRect ? (el.style.backgroundColor || null)
+                        : ((isFreehandMask || isFreehandHighlight) ? (el.querySelector('path').style.stroke || null)
+                        : null))),
                     backgroundColor: isHighlight ? el.style.backgroundColor : null,
                     zIndex: el.style.zIndex,
                     textAlign: isText ? (el.style.textAlign || el.querySelector('.text-content').style.textAlign || 'left') : null,
                     writingMode: isText ? (el.style.writingMode || el.querySelector('.text-content').style.writingMode || 'horizontal-tb') : null,
-                    pathD: isFreehandMask ? el.querySelector('path').getAttribute('d') : null,
-                    strokeWidth: isFreehandMask ? el.querySelector('path').getAttribute('stroke-width') : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke-width') : null),
+                    pathD: (isFreehandMask || isFreehandHighlight) ? el.querySelector('path').getAttribute('d') : null,
+                    strokeWidth: (isFreehandMask || isFreehandHighlight) ? el.querySelector('path').getAttribute('stroke-width') : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke-width') : null),
                     shapeType: isShape ? el.dataset.shapeType : null,
                     lineDir: isShape ? el.dataset.lineDir : null,
                     dataUrl: isImage ? el.querySelector('img').src : null
                 };
             });
-            
+        }
+
+        function currentBgScale() {
+            if (!currentBackground) return 1;
+            return currentBackground.type === 'pdf'
+                ? window.pdfBaseScale
+                : (parseFloat(uploadedImage.style.width) / uploadedImage.naturalWidth);
+        }
+
+        // 背景を除いた軽量セッション（自動保存で頻繁に書き込む部分）
+        function buildSessionData() {
+            return {
+                version: 1,
+                fileName: window.currentFileName || 'project',
+                bgScale: currentBgScale(),
+                elements: serializeElements(),
+                canvasCommandsArray: window.canvasDrawings.map(cmds => [...cmds]),
+                canvasZIndexes: Array.from(workspace.querySelectorAll('.drawing-svg')).map(c => c.style.zIndex)
+            };
+        }
+
+        // .amk書き出し用（背景データを含む完全なプロジェクト）
+        function buildProjectData() {
+            return { ...buildSessionData(), background: currentBackground };
+        }
+
+        // --- 自動保存（IndexedDB） ---
+        const AUTOSAVE_DB = 'ankimasking', AUTOSAVE_STORE = 'autosave';
+        function idbOpen() {
+            return new Promise((res, rej) => {
+                const req = indexedDB.open(AUTOSAVE_DB, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore(AUTOSAVE_STORE);
+                req.onsuccess = () => res(req.result);
+                req.onerror = () => rej(req.error);
+            });
+        }
+        async function idbSet(key, val) {
+            const db = await idbOpen();
+            return new Promise((res, rej) => {
+                const tx = db.transaction(AUTOSAVE_STORE, 'readwrite');
+                tx.objectStore(AUTOSAVE_STORE).put(val, key);
+                tx.oncomplete = () => { db.close(); res(); };
+                tx.onerror = () => { db.close(); rej(tx.error); };
+            });
+        }
+        async function idbGet(key) {
+            const db = await idbOpen();
+            return new Promise((res, rej) => {
+                const tx = db.transaction(AUTOSAVE_STORE, 'readonly');
+                const r = tx.objectStore(AUTOSAVE_STORE).get(key);
+                r.onsuccess = () => { db.close(); res(r.result); };
+                r.onerror = () => { db.close(); rej(r.error); };
+            });
+        }
+        async function idbDel(key) {
+            const db = await idbOpen();
+            return new Promise((res, rej) => {
+                const tx = db.transaction(AUTOSAVE_STORE, 'readwrite');
+                tx.objectStore(AUTOSAVE_STORE).delete(key);
+                tx.oncomplete = () => { db.close(); res(); };
+                tx.onerror = () => { db.close(); rej(tx.error); };
+            });
+        }
+
+        let autosaveTimer = null;
+        let isDirty = false;
+        function scheduleAutosave() {
+            if (!currentBackground) return;
+            isDirty = true;
+            clearTimeout(autosaveTimer);
+            autosaveTimer = setTimeout(async () => {
+                try {
+                    await idbSet('session', buildSessionData());
+                    isDirty = false;
+                } catch (err) { console.error('自動保存に失敗しました', err); }
+            }, 800);
+        }
+        // 背景（大きいデータ）はファイルを開いた時だけ書き込む
+        async function persistBackground() {
+            if (!currentBackground) return;
+            try { await idbSet('background', currentBackground); }
+            catch (err) { console.error('背景の保存に失敗しました', err); }
+        }
+
+        window.saveState = function() {
+            const elements = serializeElements();
             const canvasCommandsArray = window.canvasDrawings.map(cmds => [...cmds]);
-            const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-canvas')).map(c => c.style.zIndex);
-            
-            window.historyArray = window.historyArray.slice(0, window.historyIndex + 1); 
-            window.historyArray.push({ elements, canvasCommandsArray, canvasZIndexes }); 
+            const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-svg')).map(c => c.style.zIndex);
+
+            window.historyArray = window.historyArray.slice(0, window.historyIndex + 1);
+            window.historyArray.push({ elements, canvasCommandsArray, canvasZIndexes });
             window.historyIndex++;
 
             const MAX_HISTORY = 20;
@@ -1133,6 +1890,8 @@
                 window.historyArray.shift();
                 window.historyIndex--;
             }
+
+            scheduleAutosave();
         }
 
         function restoreState(index) {
@@ -1141,9 +1900,10 @@
             const state = window.historyArray[index];
             state.elements.forEach(data => {
                 let el;
-                if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height);
+                if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height, data.color);
                 else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir);
-                else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth);
+                else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
+                    else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                 else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                 else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                 else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode); 
@@ -1155,27 +1915,13 @@
             });
             
             window.canvasDrawings = state.canvasCommandsArray.map(cmds => [...cmds]);
-            const canvases = Array.from(workspace.querySelectorAll('.drawing-canvas'));
-            
-            canvases.forEach((c, i) => {
+            const svgs = Array.from(workspace.querySelectorAll('.drawing-svg'));
+
+            svgs.forEach((svg, i) => {
                 if (state.canvasZIndexes && state.canvasZIndexes[i]) {
-                    c.style.zIndex = state.canvasZIndexes[i];
-                } else {
-                    c.style.zIndex = '2';
+                    svg.style.zIndex = state.canvasZIndexes[i];
                 }
-                
-                const pageDiv = c.closest('.pdf-page');
-                if (!pageDiv || pageDiv.dataset.rendered === "true") {
-                    const ctx = c.getContext('2d');
-                    ctx.save(); 
-                    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-                    ctx.globalCompositeOperation = 'source-over'; 
-                    ctx.clearRect(0, 0, c.width, c.height); 
-                    ctx.restore();
-                    
-                    const cmds = window.canvasDrawings[i] || [];
-                    cmds.forEach(cmd => executeCanvasCommand(ctx, cmd));
-                }
+                renderStrokesToSVG(svg, window.canvasDrawings[i] || []);
             });
         }
 
@@ -1224,44 +1970,184 @@
             return wrapper;
         }
 
-        window.createMaskElement = function(left, top, width, height) {
+        window.createMaskElement = function(left, top, width, height, color) {
             const mask = document.createElement('div'); mask.className = 'canvas-element mask mask-rect';
             mask.style.left = left; mask.style.top = top; mask.style.width = width; mask.style.height = height;
-            addResizeHandles(mask); 
+            if (color) mask.style.backgroundColor = color;
+            addResizeHandles(mask);
             window.bringToFront(mask);
             workspace.appendChild(mask); return mask;
         }
 
-        window.createFreehandMaskElement = function(left, top, width, height, pathD, strokeWidth) {
+        // 手書き線（マスキング／ハイライト共通）の組み立て。
+        // 線本体・選択時に出す中心線・両端のつまみをまとめて作る
+        function buildFreehandElement(className, left, top, width, height, pathD, strokeWidth, color, defaultStroke) {
             const wrapper = document.createElement('div');
-            wrapper.className = 'canvas-element mask mask-freehand-wrapper';
+            wrapper.className = className;
             wrapper.style.left = left;
             wrapper.style.top = top;
             wrapper.style.width = width;
             wrapper.style.height = height;
-            
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+            const svg = document.createElementNS(SVGNS, "svg");
             svg.style.width = '100%';
             svg.style.height = '100%';
             svg.style.pointerEvents = 'none';
             svg.setAttribute('preserveAspectRatio', 'none');
             svg.setAttribute('viewBox', `0 0 ${parseFloat(width)} ${parseFloat(height)}`);
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+            const path = document.createElementNS(SVGNS, "path");
+            path.setAttribute('class', 'fh-stroke');
             path.setAttribute('d', pathD);
-            path.setAttribute('stroke', 'black');
+            if (defaultStroke) path.setAttribute('stroke', defaultStroke);
+            if (color) path.style.stroke = color;
             path.setAttribute('stroke-width', strokeWidth);
             path.setAttribute('stroke-linecap', 'round');
             path.setAttribute('stroke-linejoin', 'round');
             path.setAttribute('fill', 'none');
-            path.setAttribute('vector-effect', 'non-scaling-stroke'); 
-            
+            path.setAttribute('vector-effect', 'non-scaling-stroke');
+
+            // 選択したときだけ見える中心線
+            const center = document.createElementNS(SVGNS, "path");
+            center.setAttribute('class', 'fh-center');
+            center.setAttribute('d', pathD);
+            center.setAttribute('stroke-width', '1');
+            center.setAttribute('fill', 'none');
+            center.setAttribute('vector-effect', 'non-scaling-stroke');
+
             svg.appendChild(path);
+            svg.appendChild(center);
             wrapper.appendChild(svg);
-            addResizeHandles(wrapper);
+
+            ['start', 'end'].forEach(pos => {
+                const h = document.createElement('div');
+                h.className = 'fh-handle fh-handle-' + pos;
+                h.dataset.end = pos;
+                wrapper.appendChild(h);
+            });
+
             window.bringToFront(wrapper);
             workspace.appendChild(wrapper);
+            updateFreehandUI(wrapper);
             return wrapper;
+        }
+
+        window.createFreehandMaskElement = function(left, top, width, height, pathD, strokeWidth, color) {
+            return buildFreehandElement('canvas-element mask mask-freehand-wrapper',
+                left, top, width, height, pathD, strokeWidth, color, 'black');
+        }
+
+        // 手書きハイライト（蛍光ペンの線）。マスキングの手書きと同じ作りだが、乗算で重ねる
+        window.createFreehandHighlightElement = function(left, top, width, height, pathD, strokeWidth, color) {
+            return buildFreehandElement('canvas-element highlight-box highlight-freehand-wrapper',
+                left, top, width, height, pathD, strokeWidth, color, null);
+        }
+
+        // --- 線の明るさに応じて中心線の色（黒 or 白）を決める ---
+        const colorProbeCtx = document.createElement('canvas').getContext('2d');
+        function parseCssColor(c) {
+            if (!c) return null;
+            colorProbeCtx.fillStyle = '#000';
+            colorProbeCtx.fillStyle = c;              // 不正な値なら黒のまま残る
+            const s = colorProbeCtx.fillStyle;
+            if (s.startsWith('#')) {
+                const h = s.length === 4
+                    ? s.slice(1).split('').map(x => parseInt(x + x, 16))
+                    : [1, 3, 5].map(i => parseInt(s.substr(i, 2), 16));
+                return { r: h[0], g: h[1], b: h[2], a: 1 };
+            }
+            const n = s.match(/-?\d*\.?\d+/g);
+            if (!n) return null;
+            return { r: +n[0], g: +n[1], b: +n[2], a: n[3] === undefined ? 1 : +n[3] };
+        }
+        // 白い紙の上に置いたときの見た目の明るさで判定する
+        function centerLineColorFor(cssColor) {
+            const c = parseCssColor(cssColor);
+            if (!c) return '#ffffff';
+            const r = c.a * c.r + (1 - c.a) * 255;
+            const g = c.a * c.g + (1 - c.a) * 255;
+            const b = c.a * c.b + (1 - c.a) * 255;
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return lum > 0.55 ? '#000000' : '#ffffff';
+        }
+
+        // 端をドラッグしたときの変形。掴んだ端がカーソルにそのまま付いてくるよう、
+        // 反対の端を固定点として「拡大・縮小＋回転」をまとめてかける（線の形は崩れない）
+        function endpointTransform(anchor, baseDx, baseDy, curX, curY) {
+            const len2 = baseDx * baseDx + baseDy * baseDy;
+            const vx = curX - anchor.x, vy = curY - anchor.y;
+            if (len2 < 0.0001) return p => ({ x: p.x, y: p.y });
+            let a = (baseDx * vx + baseDy * vy) / len2;   // 拡大率（回転を含む複素数の実部）
+            let b = (baseDx * vy - baseDy * vx) / len2;   // 同じく虚部＝回転成分
+            const mag = Math.hypot(a, b);
+            if (mag > 20) { a = a / mag * 20; b = b / mag * 20; }
+            return p => {
+                const dx = p.x - anchor.x, dy = p.y - anchor.y;
+                return { x: anchor.x + a * dx - b * dy, y: anchor.y + b * dx + a * dy };
+            };
+        }
+
+        // --- 手書き線のジオメトリ（座標）操作 ---
+        function isFreehandElement(el) {
+            return !!el && (el.classList.contains('mask-freehand-wrapper') || el.classList.contains('highlight-freehand-wrapper'));
+        }
+        // "M x y L x y ..." から点の配列を取り出す
+        function parseFreehandPath(d) {
+            const nums = (d || '').match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
+            if (!nums) return [];
+            const pts = [];
+            for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: parseFloat(nums[i]), y: parseFloat(nums[i + 1]) });
+            return pts;
+        }
+        // ワークスペース座標での点の配列
+        function freehandPointsWorkspace(wrapper) {
+            const svg = wrapper.querySelector('svg');
+            const vb = svg.viewBox.baseVal;
+            const w = parseFloat(wrapper.style.width) || vb.width;
+            const h = parseFloat(wrapper.style.height) || vb.height;
+            const sx = vb.width ? w / vb.width : 1;
+            const sy = vb.height ? h / vb.height : 1;
+            const left = parseFloat(wrapper.style.left) || 0;
+            const top = parseFloat(wrapper.style.top) || 0;
+            return parseFreehandPath(wrapper.querySelector('.fh-stroke').getAttribute('d'))
+                .map(p => ({ x: left + p.x * sx, y: top + p.y * sy }));
+        }
+        // ワークスペース座標の点から、外接四角形・viewBox・パスを組み直す
+        function rebuildFreehand(wrapper, pts) {
+            if (!pts.length) return;
+            const stroke = wrapper.querySelector('.fh-stroke');
+            const pw = parseFloat(stroke.getAttribute('stroke-width')) || 15;
+            const pad = pw / 2 + 2;
+            const minX = Math.min(...pts.map(p => p.x)) - pad;
+            const minY = Math.min(...pts.map(p => p.y)) - pad;
+            const w = Math.max(...pts.map(p => p.x)) + pad - minX;
+            const h = Math.max(...pts.map(p => p.y)) + pad - minY;
+            const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x - minX} ${p.y - minY}`).join(' ');
+
+            wrapper.style.left = minX + 'px';
+            wrapper.style.top = minY + 'px';
+            wrapper.style.width = w + 'px';
+            wrapper.style.height = h + 'px';
+            wrapper.querySelector('svg').setAttribute('viewBox', `0 0 ${w} ${h}`);
+            stroke.setAttribute('d', d);
+            wrapper.querySelector('.fh-center').setAttribute('d', d);
+            updateFreehandUI(wrapper);
+        }
+        // 両端のつまみを線の端に合わせ、中心線の色も線の明るさに追従させる
+        function updateFreehandUI(wrapper) {
+            const svg = wrapper.querySelector('svg');
+            const vb = svg.viewBox.baseVal;
+            const stroke = wrapper.querySelector('.fh-stroke');
+            const center = wrapper.querySelector('.fh-center');
+            if (center) center.setAttribute('stroke', centerLineColorFor(stroke.style.stroke || stroke.getAttribute('stroke')));
+            const pts = parseFreehandPath(stroke.getAttribute('d'));
+            if (!pts.length) return;
+            const ends = { start: pts[0], end: pts[pts.length - 1] };
+            wrapper.querySelectorAll('.fh-handle').forEach(h => {
+                const p = ends[h.dataset.end];
+                h.style.left = (vb.width ? (p.x / vb.width) * 100 : 0) + '%';
+                h.style.top = (vb.height ? (p.y / vb.height) * 100 : 0) + '%';
+            });
         }
 
         window.createHighlightElement = function(left, top, width, height, bgColor) {
@@ -1272,6 +2158,44 @@
             workspace.appendChild(box); return box;
         }
 
+        // 外部 .amk 由来のテキストHTMLを無害化（保存型XSS対策）。
+        // アプリが生成する装飾タグ・スタイルのみ許可し、script/img/onXXX等は除去。
+        function sanitizeTextHTML(html) {
+            const allowedTags = new Set(['B','STRONG','U','S','STRIKE','I','EM','SPAN','DIV','P','BR','FONT']);
+            const allowedStyle = ['color','font-weight','text-decoration','text-align','writing-mode','font-style'];
+            const tpl = document.createElement('template');
+            tpl.innerHTML = html || '';
+            const walk = (node) => {
+                Array.from(node.childNodes).forEach(child => {
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        if (!allowedTags.has(child.tagName)) {
+                            child.replaceWith(document.createTextNode(child.textContent));
+                            return;
+                        }
+                        Array.from(child.attributes).forEach(attr => {
+                            const n = attr.name.toLowerCase();
+                            if (n === 'color' && child.tagName === 'FONT') return;
+                            if (n === 'style') {
+                                const safe = [];
+                                (child.getAttribute('style') || '').split(';').forEach(decl => {
+                                    const idx = decl.indexOf(':'); if (idx < 0) return;
+                                    const key = decl.slice(0, idx).trim().toLowerCase();
+                                    const val = decl.slice(idx + 1).trim();
+                                    if (allowedStyle.includes(key) && !/url\s*\(|expression|javascript:/i.test(val)) safe.push(`${key}:${val}`);
+                                });
+                                if (safe.length) child.setAttribute('style', safe.join(';')); else child.removeAttribute('style');
+                                return;
+                            }
+                            child.removeAttribute(attr.name);
+                        });
+                        walk(child);
+                    }
+                });
+            };
+            walk(tpl.content);
+            return tpl.innerHTML;
+        }
+
         window.createTextElement = function(left, top, width, height, content = '', fontSize = '20px', color = '#ef4444', textAlign = 'left', writingMode = 'horizontal-tb') {
             const wrapper = document.createElement('div'); wrapper.className = 'canvas-element text-wrapper';
             wrapper.style.left = left; wrapper.style.top = top;
@@ -1280,7 +2204,7 @@
             wrapper.style.textAlign = textAlign;
             wrapper.style.writingMode = writingMode;
             
-            const textContent = document.createElement('div'); textContent.className = 'text-content'; textContent.contentEditable = "true"; textContent.innerHTML = content;
+            const textContent = document.createElement('div'); textContent.className = 'text-content'; textContent.contentEditable = "true"; textContent.innerHTML = sanitizeTextHTML(content);
             textContent.style.textAlign = textAlign;
             textContent.style.writingMode = writingMode;
             
@@ -1342,44 +2266,46 @@
             if (window.historyIndex > 0) { window.historyIndex--; restoreState(window.historyIndex); } 
             else if (window.historyIndex === 0) { 
                 window.historyIndex--; 
-                workspace.querySelectorAll('.canvas-element').forEach(e => e.remove()); 
-                workspace.querySelectorAll('.drawing-canvas').forEach((c, i) => { 
-                    const ctx = c.getContext('2d'); ctx.save(); ctx.setTransform(1,0,0,1,0,0); 
-                    ctx.globalCompositeOperation = 'source-over'; 
-                    ctx.clearRect(0,0,c.width,c.height); ctx.restore(); 
-                    window.canvasDrawings[i] = []; 
-                }); 
-                window.deselectCurrent(); 
+                workspace.querySelectorAll('.canvas-element').forEach(e => e.remove());
+                workspace.querySelectorAll('.drawing-svg').forEach((svg, i) => {
+                    window.canvasDrawings[i] = [];
+                    renderStrokesToSVG(svg, []);
+                });
+                window.deselectCurrent();
             } 
         });
         document.getElementById('btn-redo').addEventListener('click', () => { if (window.historyIndex < window.historyArray.length - 1) { window.historyIndex++; restoreState(window.historyIndex); } });
         
-        document.getElementById('btn-delete').addEventListener('click', () => { 
-            if (selectedElements.length > 0) { 
-                selectedElements.forEach(el => el.remove()); 
-                window.deselectCurrent(); 
-                window.saveState(); 
-            } 
+        document.getElementById('btn-duplicate').addEventListener('click', () => duplicateSelection());
+
+        document.getElementById('btn-delete').addEventListener('click', () => {
+            if (selectedStroke) { deleteSelectedStroke(); return; }
+            if (selectedElements.length > 0) {
+                selectedElements.forEach(el => el.remove());
+                window.deselectCurrent();
+                window.saveState();
+            }
         });
         
         document.getElementById('btn-clear-all').addEventListener('click', () => { 
             if (confirm('すべて削除しますか？（手書きも消えます）')) { 
-                workspace.querySelectorAll('.canvas-element').forEach(e => e.remove()); 
-                workspace.querySelectorAll('.drawing-canvas').forEach((c, i) => {
-                    const ctx = c.getContext('2d'); ctx.save(); ctx.setTransform(1,0,0,1,0,0); 
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.clearRect(0,0,c.width,c.height); ctx.restore();
-                    window.canvasDrawings[i] = []; 
+                workspace.querySelectorAll('.canvas-element').forEach(e => e.remove());
+                workspace.querySelectorAll('.drawing-svg').forEach((svg, i) => {
+                    window.canvasDrawings[i] = [];
+                    renderStrokesToSVG(svg, []);
                 });
-                window.deselectCurrent(); window.saveState(); 
+                window.deselectCurrent(); window.saveState();
             } 
         });
 
         penOpacityInput.addEventListener('input', (e) => {
             let saved = false;
             selectedElements.forEach(selectedElement => {
-                if (selectedElement.classList.contains('highlight-box')) { 
-                    selectedElement.style.backgroundColor = hexToRgba(toolColors['highlight'], e.target.value); 
+                if (selectedElement.classList.contains('highlight-freehand-wrapper')) {
+                    const p = selectedElement.querySelector('.fh-stroke');
+                    if (p) { p.style.stroke = hexToRgba(toolColors['highlight'], e.target.value); updateFreehandUI(selectedElement); saved = true; }
+                } else if (selectedElement.classList.contains('highlight-box')) {
+                    selectedElement.style.backgroundColor = hexToRgba(toolColors['highlight'], e.target.value);
                     saved = true;
                 }
             });
@@ -1404,27 +2330,19 @@
             
             setTimeout(() => {
                 if (!isPdf) {
-                    let drawCanvas = workspace.querySelector('.drawing-canvas');
-                    if (!drawCanvas) {
-                        drawCanvas = document.createElement('canvas');
-                        drawCanvas.className = 'drawing-canvas';
-                        drawCanvas.style.position = 'absolute'; drawCanvas.style.top = '0'; drawCanvas.style.left = '0';
-                        drawCanvas.style.pointerEvents = 'none'; drawCanvas.style.zIndex = '2';
-                        workspace.appendChild(drawCanvas);
+                    let drawSvg = workspace.querySelector('.drawing-svg');
+                    if (!drawSvg) {
+                        drawSvg = createDrawSVG(workspace.offsetWidth, workspace.offsetHeight);
+                        workspace.appendChild(drawSvg);
+                    } else {
+                        drawSvg.setAttribute('viewBox', `0 0 ${workspace.offsetWidth} ${workspace.offsetHeight}`);
                     }
-                    drawCanvas.width = workspace.offsetWidth * RENDER_SCALE; 
-                    drawCanvas.height = workspace.offsetHeight * RENDER_SCALE;
-                    drawCanvas.style.width = workspace.offsetWidth + 'px'; 
-                    drawCanvas.style.height = workspace.offsetHeight + 'px';
-                    const ctx = drawCanvas.getContext('2d');
-                    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-                    ctx.scale(RENDER_SCALE, RENDER_SCALE);
-                    ctx.clearRect(0, 0, workspace.offsetWidth, workspace.offsetHeight);
                 }
-                
-                workspace.querySelectorAll('.drawing-canvas').forEach((c, i) => {
+
+                workspace.querySelectorAll('.drawing-svg').forEach((c, i) => {
                     c.dataset.canvasIndex = i;
-                    window.canvasDrawings[i] = []; 
+                    window.canvasDrawings[i] = [];
+                    renderStrokesToSVG(c, []);
                 });
                 
                 setZoom(1.0);
@@ -1445,19 +2363,25 @@
             }
         });
 
+        let scrollRafPending = false;
         workspaceContainer.addEventListener('scroll', () => {
             if (pdfContainer.style.display !== 'block') return;
-            const currentMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
-            const containerCenter = (workspaceContainer.scrollTop - currentMarginTop + workspaceContainer.clientHeight / 2) / zoomLevel;
-            let currentP = 1;
-            document.querySelectorAll('.pdf-page').forEach(p => {
-                const top = p.offsetTop; const bottom = top + p.offsetHeight;
-                if (containerCenter >= top && containerCenter <= bottom) { currentP = parseInt(p.dataset.page); }
+            if (scrollRafPending) return; // 1フレームに1回だけ処理（大量ページでのジャンク防止）
+            scrollRafPending = true;
+            requestAnimationFrame(() => {
+                scrollRafPending = false;
+                const currentMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
+                const containerCenter = (workspaceContainer.scrollTop - currentMarginTop + workspaceContainer.clientHeight / 2) / zoomLevel;
+                let currentP = 1;
+                document.querySelectorAll('.pdf-page').forEach(p => {
+                    const top = p.offsetTop; const bottom = top + p.offsetHeight;
+                    if (containerCenter >= top && containerCenter <= bottom) { currentP = parseInt(p.dataset.page); }
+                });
+                pageInput.value = currentP;
+                document.querySelectorAll('.pdf-thumb').forEach(t => t.classList.remove('active'));
+                const activeThumb = document.querySelector(`.pdf-thumb[data-page="${currentP}"]`);
+                if (activeThumb) { activeThumb.classList.add('active'); activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
             });
-            pageInput.value = currentP;
-            document.querySelectorAll('.pdf-thumb').forEach(t => t.classList.remove('active'));
-            const activeThumb = document.querySelector(`.pdf-thumb[data-page="${currentP}"]`);
-            if (activeThumb) { activeThumb.classList.add('active'); activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
         });
 
         let isSidebarOpen = false;
@@ -1487,28 +2411,19 @@
                 textLayerDiv.style.height = viewport.height + 'px'; 
                 textLayerDiv.style.setProperty('--scale-factor', viewport.scale);
                 
-                const drawCanvas = pageDiv.querySelector('.drawing-canvas');
-                drawCanvas.width = viewport.width * dynamicScale; 
-                drawCanvas.height = viewport.height * dynamicScale;
-                const dCtx = drawCanvas.getContext('2d');
-                dCtx.setTransform(1, 0, 0, 1, 0, 0); 
-                dCtx.scale(dynamicScale, dynamicScale);
-
                 const scaledViewport = page.getViewport({ scale: window.pdfBaseScale * dynamicScale });
                 await page.render({ canvasContext: canvas.getContext('2d'), viewport: scaledViewport }).promise;
-                
-                const textContent = await page.getTextContent(); 
+
+                const textContent = await page.getTextContent();
+                textLayerDiv.textContent = ''; // 再描画（ズーム時など）で既存spanが二重に累積するのを防ぐ
                 pdfjsLib.renderTextLayer({ textContentSource: textContent, container: textLayerDiv, viewport: viewport, textDivs: [] });
 
-                const canvasIndex = parseInt(drawCanvas.dataset.canvasIndex);
-                if (window.canvasDrawings && window.canvasDrawings[canvasIndex]) {
-                    const cmds = window.canvasDrawings[canvasIndex];
-                    dCtx.save(); 
-                    dCtx.setTransform(1, 0, 0, 1, 0, 0); 
-                    dCtx.globalCompositeOperation = 'source-over';
-                    dCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height); 
-                    dCtx.restore();
-                    cmds.forEach(cmd => executeCanvasCommand(dCtx, cmd));
+                // 手描きレイヤー（SVG）はベクターなのでズームで再描画不要。viewBoxだけ保証し、内容を再構築。
+                const drawSvg = pageDiv.querySelector('.drawing-svg');
+                if (drawSvg) {
+                    drawSvg.setAttribute('viewBox', `0 0 ${viewport.width} ${viewport.height}`);
+                    const canvasIndex = parseInt(drawSvg.dataset.canvasIndex);
+                    renderStrokesToSVG(drawSvg, window.canvasDrawings[canvasIndex] || []);
                 }
             } catch(e) {
                 console.error("Page rendering failed", e);
@@ -1535,14 +2450,18 @@
         async function loadBackground(bgData) {
             pdfSidebar.innerHTML = ''; document.getElementById('floating-top-left').style.display = 'none';
             isSidebarOpen = false; pdfSidebar.style.display = 'none';
-            workspace.querySelectorAll('.drawing-canvas').forEach(c => c.remove());
+            workspace.querySelectorAll('.drawing-canvas, .drawing-svg').forEach(c => c.remove());
             
             return new Promise(async (resolve, reject) => {
                 if (bgData.type === 'pdf') {
-                    uploadedImage.style.display = 'none'; pdfContainer.style.display = 'block'; 
+                    if (typeof pdfjsLib === 'undefined') {
+                        alert('PDF機能の読み込みに失敗しました。通信環境を確認して再読み込みしてください。');
+                        return reject(new Error('pdfjsLib unavailable'));
+                    }
+                    uploadedImage.style.display = 'none'; pdfContainer.style.display = 'block';
                     const loadingOverlay = document.getElementById('loading-overlay');
                     loadingOverlay.style.display = 'flex';
-                    loadingOverlay.querySelectorAll('div')[1].innerText = 'PDFを読み込み中...'; 
+                    loadingOverlay.querySelectorAll('div')[1].innerText = 'PDFを読み込み中...';
                     
                     try {
                         const res = await fetch(bgData.dataURL);
@@ -1603,13 +2522,8 @@
                             textLayerDiv.style.height = defaultViewport.height + 'px';
                             pageDiv.appendChild(textLayerDiv);
                             
-                            const drawCanvas = document.createElement('canvas');
-                            drawCanvas.className = 'drawing-canvas';
-                            drawCanvas.style.position = 'absolute'; drawCanvas.style.top = '0'; drawCanvas.style.left = '0';
-                            drawCanvas.style.pointerEvents = 'none'; drawCanvas.style.zIndex = '2';
-                            drawCanvas.style.width = '100%';
-                            drawCanvas.style.height = '100%';
-                            pageDiv.appendChild(drawCanvas);
+                            const drawSvg = createDrawSVG(defaultViewport.width, defaultViewport.height);
+                            pageDiv.appendChild(drawSvg);
                             
                             pdfContainer.appendChild(pageDiv);
                             window.pageObserver.observe(pageDiv);
@@ -1674,6 +2588,8 @@
                     dataURL: event.target.result
                 };
                 await loadBackground(currentBackground);
+                await persistBackground(); // 新しい背景を自動保存に反映
+                scheduleAutosave();
                 e.target.value = '';
             };
             reader.readAsDataURL(file);
@@ -1691,45 +2607,7 @@
             loadingOverlay.style.display = 'flex';
             
             try {
-                const elements = Array.from(workspace.querySelectorAll('.canvas-element')).map(el => {
-                    const isText = el.classList.contains('text-wrapper');
-                    const isHighlight = el.classList.contains('highlight-box');
-                    const isFreehandMask = el.classList.contains('mask-freehand-wrapper');
-                    const isShape = el.classList.contains('shape-element');
-                    const isImage = el.classList.contains('image-element');
-                    
-                    return {
-                        type: isText ? 'text' : (isHighlight ? 'highlight' : (isFreehandMask ? 'freehand-mask' : (isShape ? 'shape' : (isImage ? 'image' : 'mask')))),
-                        left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height,
-                        content: isText ? el.querySelector('.text-content').innerHTML : null,
-                        fontSize: isText ? el.style.fontSize : null, 
-                        color: isText ? el.style.color : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke') : null),
-                        backgroundColor: isHighlight ? el.style.backgroundColor : null,
-                        zIndex: el.style.zIndex,
-                        textAlign: isText ? (el.style.textAlign || el.querySelector('.text-content').style.textAlign || 'left') : null,
-                        writingMode: isText ? (el.style.writingMode || el.querySelector('.text-content').style.writingMode || 'horizontal-tb') : null,
-                        pathD: isFreehandMask ? el.querySelector('path').getAttribute('d') : null,
-                        strokeWidth: isFreehandMask ? el.querySelector('path').getAttribute('stroke-width') : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke-width') : null),
-                        shapeType: isShape ? el.dataset.shapeType : null,
-                        lineDir: isShape ? el.dataset.lineDir : null,
-                        dataUrl: isImage ? el.querySelector('img').src : null
-                    };
-                });
-                
-                const canvasCommandsArray = window.canvasDrawings.map(cmds => [...cmds]);
-                const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-canvas')).map(c => c.style.zIndex);
-                
-                const currentBgScale = currentBackground.type === 'pdf' ? window.pdfBaseScale : (parseFloat(uploadedImage.style.width) / uploadedImage.naturalWidth);
-
-                const projectData = {
-                    version: 1,
-                    background: currentBackground,
-                    bgScale: currentBgScale,
-                    elements: elements,
-                    canvasCommandsArray: canvasCommandsArray,
-                    canvasZIndexes: canvasZIndexes
-                };
-                
+                const projectData = buildProjectData();
                 const jsonStr = JSON.stringify(projectData);
                 const blob = new Blob([jsonStr], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -1754,9 +2632,10 @@
             if (projectData.elements && projectData.elements.length > 0) {
                 projectData.elements.forEach(data => {
                     let el;
-                    if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height);
+                    if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height, data.color);
                     else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir);
-                    else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth);
+                    else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
+                    else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                     else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                     else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                     else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode); 
@@ -1776,26 +2655,12 @@
                 );
             }
 
-            const canvases = Array.from(workspace.querySelectorAll('.drawing-canvas'));
-            canvases.forEach((c, i) => {
+            const svgs = Array.from(workspace.querySelectorAll('.drawing-svg'));
+            svgs.forEach((svg, i) => {
                 if (projectData.canvasZIndexes && projectData.canvasZIndexes[i]) {
-                    c.style.zIndex = projectData.canvasZIndexes[i];
-                } else {
-                    c.style.zIndex = '2';
+                    svg.style.zIndex = projectData.canvasZIndexes[i];
                 }
-                
-                const pageDiv = c.closest('.pdf-page');
-                if (!pageDiv || pageDiv.dataset.rendered === "true") {
-                    const ctx = c.getContext('2d');
-                    ctx.save(); 
-                    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.clearRect(0, 0, c.width, c.height); 
-                    ctx.restore();
-                    
-                    const cmds = window.canvasDrawings[i] || [];
-                    cmds.forEach(cmd => executeCanvasCommand(ctx, cmd));
-                }
+                renderStrokesToSVG(svg, window.canvasDrawings[i] || []);
             });
 
             window.historyArray = [];
@@ -1812,92 +2677,151 @@
             
             const reader = new FileReader();
             reader.onload = async (event) => {
+                const loadingOverlay = document.getElementById('loading-overlay');
                 try {
-                    const loadingOverlay = document.getElementById('loading-overlay');
                     loadingOverlay.style.display = 'flex';
-                    loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...'; 
+                    loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
 
                     let projectData = JSON.parse(event.target.result);
-                    if (!projectData.background) throw new Error("無効なファイルです");
+                    await applyProjectData(projectData);
 
-                    currentBackground = projectData.background;
-                    
-                    await loadBackground(currentBackground);
-                    
-                    const currentBgScale = currentBackground.type === 'pdf' ? window.pdfBaseScale : (parseFloat(uploadedImage.style.width) / uploadedImage.naturalWidth);
-                    const savedScale = projectData.bgScale || currentBgScale;
-                    const scaleRatio = currentBgScale / savedScale;
-
-                    let originalPageHeight = 0;
-                    const GAP = 20;
-                    if (currentBackground.type === 'pdf') {
-                        originalPageHeight = window.pdfViewport1.height * savedScale;
-                    }
-
-                    if (projectData.elements) {
-                        projectData.elements = projectData.elements.map(el => {
-                            if (el.left) el.left = (parseFloat(el.left) * scaleRatio) + 'px';
-                            if (el.top) {
-                                let oldTop = parseFloat(el.top);
-                                if (currentBackground.type === 'pdf' && originalPageHeight > 0) {
-                                    const k = Math.floor(oldTop / (originalPageHeight + GAP));
-                                    const oldTopWithoutGaps = oldTop - (k * GAP);
-                                    const newTopWithoutGaps = oldTopWithoutGaps * scaleRatio;
-                                    el.top = (newTopWithoutGaps + (k * GAP)) + 'px';
-                                } else {
-                                    el.top = (oldTop * scaleRatio) + 'px';
-                                }
-                            }
-                            if (el.width) el.width = (parseFloat(el.width) * scaleRatio) + 'px';
-                            if (el.height) el.height = (parseFloat(el.height) * scaleRatio) + 'px';
-                            if (el.fontSize) el.fontSize = (parseFloat(el.fontSize) * scaleRatio) + 'px';
-                            if (el.strokeWidth) el.strokeWidth = parseFloat(el.strokeWidth) * scaleRatio;
-                            if (el.pathD) {
-                                el.pathD = el.pathD.replace(/([\d.-]+)/g, match => (parseFloat(match) * scaleRatio).toFixed(2));
-                            }
-                            return el;
-                        });
-                    }
-
-                    if (projectData.canvasCommandsArray) {
-                        projectData.canvasCommandsArray = projectData.canvasCommandsArray.map(cmds => {
-                            return cmds.map(cmd => {
-                                if (cmd.tool === 'legacy_base64') return cmd;
-                                return {
-                                    ...cmd,
-                                    width: cmd.width * scaleRatio,
-                                    points: cmd.points.map(p => ({ x: p.x * scaleRatio, y: p.y * scaleRatio }))
-                                };
-                            });
-                        });
-                    }
-                    
-                    setTimeout(() => {
-                        loadDataToWorkspace(projectData);
-                        loadingOverlay.style.display = 'none';
-                        e.target.value = '';
-                    }, 500);
-
+                    loadingOverlay.style.display = 'none';
+                    e.target.value = '';
                 } catch (error) {
                     console.error(error);
                     alert("ファイルの読み込みに失敗しました。正しいデータを選択してください。");
-                    document.getElementById('loading-overlay').style.display = 'none';
+                    loadingOverlay.style.display = 'none';
                 }
             };
             reader.readAsText(file);
         });
 
+        // .amk読込・自動保存復元で共通のプロジェクト適用処理（背景ロード＋スケール補正＋要素復元）
+        async function applyProjectData(projectData) {
+            if (!projectData || !projectData.background) throw new Error("無効なデータです");
+
+            currentBackground = projectData.background;
+            await loadBackground(currentBackground);
+
+            const bgScale = currentBgScale();
+            const savedScale = projectData.bgScale || bgScale;
+            const scaleRatio = bgScale / savedScale;
+
+            let originalPageHeight = 0;
+            const GAP = 20;
+            if (currentBackground.type === 'pdf') {
+                originalPageHeight = window.pdfViewport1.height * savedScale;
+            }
+
+            if (projectData.elements) {
+                projectData.elements = projectData.elements.map(el => {
+                    if (el.left) el.left = (parseFloat(el.left) * scaleRatio) + 'px';
+                    if (el.top) {
+                        let oldTop = parseFloat(el.top);
+                        if (currentBackground.type === 'pdf' && originalPageHeight > 0) {
+                            const k = Math.floor(oldTop / (originalPageHeight + GAP));
+                            const oldTopWithoutGaps = oldTop - (k * GAP);
+                            const newTopWithoutGaps = oldTopWithoutGaps * scaleRatio;
+                            el.top = (newTopWithoutGaps + (k * GAP)) + 'px';
+                        } else {
+                            el.top = (oldTop * scaleRatio) + 'px';
+                        }
+                    }
+                    if (el.width) el.width = (parseFloat(el.width) * scaleRatio) + 'px';
+                    if (el.height) el.height = (parseFloat(el.height) * scaleRatio) + 'px';
+                    if (el.fontSize) el.fontSize = (parseFloat(el.fontSize) * scaleRatio) + 'px';
+                    if (el.strokeWidth) el.strokeWidth = parseFloat(el.strokeWidth) * scaleRatio;
+                    if (el.pathD) {
+                        el.pathD = el.pathD.replace(/([\d.-]+)/g, match => (parseFloat(match) * scaleRatio).toFixed(2));
+                    }
+                    return el;
+                });
+            }
+
+            if (projectData.canvasCommandsArray) {
+                projectData.canvasCommandsArray = projectData.canvasCommandsArray.map(cmds => {
+                    return cmds.map(cmd => {
+                        if (cmd.tool === 'legacy_base64') return cmd;
+                        return {
+                            ...cmd,
+                            width: cmd.width * scaleRatio,
+                            points: cmd.points.map(p => ({ x: p.x * scaleRatio, y: p.y * scaleRatio }))
+                        };
+                    });
+                });
+            }
+
+            await new Promise(r => setTimeout(r, 500));
+            loadDataToWorkspace(projectData);
+            await persistBackground(); // 復元後、以降の自動保存のため背景を確実に保存
+        }
+
         // 【改修】ポインターダウン（掴む・描画開始）の制御
         workspaceContainer.addEventListener('pointerdown', function(e) {
-            if (currentTool === 'pan') {
-                action = 'pan'; startX = e.clientX; startY = e.clientY; startRect = { scrollLeft: workspaceContainer.scrollLeft, scrollTop: workspaceContainer.scrollTop }; 
-                return; 
+            // 学習モード中は編集を一切受け付けない（マスクのめくりはCSSのホバーで動作）
+            if (document.body.classList.contains('focus-mode')) return;
+            // 中ボタン、またはスペース押し＋左クリックで、どのツール中でもパン
+            if (e.button === 1 || (spaceHeld && e.button === 0)) {
+                action = 'pan'; startX = e.clientX; startY = e.clientY;
+                startRect = { scrollLeft: workspaceContainer.scrollLeft, scrollTop: workspaceContainer.scrollTop };
+                workspaceContainer.classList.add('panning');
+                brushCursor.style.display = 'none';
+                e.preventDefault();
+                return;
             }
+            if (e.button !== 0) return;
+            // マウスツール＋シフトは、要素を触らず背景の文字選択をブラウザに任せる
+            if (currentTool === 'select' && shiftHeld) { window.deselectCurrent(); return; }
             if (!e.target.closest('#workspace')) return;
             const rect = workspace.getBoundingClientRect(); const mouseX = (e.clientX - rect.left) / zoomLevel; const mouseY = (e.clientY - rect.top) / zoomLevel;
 
-            if (e.target.classList.contains('resize-handle')) {
-                action = 'resize'; 
+            // 既存オブジェクトの選択・移動・変形はマウスツールのときだけ。
+            // 他ツールは新規作成に専念する（作成直後はマウスツールへ戻るので続けて編集できる）。
+            // 例外：マスキングツールは、自分が作るマスキングだけはその場で選択・編集できる
+            const canPickExisting = ['select', 'mask', 'highlight'].includes(currentTool);
+            const pickSelector = currentPickSelector();
+
+            // ペン線の端のつまみ：ドラッグで線全体を拡大・縮小する
+            if (currentTool === 'select' && selectedStroke && e.target.classList && e.target.classList.contains('stroke-handle')) {
+                const cmd = currentStrokeCmd();
+                if (cmd && cmd.points && cmd.points.length > 1) {
+                    const isStart = e.target.dataset.end === 'start';
+                    const anchor = isStart ? cmd.points[cmd.points.length - 1] : cmd.points[0];
+                    const moving = isStart ? cmd.points[0] : cmd.points[cmd.points.length - 1];
+                    action = 'scale_stroke';
+                    strokeScale = {
+                        anchor: { ...anchor },
+                        orig: cmd.points.map(p => ({ ...p })),
+                        baseDx: moving.x - anchor.x,
+                        baseDy: moving.y - anchor.y
+                    };
+                    e.preventDefault(); e.stopPropagation(); return;
+                }
+            }
+
+            // 手書き線の端のつまみ：ドラッグで線全体を拡大・縮小する
+            if (canPickExisting && e.target.classList.contains('fh-handle')) {
+                const wrapper = e.target.parentElement;
+                if (!wrapper.classList.contains('selected')) {
+                    window.deselectCurrent();
+                    wrapper.classList.add('selected');
+                    selectedElements = [wrapper];
+                }
+                window.bringToFront(wrapper);
+                const pts = freehandPointsWorkspace(wrapper);
+                const anchor = (e.target.dataset.end === 'start') ? pts[pts.length - 1] : pts[0];
+                const moving = (e.target.dataset.end === 'start') ? pts[0] : pts[pts.length - 1];
+                action = 'scale_freehand';
+                freehandScale = {
+                    wrapper, anchor, orig: pts,
+                    baseDx: moving.x - anchor.x,
+                    baseDy: moving.y - anchor.y
+                };
+                e.preventDefault(); e.stopPropagation(); return;
+            }
+
+            if (canPickExisting && e.target.classList.contains('resize-handle')) {
+                action = 'resize';
                 const targetElement = e.target.parentElement;
                 if (!targetElement.classList.contains('selected')) {
                     window.deselectCurrent();
@@ -1928,7 +2852,7 @@
                 e.preventDefault(); e.stopPropagation(); return;
             }
 
-            const clickedTextContent = e.target.closest('.text-content');
+            const clickedTextContent = (currentTool === 'select') ? e.target.closest('.text-content') : null;
             if (clickedTextContent) {
                 const targetElement = clickedTextContent.parentElement;
                 if (!targetElement.classList.contains('selected')) { 
@@ -1942,8 +2866,8 @@
                 return; 
             }
 
-            const draggableTarget = e.target.closest('.mask, .text-wrapper, .highlight-box, .shape-element, .image-element');
-            if (draggableTarget && !['pen'].includes(currentTool)) {
+            const draggableTarget = canPickExisting ? e.target.closest(pickSelector) : null;
+            if (draggableTarget) {
                 action = 'move'; 
                 if (!draggableTarget.classList.contains('selected')) {
                     window.deselectCurrent(); 
@@ -1966,8 +2890,11 @@
                 return;
             }
             
+            // 何もないところをクリックした。選択があったかを覚えておき、
+            // マスキングでは「選択解除だけ」で終える判断に使う
+            clearedSelectionOnDown = (selectedElements.length > 0 || !!selectedStroke);
             window.deselectCurrent();
-            
+
             if (currentTool === 'mask') {
                 const maskType = document.querySelector('input[name="maskType"]:checked') ? document.querySelector('input[name="maskType"]:checked').value : 'rect';
                 if (maskType === 'rect') {
@@ -1991,7 +2918,7 @@
                     
                     tempMaskPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     tempMaskPath.setAttribute("d", tempPathD);
-                    tempMaskPath.setAttribute("stroke", "black");
+                    tempMaskPath.setAttribute("stroke", "rgba(0, 0, 0, 0.7)"); // 出来上がりと同じ半透明の黒
                     tempMaskPath.setAttribute("stroke-width", penWidthInput.value);
                     tempMaskPath.setAttribute("stroke-linecap", "round");
                     tempMaskPath.setAttribute("stroke-linejoin", "round");
@@ -2008,43 +2935,85 @@
                 currentDrawingShape = window.createShapeElement(startX+'px', startY+'px', '0px', '0px', shapeType, col, strokeW, '\\');
                 currentDrawingShape.style.pointerEvents = 'none';
             } else if (currentTool === 'highlight') {
-                action = 'draw'; startX = mouseX; startY = mouseY;
-                drawingBox.style.left = startX + 'px'; drawingBox.style.top = startY + 'px';
-                drawingBox.style.width = '0px'; drawingBox.style.height = '0px';
-                drawingBox.style.display = 'block';
+                if (currentHighlightType() === 'rect') {
+                    action = 'draw'; startX = mouseX; startY = mouseY;
+                    // 作成中も完成時と同じ色・濃さで見せる
+                    drawingBox.style.backgroundColor = hexToRgba(toolColors['highlight'], penOpacityInput.value);
+                    drawingBox.style.left = startX + 'px'; drawingBox.style.top = startY + 'px';
+                    drawingBox.style.width = '0px'; drawingBox.style.height = '0px';
+                    drawingBox.style.display = 'block';
+                } else {
+                    action = 'draw_freehand_highlight';
+                    penPoints = [{x: mouseX, y: mouseY}];
+                    tempPathD = `M ${mouseX} ${mouseY}`;
+
+                    tempMaskSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    tempMaskSvg.style.position = 'absolute';
+                    tempMaskSvg.style.top = '0';
+                    tempMaskSvg.style.left = '0';
+                    tempMaskSvg.style.width = '100%';
+                    tempMaskSvg.style.height = '100%';
+                    tempMaskSvg.style.pointerEvents = 'none';
+                    tempMaskSvg.style.zIndex = '9999';
+                    tempMaskSvg.style.mixBlendMode = 'multiply';
+
+                    tempMaskPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    tempMaskPath.setAttribute("d", tempPathD);
+                    tempMaskPath.setAttribute("stroke", hexToRgba(toolColors['highlight'], penOpacityInput.value));
+                    tempMaskPath.setAttribute("stroke-width", penWidthInput.value);
+                    tempMaskPath.setAttribute("stroke-linecap", "round");
+                    tempMaskPath.setAttribute("stroke-linejoin", "round");
+                    tempMaskPath.setAttribute("fill", "none");
+
+                    tempMaskSvg.appendChild(tempMaskPath);
+                    workspace.appendChild(tempMaskSvg);
+                }
             } else if (currentTool === 'text') {
                 const currentFontSize = textSizeInput.value + 'px'; const currentColor = toolColors['text']; 
                 const newText = window.createTextElement((mouseX - 8) + 'px', (mouseY - 8) + 'px', 'max-content', 'max-content', '', currentFontSize, currentColor, 'left', currentTextDirection);
                 selectedElements = [newText]; newText.classList.add('selected'); setTimeout(() => { newText.querySelector('.text-content').focus(); }, 10);
             } else if (currentTool === 'pen') {
-                action = 'draw_pen'; 
-                const page = e.target.closest('.pdf-page'); activeCanvas = page ? page.querySelector('.drawing-canvas') : workspace.querySelector('.drawing-canvas');
-                if (!activeCanvas) return;
-                
-                window.bringToFront(activeCanvas);
-                
-                activeCanvasIndex = activeCanvas.dataset.canvasIndex; 
-                activeCtx = activeCanvas.getContext('2d');
-                const canvasRect = activeCanvas.getBoundingClientRect();
-                const localX = (e.clientX - canvasRect.left) / zoomLevel; const localY = (e.clientY - canvasRect.top) / zoomLevel;
+                action = 'draw_pen';
+                const page = e.target.closest('.pdf-page');
+                activeDrawSvg = page ? page.querySelector('.drawing-svg') : workspace.querySelector('.drawing-svg');
+                if (!activeDrawSvg) return;
 
-                rawPenPoints = [{x: localX, y: localY}]; 
+                activeCanvasIndex = activeDrawSvg.dataset.canvasIndex;
+                const svgRect = activeDrawSvg.getBoundingClientRect();
+                const vb = activeDrawSvg.viewBox.baseVal;
+                const sx = svgRect.width ? vb.width / svgRect.width : 1;
+                const sy = svgRect.height ? vb.height / svgRect.height : 1;
+                const localX = (e.clientX - svgRect.left) * sx;
+                const localY = (e.clientY - svgRect.top) * sy;
+                rawPenPoints = [{x: localX, y: localY}];
 
-                savedCanvasState = document.createElement('canvas');
-                savedCanvasState.width = activeCanvas.width;
-                savedCanvasState.height = activeCanvas.height;
-                savedCanvasState.getContext('2d').drawImage(activeCanvas, 0, 0);
-
+                // ドラッグ中のプレビュー（確定時に renderStrokesToSVG で正式描画）
                 const actualTool = document.querySelector('input[name="penMode"]:checked').value;
-                const cmd = {
-                    tool: actualTool,
-                    points: rawPenPoints,
-                    width: parseFloat(penWidthInput.value),
-                    color: toolColors['pen'],
-                    opacity: penOpacityInput.value
-                };
-                executeCanvasCommand(activeCtx, cmd);
+                liveStrokePath = document.createElementNS(SVGNS, 'path');
+                liveStrokePath.setAttribute('fill', 'none');
+                liveStrokePath.setAttribute('stroke-linecap', 'round');
+                liveStrokePath.setAttribute('stroke-linejoin', 'round');
+                liveStrokePath.setAttribute('stroke-width', parseFloat(penWidthInput.value));
+                if (actualTool === 'pen') {
+                    liveStrokePath.setAttribute('stroke', toolColors['pen']);
+                    liveStrokePath.setAttribute('stroke-opacity', penOpacityInput.value);
+                } else {
+                    liveStrokePath.setAttribute('stroke', 'rgba(140,140,140,0.6)'); // 消しゴムのプレビュー
+                }
+                liveStrokePath.setAttribute('d', strokePathD(rawPenPoints));
+                activeDrawSvg.appendChild(liveStrokePath);
             } else if (currentTool === 'select') {
+                // まずペン線のクリック選択を試す（当たれば移動開始、外れたら範囲選択）
+                const hitStroke = findStrokeAt(e);
+                if (hitStroke) {
+                    selectStroke(hitStroke);
+                    const loc = eventToSvgLocal(hitStroke.svg, e);
+                    const cmd = currentStrokeCmd();
+                    strokeMoveStart = { x: loc.x, y: loc.y, orig: cmd.points.map(p => ({ ...p })) };
+                    action = 'move_stroke';
+                    e.preventDefault();
+                    return;
+                }
                 action = 'box_select';
                 startX = mouseX; startY = mouseY;
                 selectionBox.style.left = startX + 'px'; selectionBox.style.top = startY + 'px';
@@ -2056,10 +3025,13 @@
 
         // 【改修】ポインター移動（ドラッグなど）の制御
         document.addEventListener('pointermove', function(e) {
-            const maskType = document.querySelector('input[name="maskType"]:checked') ? document.querySelector('input[name="maskType"]:checked').value : 'rect';
-            if ((['pen'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free')) && e.target.closest('#workspace-container')) {
+            // 選択できるものの上ではカーソルの変化を見せたいので、丸は出さない
+            const showBrush = action !== 'pan' && !spaceHeld && isFreehandDrawing()
+                && !isPickableAt(e.target) && e.target.closest('#workspace-container');
+            if (showBrush) {
                 brushCursor.style.display = 'block'; brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px';
             } else { brushCursor.style.display = 'none'; }
+            workspaceContainer.classList.toggle('hide-cursor', !!showBrush);
 
             if (!action) return;
             if (action === 'pan') {
@@ -2076,6 +3048,11 @@
             } else if (action === 'box_select') {
                 selectionBox.style.width = Math.abs(currentX - startX) + 'px'; selectionBox.style.height = Math.abs(currentY - startY) + 'px';
                 selectionBox.style.left = Math.min(currentX, startX) + 'px'; selectionBox.style.top = Math.min(currentY, startY) + 'px';
+            } else if (action === 'move_stroke' && selectedStroke && strokeMoveStart) {
+                const loc = eventToSvgLocal(selectedStroke.svg, e);
+                const dx = loc.x - strokeMoveStart.x, dy = loc.y - strokeMoveStart.y;
+                const cmd = currentStrokeCmd();
+                if (cmd) { cmd.points = strokeMoveStart.orig.map(p => ({ x: p.x + dx, y: p.y + dy })); reRenderStrokeSvg(); }
             } else if (action === 'draw_shape' && currentDrawingShape) {
                 let minX = Math.min(startX, currentX);
                 let minY = Math.min(startY, currentY);
@@ -2100,32 +3077,31 @@
                         shapeNode.setAttribute('x2', '100%'); shapeNode.setAttribute('y2', '100%');
                     }
                 }
-            } else if (action === 'draw_freehand_mask' && tempMaskSvg) {
+            } else if (action === 'scale_stroke' && selectedStroke && strokeScale) {
+                const loc = eventToSvgLocal(selectedStroke.svg, e);
+                const { anchor, orig, baseDx, baseDy } = strokeScale;
+                const tf = endpointTransform(anchor, baseDx, baseDy, loc.x, loc.y);
+                const cmd = currentStrokeCmd();
+                if (cmd) {
+                    cmd.points = orig.map(tf);
+                    reRenderStrokeSvg();
+                }
+            } else if (action === 'scale_freehand' && freehandScale) {
+                const { wrapper, anchor, orig, baseDx, baseDy } = freehandScale;
+                rebuildFreehand(wrapper, orig.map(endpointTransform(anchor, baseDx, baseDy, currentX, currentY)));
+            } else if ((action === 'draw_freehand_mask' || action === 'draw_freehand_highlight') && tempMaskSvg) {
                 penPoints.push({x: currentX, y: currentY});
                 tempPathD += ` L ${currentX} ${currentY}`;
                 tempMaskPath.setAttribute("d", tempPathD);
-            } else if (action === 'draw_pen' && activeCanvas && activeCtx) {
-                const canvasRect = activeCanvas.getBoundingClientRect();
-                const localX = (e.clientX - canvasRect.left) / zoomLevel; const localY = (e.clientY - canvasRect.top) / zoomLevel;
-
-                rawPenPoints.push({x: localX, y: localY}); 
-                
-                activeCtx.save();
-                activeCtx.setTransform(1, 0, 0, 1, 0, 0);
-                activeCtx.globalCompositeOperation = 'source-over';
-                activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
-                activeCtx.drawImage(savedCanvasState, 0, 0);
-                activeCtx.restore();
-
-                const actualTool = document.querySelector('input[name="penMode"]:checked').value;
-                const cmd = {
-                    tool: actualTool,
-                    points: rawPenPoints,
-                    width: parseFloat(penWidthInput.value),
-                    color: toolColors['pen'],
-                    opacity: penOpacityInput.value
-                };
-                executeCanvasCommand(activeCtx, cmd);
+            } else if (action === 'draw_pen' && activeDrawSvg && liveStrokePath) {
+                const svgRect = activeDrawSvg.getBoundingClientRect();
+                const vb = activeDrawSvg.viewBox.baseVal;
+                const sx = svgRect.width ? vb.width / svgRect.width : 1;
+                const sy = svgRect.height ? vb.height / svgRect.height : 1;
+                const localX = (e.clientX - svgRect.left) * sx;
+                const localY = (e.clientY - svgRect.top) * sy;
+                rawPenPoints.push({x: localX, y: localY});
+                liveStrokePath.setAttribute('d', strokePathD(rawPenPoints));
             } else if (action === 'move' && startRects.length > 0) {
                 const dx = currentX - startX; const dy = currentY - startY; 
                 startRects.forEach(item => {
@@ -2177,15 +3153,31 @@
         document.addEventListener('pointerup', function(e) {
             if (!action) return;
             let stateChanged = false;
-            if (action === 'pan') { action = null; return; }
+            if (action === 'pan') { action = null; workspaceContainer.classList.remove('panning'); return; }
             
             const rect = workspace.getBoundingClientRect(); let currentX = Math.max(0, Math.min((e.clientX - rect.left) / zoomLevel, workspace.offsetWidth)); let currentY = Math.max(0, Math.min((e.clientY - rect.top) / zoomLevel, workspace.offsetHeight));
 
             if (action === 'draw') {
                 drawingBox.style.display = 'none';
+                drawingBox.style.backgroundColor = ''; // ハイライト用に上書きした色を戻す
                 let w = parseFloat(drawingBox.style.width);
                 let h = parseFloat(drawingBox.style.height);
-                
+
+                // マスキング矩形はワンクリック（ほぼ動かさず離す）で既定サイズを配置。
+                // ただし直前まで何かを選択していた場合、そのクリックは「選択解除」として扱い配置しない
+                if (currentTool === 'mask' && Math.hypot(w, h) < 5) {
+                    if (!clearedSelectionOnDown) {
+                        window.createMaskElement(
+                            (startX - DEFAULT_MASK_W / 2) + 'px', (startY - DEFAULT_MASK_H / 2) + 'px',
+                            DEFAULT_MASK_W + 'px', DEFAULT_MASK_H + 'px');
+                        stateChanged = true;
+                    }
+                    action = null;
+                    if (stateChanged) window.saveState();
+                    updateToolbar();
+                    return;
+                }
+
                 if (Math.hypot(w, h) >= 5) {
                     let left = parseFloat(drawingBox.style.left);
                     let top = parseFloat(drawingBox.style.top);
@@ -2194,12 +3186,12 @@
                     if (h < 4) { h = 4; top -= 2; }
 
                     if (currentTool === 'highlight') {
+                        // ハイライトも選択状態にせず、続けて次を置けるようにする
                         const bgColor = hexToRgba(toolColors['highlight'], penOpacityInput.value);
-                        const hl = window.createHighlightElement(left + 'px', top + 'px', w + 'px', h + 'px', bgColor);
-                        window.deselectCurrent(); selectedElements = [hl]; hl.classList.add('selected');
+                        window.createHighlightElement(left + 'px', top + 'px', w + 'px', h + 'px', bgColor);
                     } else {
-                        const mask = window.createMaskElement(left + 'px', top + 'px', w + 'px', h + 'px');
-                        window.deselectCurrent(); selectedElements = [mask]; mask.classList.add('selected');
+                        // マスキングは選択状態にせず、続けて次を置けるようにする
+                        window.createMaskElement(left + 'px', top + 'px', w + 'px', h + 'px');
                     }
                     stateChanged = true;
                 }
@@ -2258,35 +3250,79 @@
                     
                     let d = penPoints.map((p, i) => `${i===0?'M':'L'} ${p.x - minX} ${p.y - minY}`).join(' ');
                     
-                    const freeMask = window.createFreehandMaskElement(minX+'px', minY+'px', w+'px', h+'px', d, pw);
-                    window.deselectCurrent(); selectedElements = [freeMask]; freeMask.classList.add('selected');
+                    window.createFreehandMaskElement(minX+'px', minY+'px', w+'px', h+'px', d, pw);
+                    // マスキングは選択状態にせず、続けて次を描けるようにする
                     stateChanged = true;
                 }
                 tempMaskSvg = null; tempMaskPath = null;
-            } else if (action === 'draw_pen') { 
-                if (activeCanvas && activeCanvasIndex !== null) {
+            } else if (action === 'draw_freehand_highlight') {
+                if (tempMaskSvg) tempMaskSvg.remove();
+                if (penPoints.length > 2) {
+                    const pw = parseFloat(penWidthInput.value);
+                    const padding = pw / 2 + 2;
+                    let minX = Math.min(...penPoints.map(p => p.x)) - padding;
+                    let minY = Math.min(...penPoints.map(p => p.y)) - padding;
+                    let maxX = Math.max(...penPoints.map(p => p.x)) + padding;
+                    let maxY = Math.max(...penPoints.map(p => p.y)) + padding;
+                    let w = maxX - minX;
+                    let h = maxY - minY;
+
+                    let d = penPoints.map((p, i) => `${i===0?'M':'L'} ${p.x - minX} ${p.y - minY}`).join(' ');
+                    const col = hexToRgba(toolColors['highlight'], penOpacityInput.value);
+
+                    window.createFreehandHighlightElement(minX+'px', minY+'px', w+'px', h+'px', d, pw, col);
+                    // 選択状態にせず、続けて次を描けるようにする
+                    stateChanged = true;
+                }
+                tempMaskSvg = null; tempMaskPath = null;
+            } else if (action === 'scale_freehand') {
+                freehandScale = null;
+                stateChanged = true;
+            } else if (action === 'scale_stroke') {
+                strokeScale = null;
+                stateChanged = true;
+            } else if (action === 'draw_pen') {
+                if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+                if (activeDrawSvg && activeCanvasIndex != null) {
+                    const idx = parseInt(activeCanvasIndex);
                     const actualTool = document.querySelector('input[name="penMode"]:checked').value;
-                    window.canvasDrawings[activeCanvasIndex].push({
+                    if (!window.canvasDrawings[idx]) window.canvasDrawings[idx] = [];
+                    window.canvasDrawings[idx].push({
                         tool: actualTool,
                         points: rawPenPoints,
                         width: parseFloat(penWidthInput.value),
                         color: toolColors['pen'],
                         opacity: penOpacityInput.value
                     });
+                    renderStrokesToSVG(activeDrawSvg, window.canvasDrawings[idx]);
                 }
-                activeCanvas = null; activeCtx = null; activeCanvasIndex = null; stateChanged = true; 
-                savedCanvasState = null;
-            } 
-            else if (action === 'move' || action === 'resize') { stateChanged = true; }
+                activeDrawSvg = null; liveStrokePath = null; activeCanvasIndex = null; stateChanged = true;
+            }
+            else if (action === 'move' || action === 'resize') {
+                // 実際に動いた/リサイズされた時だけ履歴に積む（単なる選択クリックで履歴を汚さない）
+                const dx = currentX - startX; const dy = currentY - startY;
+                if (Math.hypot(dx, dy) >= 1) { stateChanged = true; }
+            }
+            else if (action === 'move_stroke') {
+                if (strokeMoveStart) {
+                    const cmd = currentStrokeCmd();
+                    if (cmd && cmd.points[0] && strokeMoveStart.orig[0]) {
+                        const moved = Math.hypot(cmd.points[0].x - strokeMoveStart.orig[0].x, cmd.points[0].y - strokeMoveStart.orig[0].y);
+                        if (moved >= 1) stateChanged = true;
+                    }
+                }
+                strokeMoveStart = null;
+            }
             
             action = null; penPoints = []; rawPenPoints = []; startRects = [];
             if (stateChanged) window.saveState();
+            updateToolbar(); // 選択状態に応じてプロパティ表示を更新
         });
         
-        workspaceContainer.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; });
+        workspaceContainer.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; workspaceContainer.classList.remove('hide-cursor'); });
         
         document.addEventListener('pointerdown', function(e) {
-            if (!e.target.closest('#workspace') && !e.target.closest('#app-header') && !e.target.closest('#floating-tools-container') && !e.target.closest('.floating-ui') && !e.target.closest('#btn-focus-mode') && selectedElements.length > 0) {
+            if (!e.target.closest('#workspace') && !e.target.closest('#app-header') && !e.target.closest('#floating-tools-container') && !e.target.closest('.floating-ui') && !e.target.closest('#btn-focus-mode') && (selectedElements.length > 0 || selectedStroke)) {
                 window.deselectCurrent();
             }
         });
@@ -2307,15 +3343,22 @@
             ctx.translate(left, top);
 
             if (data.type === 'mask') {
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = data.color || 'black';
                 ctx.fillRect(0, 0, width, height);
             } else if (data.type === 'highlight') {
                 ctx.globalCompositeOperation = 'multiply';
                 ctx.fillStyle = data.backgroundColor;
                 ctx.fillRect(0, 0, width, height);
             } else if (data.type === 'freehand-mask') {
-                ctx.strokeStyle = 'black';
+                ctx.strokeStyle = data.color || 'black';
                 ctx.lineWidth = parseFloat(data.strokeWidth || 15);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke(new Path2D(data.pathD));
+            } else if (data.type === 'freehand-highlight') {
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.strokeStyle = data.color;
+                ctx.lineWidth = parseFloat(data.strokeWidth || 20);
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.stroke(new Path2D(data.pathD));
@@ -2344,7 +3387,7 @@
                 }
             } else if (data.type === 'text') {
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.content;
+                tempDiv.innerHTML = sanitizeTextHTML(data.content);
 
                 ctx.translate(8, 8); 
                 ctx.textBaseline = 'top'; // ★修正3: 基準をtopに戻す
@@ -2417,8 +3460,11 @@
                 if (isVertical) {
                     ctx.textAlign = 'center';
                     const isRL = data.writingMode === 'vertical-rl';
+                    // 保存された box 幅は 'max-content'(→NaN でフォールバック300px) になり得るため、
+                    // 実際の列数から内容幅を求めて右端の基準にする（縦書きが画面外へ飛ぶのを防ぐ）
+                    const vContentWidth = lines.length * lineHeight;
                     lines.forEach((line, i) => {
-                        let lx = isRL ? (width - 16 - (i * lineHeight) - baseFontSize / 2) : ((i * lineHeight) + baseFontSize / 2);
+                        let lx = isRL ? (vContentWidth - (i * lineHeight) - baseFontSize / 2) : ((i * lineHeight) + baseFontSize / 2);
                         let ly = halfLeading; // Y座標に余白を足してズレ解消
                         line.forEach(seg => {
                             ctx.fillStyle = seg.color || data.color || '#ef4444'; // ★保険: 万が一色を見失っても元の色を維持
@@ -2471,10 +3517,20 @@
         }
 
         // 【改修】オリジナル画質での書き出し処理（PDF解像度対応）
+        // 問題版（マスクあり）／解答版（マスクなし）の明示的な書き出し
+        document.getElementById('btn-export-question').addEventListener('click', () => {
+            setMasksHidden(false);
+            document.getElementById('btn-download-menu').click();
+        });
+        document.getElementById('btn-export-answer').addEventListener('click', () => {
+            setMasksHidden(true);
+            document.getElementById('btn-download-menu').click();
+        });
+
         document.getElementById('btn-download-menu').addEventListener('click', async () => {
             saveDropdownMenu.classList.remove('show');
             if (uploadedImage.style.display === 'none' && pdfContainer.style.display === 'none') { alert('先に画像かPDFを新規作成で開いてください。'); return; }
-            window.deselectCurrent(); brushCursor.style.display = 'none'; 
+            window.deselectCurrent(); brushCursor.style.display = 'none';
             
             const loadingOverlay = document.getElementById('loading-overlay');
             loadingOverlay.style.display = 'flex'; 
@@ -2506,11 +3562,20 @@
                     const eCtx = exportCanvas.getContext('2d');
                     
                     eCtx.drawImage(uploadedImage, 0, 0, natWidth, natHeight);
-                    eCtx.scale(scaleRatio, scaleRatio);
-                    
+
+                    // 手描き（ペン/消しゴム）は独立レイヤーで合成し、消しゴムが背景画像を削らないようにする
                     const cmds = state.canvasCommandsArray[0] || [];
-                    cmds.forEach(cmd => executeCanvasCommand(eCtx, cmd));
-                    
+                    if (cmds.length > 0) {
+                        const penLayer = document.createElement('canvas');
+                        penLayer.width = natWidth;
+                        penLayer.height = natHeight;
+                        const pCtx = penLayer.getContext('2d');
+                        pCtx.scale(scaleRatio, scaleRatio);
+                        cmds.forEach(cmd => executeCanvasCommand(pCtx, cmd));
+                        eCtx.drawImage(penLayer, 0, 0);
+                    }
+
+                    eCtx.scale(scaleRatio, scaleRatio);
                     for (const el of state.elements) {
                         await drawDOMElementToCanvas(eCtx, el);
                     }
@@ -2545,22 +3610,35 @@
                         await page.render({ canvasContext: eCtx, viewport: renderViewport }).promise;
                         
                         eCtx.save();
-                        
+
                         // 画面上のCSSサイズ(pdfBaseScale)から、内部のレンダリングサイズ(EXPORT_RENDER_SCALE)に変換
                         const drawScale = EXPORT_RENDER_SCALE / window.pdfBaseScale;
-                        eCtx.scale(drawScale, drawScale);
-                        
+
+                        // 手描き（ペン/消しゴム）は独立した透明レイヤーで合成する。
+                        // 直接eCtxに描くと消しゴム(destination-out)がPDF背景まで削り、
+                        // JPEG化で透明部分が黒くなる。合成方式を分離することで背景を守り、
+                        // かつdestination-outの合成モードがeCtxに残留して後続の描画を壊すのも防ぐ。
                         const cmds = state.canvasCommandsArray[i-1] || [];
-                        cmds.forEach(cmd => executeCanvasCommand(eCtx, cmd));
-                        
+                        if (cmds.length > 0) {
+                            const penLayer = document.createElement('canvas');
+                            penLayer.width = exportCanvas.width;
+                            penLayer.height = exportCanvas.height;
+                            const pCtx = penLayer.getContext('2d');
+                            pCtx.scale(drawScale, drawScale);
+                            cmds.forEach(cmd => executeCanvasCommand(pCtx, cmd));
+                            eCtx.drawImage(penLayer, 0, 0);
+                        }
+
+                        // 要素（マスク/テキスト等）は常にsource-overでeCtxへ直接描画
+                        eCtx.scale(drawScale, drawScale);
                         const pageDiv = document.getElementById(`pdf-page-${i}`);
                         const pageTop = pageDiv ? pageDiv.offsetTop : 0;
                         eCtx.translate(0, -pageTop);
-                        
+
                         for (const el of state.elements) {
                             await drawDOMElementToCanvas(eCtx, el);
                         }
-                        
+
                         eCtx.restore();
                         
                         const imgData = exportCanvas.toDataURL('image/jpeg', 0.9);
@@ -2664,5 +3742,52 @@
                 }
             }
         });
+
+        // --- データ損失防止：離脱警告 ＋ 前回作業の復元 ---
+        // 自動保存が完了する前（編集直後）に閉じた場合のみ警告する
+        window.addEventListener('beforeunload', (e) => {
+            if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        function showRestoreBanner(projectData) {
+            const bar = document.createElement('div');
+            bar.id = 'restore-banner';
+            bar.innerHTML =
+                '<span class="material-symbols-outlined">history</span>' +
+                '<span>前回の作業データが残っています。復元しますか？</span>' +
+                '<button class="btn btn-primary" id="restore-yes">復元する</button>' +
+                '<button class="btn" id="restore-no">破棄</button>';
+            document.body.appendChild(bar);
+
+            document.getElementById('restore-yes').addEventListener('click', async () => {
+                bar.remove();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
+                try {
+                    window.currentFileName = projectData.fileName || window.currentFileName;
+                    await applyProjectData(projectData);
+                } catch (err) {
+                    console.error(err);
+                    alert("前回データの復元に失敗しました。");
+                }
+                loadingOverlay.style.display = 'none';
+            });
+
+            document.getElementById('restore-no').addEventListener('click', async () => {
+                bar.remove();
+                try { await idbDel('session'); await idbDel('background'); }
+                catch (err) { console.error(err); }
+            });
+        }
+
+        (async function checkAutosaveRestore() {
+            try {
+                const session = await idbGet('session');
+                const background = await idbGet('background');
+                if (!session || !background) return;
+                showRestoreBanner({ ...session, background });
+            } catch (err) { console.error('自動保存データの読み込みに失敗しました', err); }
+        })();
 
     </script>
