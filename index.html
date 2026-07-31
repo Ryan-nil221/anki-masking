@@ -499,10 +499,12 @@
         /* 通常の四隅のハンドル */
         .resize-handle { position: absolute; width: 10px; height: 10px; background-color: white; border: 2px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
         .canvas-element.selected .resize-handle { display: block; }
-        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
-        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
-        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
-        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .handle-nw { top: -8px; left: -8px; cursor: nwse-resize; }
+        .handle-ne { top: -8px; right: -8px; cursor: nesw-resize; }
+        .handle-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+        .handle-se { bottom: -8px; right: -8px; cursor: nwse-resize; }
+        /* 範囲選択で選んだペン線の囲み */
+        .stroke-multi-sel { position: absolute; border: 2px dashed var(--c-accent); border-radius: 4px; pointer-events: none; z-index: 60; }
 
         /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置 */
         .shape-element[data-shape-type="line"] .resize-handle {
@@ -901,6 +903,7 @@
         let activeDrawSvg = null;   // 現在描画中のSVGレイヤー
         let liveStrokePath = null;  // ドラッグ中のプレビュー用path
         let selectedStroke = null;  // 選択中のペン線 { svg, index }
+        let selectedStrokes = [];   // 範囲選択で選んだペン線の集合 [{ svg, index }]
         let strokeMoveStart = null; // ペン線ドラッグ開始情報
         
         let tempMaskSvg = null;
@@ -1022,10 +1025,16 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedElements.length > 0 || selectedStroke)) {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedElements.length > 0 || selectedStroke || selectedStrokes.length)) {
                 if (!e.target.classList.contains('text-content') && e.target.tagName.toLowerCase() !== 'input') {
                     if (selectedStroke) { deleteSelectedStroke(); }
-                    else { selectedElements.forEach(el => el.remove()); window.deselectCurrent(); window.saveState(); }
+                    else {
+                        let changed = false;
+                        if (selectedElements.length) { selectedElements.forEach(el => el.remove()); changed = true; }
+                        if (selectedStrokes.length) { deleteMultiStrokes(); changed = true; }
+                        window.deselectCurrent();
+                        if (changed) window.saveState();
+                    }
                     e.preventDefault();
                 }
             }
@@ -1269,14 +1278,15 @@
             setTimeout(() => {
                 const a = document.activeElement;
                 if (a && a.classList && a.classList.contains('text-content')) return;
-                if (currentTool === 'text') window.returnToSelectTool();
+                // テキストツールのまま選択を外す（続けて空所クリックで新規設置できる）
+                if (currentTool === 'text') { window.deselectCurrent(); updateToolbar(); }
             }, 0);
         });
 
         // ダブルクリックでテキスト編集に入る
         workspace.addEventListener('dblclick', (e) => {
             if (document.body.classList.contains('focus-mode')) return;
-            if (currentTool !== 'select') return; // 選択はマウスツール限定
+            if (currentTool !== 'select' && currentTool !== 'text') return; // 選択・テキストツールで編集に入れる
             const wrapper = e.target.closest('.text-wrapper');
             if (wrapper) {
                 const tc = wrapper.querySelector('.text-content');
@@ -1484,7 +1494,7 @@
             document.getElementById('prop-shape-type').style.display = (currentTool === 'shape') ? 'flex' : 'none';
             const penModeNow = document.querySelector('input[name="penMode"]:checked') ? document.querySelector('input[name="penMode"]:checked').value : 'pen';
             const isErasing = (currentTool === 'pen' && penModeNow === 'eraser');
-            const hasSel = selectedElements.length > 0 || !!selectedStroke;
+            const hasSel = selectedElements.length > 0 || !!selectedStroke || selectedStrokes.length > 0;
             document.getElementById('prop-color').style.display = ((['text', 'highlight', 'pen', 'shape'].includes(currentTool) && !isErasing) || selectionHasColor()) ? 'flex' : 'none';
             // テキストの書式は、テキストツール中か、テキストを選んでいる時に出す
             const showTextProps = (currentTool === 'text') || selectionHasText();
@@ -1619,13 +1629,14 @@
         function currentPickSelector() {
             if (currentTool === 'mask') return '.mask';
             if (currentTool === 'highlight') return '.highlight-box';
+            if (currentTool === 'text') return '.text-wrapper';
             return '.mask, .text-wrapper, .highlight-box, .shape-element, .image-element';
         }
         // カーソルの下に「選択できるもの」があるか（つまみを含む）
         function isPickableAt(target) {
             if (!target || !target.closest) return false;
             if (target.classList && (target.classList.contains('fh-handle') || target.classList.contains('stroke-handle') || target.classList.contains('resize-handle'))) return true;
-            if (!['select', 'mask', 'highlight'].includes(currentTool)) return false;
+            if (!['select', 'mask', 'highlight', 'text'].includes(currentTool)) return false;
             return !!target.closest(currentPickSelector());
         }
 
@@ -1670,11 +1681,13 @@
             const newScaledW = workspace.offsetWidth * zoomLevel; 
             const newScaledH = workspace.offsetHeight * zoomLevel;
             
-            workspaceWrapper.style.width = newScaledW + 'px'; 
-            workspaceWrapper.style.height = newScaledH + 'px';
-            
-            const newMarginLeft = Math.max(0, (containerW - newScaledW) / 2); 
-            const newMarginTop = Math.max(0, (containerH - newScaledH) / 2);
+            const BOTTOM_SLACK = 200; // 最下部がツールバーに隠れないよう下へスクロールできる余地
+            const PAD_X = 250, PAD_Y = 140; // コンテンツが大きくても四方にパンの余地を残す
+            workspaceWrapper.style.width = newScaledW + 'px';
+            workspaceWrapper.style.height = (newScaledH + BOTTOM_SLACK) + 'px';
+
+            const newMarginLeft = Math.max(PAD_X, (containerW - newScaledW) / 2);
+            const newMarginTop = Math.max(PAD_Y, (containerH - newScaledH) / 2);
             
             workspaceWrapper.style.marginLeft = newMarginLeft + 'px'; 
             workspaceWrapper.style.marginTop = newMarginTop + 'px';
@@ -1719,6 +1732,7 @@
             selectedElements = [];
             savedSelectionRange = null;
             if (typeof deselectStroke === 'function') deselectStroke();
+            if (typeof clearMultiStrokeSelection === 'function') clearMultiStrokeSelection();
             if (typeof updateToolbar === 'function') updateToolbar();
         }
         
@@ -1943,6 +1957,55 @@
             deselectStroke();
             renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
             window.saveState();
+            return true;
+        }
+        // ===== ペン線の範囲選択（box_select で複数のストロークをまとめて選ぶ） =====
+        // 1本のストロークの外接矩形を workspace 座標（ズーム前）で返す
+        function strokeWorkspaceBBox(sel) {
+            const idx = parseInt(sel.svg.dataset.canvasIndex);
+            const cmd = (window.canvasDrawings[idx] || [])[sel.index];
+            if (!cmd || !cmd.points || !cmd.points.length) return null;
+            const xs = cmd.points.map(p => p.x), ys = cmd.points.map(p => p.y);
+            const pad = (cmd.width || 2) / 2 + 3;
+            const wsRect = workspace.getBoundingClientRect();
+            const sRect = sel.svg.getBoundingClientRect();
+            const z = zoomLevel || 1;
+            const offX = (sRect.left - wsRect.left) / z;
+            const offY = (sRect.top - wsRect.top) / z;
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const minY = Math.min(...ys), maxY = Math.max(...ys);
+            return { left: minX + offX - pad, top: minY + offY - pad, right: maxX + offX + pad, bottom: maxY + offY + pad };
+        }
+        function clearMultiStrokeSelection() {
+            document.querySelectorAll('.stroke-multi-sel').forEach(n => n.remove());
+            selectedStrokes = [];
+        }
+        function renderMultiStrokeSelection() {
+            document.querySelectorAll('.stroke-multi-sel').forEach(n => n.remove());
+            selectedStrokes.forEach(sel => {
+                const bb = strokeWorkspaceBBox(sel);
+                if (!bb) return;
+                const box = document.createElement('div');
+                box.className = 'stroke-multi-sel';
+                box.style.left = bb.left + 'px';
+                box.style.top = bb.top + 'px';
+                box.style.width = (bb.right - bb.left) + 'px';
+                box.style.height = (bb.bottom - bb.top) + 'px';
+                workspace.appendChild(box);
+            });
+        }
+        function deleteMultiStrokes() {
+            if (!selectedStrokes.length) return false;
+            const bySvg = new Map();
+            selectedStrokes.forEach(s => { const a = bySvg.get(s.svg) || []; a.push(s.index); bySvg.set(s.svg, a); });
+            bySvg.forEach((indices, svg) => {
+                const idx = parseInt(svg.dataset.canvasIndex);
+                const cmds = window.canvasDrawings[idx];
+                if (!cmds) return;
+                indices.sort((a, b) => b - a).forEach(i => { if (i < cmds.length) cmds.splice(i, 1); });
+                renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
+            });
+            clearMultiStrokeSelection();
             return true;
         }
         function nudgeSelectedStroke(dx, dy) {
@@ -2524,11 +2587,10 @@
 
         document.getElementById('btn-delete').addEventListener('click', () => {
             if (selectedStroke) { deleteSelectedStroke(); return; }
-            if (selectedElements.length > 0) {
-                selectedElements.forEach(el => el.remove());
-                window.deselectCurrent();
-                window.saveState();
-            }
+            let changed = false;
+            if (selectedElements.length > 0) { selectedElements.forEach(el => el.remove()); changed = true; }
+            if (selectedStrokes.length) { deleteMultiStrokes(); changed = true; }
+            if (changed) { window.deselectCurrent(); window.saveState(); }
         });
         
         document.getElementById('btn-clear-all').addEventListener('click', () => { 
@@ -3027,7 +3089,7 @@
             // 既存オブジェクトの選択・移動・変形はマウスツールのときだけ。
             // 他ツールは新規作成に専念する（作成直後はマウスツールへ戻るので続けて編集できる）。
             // 例外：マスキングツールは、自分が作るマスキングだけはその場で選択・編集できる
-            const canPickExisting = ['select', 'mask', 'highlight'].includes(currentTool);
+            const canPickExisting = ['select', 'mask', 'highlight', 'text'].includes(currentTool);
             const pickSelector = currentPickSelector();
 
             // ペン線の端のつまみ：ドラッグで線全体を拡大・縮小する
@@ -3447,8 +3509,8 @@
                         if (currentHandle.includes('n')) newTop = startRect.top + startRect.height - newHeight;
                     }
 
-                    if (newWidth > 30) { target.style.width = newWidth + 'px'; target.style.left = newLeft + 'px'; }
-                    if (newHeight > 30) { target.style.height = newHeight + 'px'; target.style.top = newTop + 'px'; }
+                    if (newWidth > 4) { target.style.width = newWidth + 'px'; target.style.left = newLeft + 'px'; }
+                    if (newHeight > 4) { target.style.height = newHeight + 'px'; target.style.top = newTop + 'px'; }
                 }
             }
         });
@@ -3545,6 +3607,20 @@
                             selectedElements.push(el);
                         }
                     });
+                    // ペン線（canvasDrawings のストローク）も範囲選択に含める
+                    selectedStrokes = [];
+                    document.querySelectorAll('.drawing-svg').forEach(svg => {
+                        const idx = parseInt(svg.dataset.canvasIndex);
+                        const cmds = window.canvasDrawings[idx] || [];
+                        cmds.forEach((cmd, i) => {
+                            const bb = strokeWorkspaceBBox({ svg, index: i });
+                            if (!bb) return;
+                            if (bb.left < boxRect.right && bb.right > boxRect.left && bb.top < boxRect.bottom && bb.bottom > boxRect.top) {
+                                selectedStrokes.push({ svg, index: i });
+                            }
+                        });
+                    });
+                    renderMultiStrokeSelection();
                     updateToolbar();
                 }
             } else if (action === 'draw_shape') {
