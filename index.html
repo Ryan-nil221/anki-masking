@@ -190,9 +190,13 @@
             color: var(--c-text);
             border-color: var(--c-border-input);
             box-shadow: var(--sh-sm);
+            position: relative; /* ツールチップ(::after)の基準にする */
         }
         .btn:hover { background-color: var(--c-surface-2); border-color: var(--c-border-strong); }
         .btn:active { transform: scale(0.97); }
+        /* 押せないボタンは薄く表示して「効かない/もう戻れない」を区別できるようにする */
+        .btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
+        .btn:disabled:hover { background-color: var(--c-surface); border-color: var(--c-border-input); }
         .btn-icon { padding: 6px 10px; }
 
         .btn-primary { background-color: var(--c-accent); color: var(--c-on-accent); border-color: var(--c-accent); }
@@ -256,6 +260,10 @@
             transform: translateY(5px); z-index: 5000;
         }
         .tool-switch label:hover::after { opacity: 1; transform: translateY(0); }
+        /* .btn のツールチップも表示する（従来はホバー時の opacity ルールが無く出ていなかった） */
+        .btn[title]:hover::after { opacity: 1; transform: translateY(0); }
+        /* ヘッダー内のボタンは上に出すと画面外に切れるため下向きに表示する */
+        header .btn[title]::after { top: calc(100% + 8px); }
         .tool-switch label:hover { background-color: var(--c-surface-3); color: var(--c-text); }
         .tool-switch input[type="radio"] { display: none; }
         .tool-switch input[type="radio"]:checked + label {
@@ -333,6 +341,7 @@
         .pdf-thumb span { font-size: 12px; font-weight: 700; color: var(--c-text-sub); }
 
         #workspace-outer { flex-grow: 1; position: relative; display: flex; overflow: hidden; background-color: var(--c-canvas); }
+        #workspace-outer.drag-over::after { content: ''; position: absolute; inset: 8px; border: 2px dashed var(--c-accent); border-radius: var(--r-lg); pointer-events: none; z-index: 4000; }
         #workspace-container { flex-grow: 1; overflow: auto; position: relative; touch-action: none; user-select: none; }
         #workspace-wrapper { position: relative; }
         #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
@@ -420,11 +429,16 @@
         #workspace-container.tool-mask div.mask-rect { background-color: rgba(0, 0, 0, 0.7); }
         #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: rgba(0, 0, 0, 0.7); }
 
+        /* 学習モード中はマスクツールの半透明表示を打ち消し、ホバーでめくれるように戻す */
+        body.focus-mode #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 0; }
+        body.focus-mode #workspace-container.tool-mask div.mask-rect { background-color: black; }
+        body.focus-mode #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: black; }
+
         .highlight-box { cursor: pointer; mix-blend-mode: multiply; -webkit-touch-callout: none; border-radius: 2px; } 
         .highlight-box.selected { cursor: move; }
         div.highlight-freehand-wrapper { background-color: transparent; }
         div.highlight-freehand-wrapper svg { display: block; overflow: visible; }
-        div.highlight-freehand-wrapper path { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
+        div.highlight-freehand-wrapper .fh-stroke { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
         
         .text-wrapper { min-width: 30px; min-height: 30px; font-size: 20px; padding: 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
         .text-wrapper.selected { background-color: rgba(255, 255, 255, 0.6); }
@@ -732,22 +746,22 @@
 
                 <div class="tool-switch">
                     <input type="radio" id="tool-select" name="currentTool" value="select">
-                    <label for="tool-select" title="選択"><span class="material-symbols-outlined">highlight_alt</span></label>
-                    
+                    <label for="tool-select" title="選択 (V)"><span class="material-symbols-outlined">highlight_alt</span></label>
+
                     <input type="radio" id="tool-mask" name="currentTool" value="mask" checked>
-                    <label for="tool-mask" title="黒塗りマスク"><span class="material-symbols-outlined icon-filled">square</span></label>
-                    
+                    <label for="tool-mask" title="黒塗りマスク (M)"><span class="material-symbols-outlined icon-filled">square</span></label>
+
                     <input type="radio" id="tool-highlight" name="currentTool" value="highlight">
-                    <label for="tool-highlight" title="蛍光ペン"><span class="material-symbols-outlined">format_ink_highlighter</span></label>
-                    
+                    <label for="tool-highlight" title="蛍光ペン (H)"><span class="material-symbols-outlined">format_ink_highlighter</span></label>
+
                     <input type="radio" id="tool-text" name="currentTool" value="text">
-                    <label for="tool-text" title="テキスト入力"><span class="material-symbols-outlined">text_fields</span></label>
-                    
+                    <label for="tool-text" title="テキスト入力 (T)"><span class="material-symbols-outlined">text_fields</span></label>
+
                     <input type="radio" id="tool-shape" name="currentTool" value="shape">
-                    <label for="tool-shape" title="図形・直線"><span class="material-symbols-outlined">category</span></label>
+                    <label for="tool-shape" title="図形・直線 (G)"><span class="material-symbols-outlined">category</span></label>
 
                     <input type="radio" id="tool-pen" name="currentTool" value="pen">
-                    <label for="tool-pen" title="ペン / 消しゴム"><span class="material-symbols-outlined">brush</span></label>
+                    <label for="tool-pen" title="ペン / 消しゴム (P)"><span class="material-symbols-outlined">brush</span></label>
                     
                     <div class="tool-divider"></div>
 
@@ -760,7 +774,7 @@
                     <button class="btn btn-icon btn-ghost" id="btn-duplicate" title="複製 (Ctrl+D)">
                         <span class="material-symbols-outlined">content_copy</span>
                     </button>
-                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-delete" title="選択したものを消す">
+                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-delete" title="選択したものを消す (Delete)">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
                     <button class="btn btn-icon btn-danger btn-ghost" id="btn-clear-all" title="すべて消す">
@@ -943,6 +957,24 @@
             const r = parseInt(hex.slice(1, 3), 16); const g = parseInt(hex.slice(3, 5), 16); const b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
+        // 既存の色（#hex / rgb / rgba）の色相を保ったまま不透明度(alpha)だけ差し替える
+        function setAlpha(color, alpha) {
+            if (!color) return `rgba(0, 0, 0, ${alpha})`;
+            color = color.trim();
+            if (/^#[0-9a-f]{6}$/i.test(color)) return hexToRgba(color, alpha);
+            if (/^#[0-9a-f]{3}$/i.test(color)) { const h = color.slice(1); return hexToRgba('#' + h[0]+h[0] + h[1]+h[1] + h[2]+h[2], alpha); }
+            const m = color.match(/rgba?\(([^)]+)\)/i);
+            if (m) { const p = m[1].split(',').map(s => s.trim()); return `rgba(${p[0]}, ${p[1]}, ${p[2]}, ${alpha})`; }
+            return color;
+        }
+        // 履歴の残量に応じて undo/redo ボタンの有効・無効を切り替える
+        function updateHistoryButtons() {
+            const u = document.getElementById('btn-undo');
+            const r = document.getElementById('btn-redo');
+            if (u) u.disabled = !(window.historyIndex > 0);
+            if (r) r.disabled = !(window.historyIndex < window.historyArray.length - 1);
+        }
+        window.updateHistoryButtons = updateHistoryButtons;
 
         document.addEventListener('contextmenu', function(e) {
             if (e.target.closest('#workspace-container')) {
@@ -1196,7 +1228,8 @@
             if (cmdOrCtrl && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
             if (cmdOrCtrl && e.key.toLowerCase() === 'c') { if (selectedElements.length || selectedStroke) { e.preventDefault(); copySelection(); } return; }
             if (cmdOrCtrl && e.key.toLowerCase() === 'x') { if (selectedElements.length || selectedStroke) { e.preventDefault(); cutSelection(); } return; }
-            if (cmdOrCtrl && e.key.toLowerCase() === 'v') { if (hasClipboard()) { e.preventDefault(); pasteClipboard(); } return; }
+            // Ctrl+V は preventDefault せず既定の paste イベントに委ねる。
+            // ここで潰すと OS クリップボードの画像貼り付け(paste ハンドラ)が発火しなくなるため。
             if (cmdOrCtrl) return; // 他のCtrl系(Z/Y)は既存ハンドラに委譲
 
             if (e.key === 'Escape') {
@@ -1223,6 +1256,21 @@
 
             const t = TOOL_HOTKEYS[e.key.toLowerCase()];
             if (t) selectToolByName(t);
+        });
+
+        // テキスト編集の確定を委譲で一括処理（複製・貼り付けで作った箱にも効く）
+        workspace.addEventListener('focusout', (e) => {
+            const tc = e.target.closest && e.target.closest('.text-content');
+            if (!tc) return;
+            const wrapper = tc.closest('.text-wrapper');
+            if (tc.innerText.trim() === '') { if (wrapper) wrapper.remove(); }
+            else window.saveState();
+            // 別のテキストの編集へ移った時はツールを戻さない
+            setTimeout(() => {
+                const a = document.activeElement;
+                if (a && a.classList && a.classList.contains('text-content')) return;
+                if (currentTool === 'text') window.returnToSelectTool();
+            }, 0);
         });
 
         // ダブルクリックでテキスト編集に入る
@@ -1456,7 +1504,9 @@
             const hasWidthSel = selectionHasWidth();
             document.getElementById('prop-pen-width').style.display = (['pen', 'shape'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free') || (currentTool === 'highlight' && highlightType === 'free') || hasWidthSel) ? 'flex' : 'none';
             
-            document.getElementById('prop-opacity').style.display = ['highlight', 'pen'].includes(currentTool) ? 'flex' : 'none';
+            // 濃さスライダーは、ハイライト/ペンツール中に加えて、ハイライト要素を選択中も出す
+            const opacitySelectable = selectedElements.some(el => el.classList.contains('highlight-box') || el.classList.contains('highlight-freehand-wrapper'));
+            document.getElementById('prop-opacity').style.display = (['highlight', 'pen'].includes(currentTool) || opacitySelectable) ? 'flex' : 'none';
             
             if (['pen', 'mask', 'shape', 'highlight'].includes(currentTool)) {
                 if (currentTool === 'pen') {
@@ -1482,7 +1532,11 @@
                 floatingProps.style.display = (['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) || hasSel) ? 'flex' : 'none';
             }
 
-            updatePaletteUI(); updateBrushCursor(); 
+            // 選択が無ければ「複製」「削除」を押せなくする
+            const delBtn = document.getElementById('btn-delete'); if (delBtn) delBtn.disabled = !hasSel;
+            const dupBtn = document.getElementById('btn-duplicate'); if (dupBtn) dupBtn.disabled = !hasSel;
+
+            updatePaletteUI(); updateBrushCursor();
         }
 
         toolRadios.forEach(radio => {
@@ -2074,20 +2128,21 @@
 
         window.saveState = function() {
             const elements = serializeElements();
-            const canvasCommandsArray = window.canvasDrawings.map(cmds => [...cmds]);
+            const canvasCommandsArray = JSON.parse(JSON.stringify(window.canvasDrawings));
             const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-svg')).map(c => c.style.zIndex);
 
             window.historyArray = window.historyArray.slice(0, window.historyIndex + 1);
             window.historyArray.push({ elements, canvasCommandsArray, canvasZIndexes });
             window.historyIndex++;
 
-            const MAX_HISTORY = 20;
+            const MAX_HISTORY = 50;
             if (window.historyArray.length > MAX_HISTORY) {
                 window.historyArray.shift();
                 window.historyIndex--;
             }
 
             scheduleAutosave();
+            updateHistoryButtons();
         }
 
         function restoreState(index) {
@@ -2110,7 +2165,7 @@
                 }
             });
             
-            window.canvasDrawings = state.canvasCommandsArray.map(cmds => [...cmds]);
+            window.canvasDrawings = JSON.parse(JSON.stringify(state.canvasCommandsArray));
             const svgs = Array.from(workspace.querySelectorAll('.drawing-svg'));
 
             svgs.forEach((svg, i) => {
@@ -2119,6 +2174,7 @@
                 }
                 renderStrokesToSVG(svg, window.canvasDrawings[i] || []);
             });
+            updateHistoryButtons();
         }
 
         window.createShapeElement = function(left, top, width, height, shapeType, color, strokeWidth, lineDir) {
@@ -2407,16 +2463,8 @@
             wrapper.appendChild(textContent); addResizeHandles(wrapper); 
             window.bringToFront(wrapper);
             workspace.appendChild(wrapper);
-            // 編集を終えたら、他のツールと同じくマウスツールへ戻す（中身が空なら箱ごと捨てる）
-            textContent.addEventListener('blur', () => {
-                if (textContent.innerText.trim() === '') wrapper.remove(); else window.saveState();
-                // 別のテキストの編集に移った時まで戻さないよう、フォーカスの移動先を見てから判断する
-                setTimeout(() => {
-                    const a = document.activeElement;
-                    if (a && a.classList && a.classList.contains('text-content')) return;
-                    if (currentTool === 'text') window.returnToSelectTool();
-                }, 0);
-            });
+            // 編集終了時の処理（保存・空箱削除・ツール復帰）は workspace への委譲リスナーで
+            // 一括処理する。cloneNode で作った複製・貼り付けの箱にも確実に効かせるため。
             return wrapper;
         }
 
@@ -2468,16 +2516,7 @@
         document.getElementById('btn-text-size-down').addEventListener('click', () => changeGlobalTextSize(-1));
 
         document.getElementById('btn-undo').addEventListener('click', () => { 
-            if (window.historyIndex > 0) { window.historyIndex--; restoreState(window.historyIndex); } 
-            else if (window.historyIndex === 0) { 
-                window.historyIndex--; 
-                workspace.querySelectorAll('.canvas-element').forEach(e => e.remove());
-                workspace.querySelectorAll('.drawing-svg').forEach((svg, i) => {
-                    window.canvasDrawings[i] = [];
-                    renderStrokesToSVG(svg, []);
-                });
-                window.deselectCurrent();
-            } 
+            if (window.historyIndex > 0) { window.historyIndex--; restoreState(window.historyIndex); }
         });
         document.getElementById('btn-redo').addEventListener('click', () => { if (window.historyIndex < window.historyArray.length - 1) { window.historyIndex++; restoreState(window.historyIndex); } });
         
@@ -2504,13 +2543,15 @@
         });
 
         penOpacityInput.addEventListener('input', (e) => {
+            const a = e.target.value;
             let saved = false;
             selectedElements.forEach(selectedElement => {
                 if (selectedElement.classList.contains('highlight-freehand-wrapper')) {
                     const p = selectedElement.querySelector('.fh-stroke');
-                    if (p) { p.style.stroke = hexToRgba(toolColors['highlight'], e.target.value); updateFreehandUI(selectedElement); saved = true; }
+                    // 現在の色は保ったまま濃さ(alpha)だけ変える（従来はツール色で塗り替わる不具合があった）
+                    if (p) { p.style.stroke = setAlpha(p.style.stroke || getComputedStyle(p).stroke, a); updateFreehandUI(selectedElement); saved = true; }
                 } else if (selectedElement.classList.contains('highlight-box')) {
-                    selectedElement.style.backgroundColor = hexToRgba(toolColors['highlight'], e.target.value);
+                    selectedElement.style.backgroundColor = setAlpha(selectedElement.style.backgroundColor || getComputedStyle(selectedElement).backgroundColor, a);
                     saved = true;
                 }
             });
@@ -2551,6 +2592,9 @@
                 });
                 
                 setZoom(1.0);
+                // 空の初期状態を履歴の起点(index 0)として必ず積む（undoで全消去される不具合の防止）
+                window.historyArray = []; window.historyIndex = -1;
+                window.saveState();
             }, 50);
         }
 
@@ -3028,7 +3072,9 @@
             if (canPickExisting && e.target.classList.contains('resize-handle')) {
                 action = 'resize';
                 const targetElement = e.target.parentElement;
-                if (!targetElement.classList.contains('selected')) {
+                // リサイズは常に「つまみを掴んだ要素」1つだけを対象にする。
+                // 複数選択中に掴んでも他要素へ変形が波及しないよう、選択をこの要素に絞る。
+                if (selectedElements.length !== 1 || selectedElements[0] !== targetElement) {
                     window.deselectCurrent();
                     targetElement.classList.add('selected');
                     selectedElements = [targetElement];
@@ -3810,16 +3856,19 @@
 
         // 【改修】オリジナル画質での書き出し処理（PDF解像度対応）
         // 問題版（マスクあり）／解答版（マスクなし）の明示的な書き出し
-        document.getElementById('btn-export-question').addEventListener('click', () => {
+        document.getElementById('btn-export-question').addEventListener('click', async () => {
+            const prev = window.isMasksHidden;
             setMasksHidden(false);
-            document.getElementById('btn-download-menu').click();
+            try { await runNativeExport(); } finally { setMasksHidden(prev); } // 書き出し後は画面の表示状態を元に戻す
         });
-        document.getElementById('btn-export-answer').addEventListener('click', () => {
+        document.getElementById('btn-export-answer').addEventListener('click', async () => {
+            const prev = window.isMasksHidden;
             setMasksHidden(true);
-            document.getElementById('btn-download-menu').click();
+            try { await runNativeExport(); } finally { setMasksHidden(prev); }
         });
+        document.getElementById('btn-download-menu').addEventListener('click', () => runNativeExport());
 
-        document.getElementById('btn-download-menu').addEventListener('click', async () => {
+        async function runNativeExport() {
             saveDropdownMenu.classList.remove('show');
             if (uploadedImage.style.display === 'none' && pdfContainer.style.display === 'none') { alert('先に画像かPDFを新規作成で開いてください。'); return; }
             window.deselectCurrent(); brushCursor.style.display = 'none';
@@ -3945,15 +3994,15 @@
                     }
                     pdf.save(`${window.currentFileName}_マスキング.pdf`);
                 }
-            } catch (error) { 
-                console.error("ダウンロードエラー:", error); 
-                alert("エラーが発生しました。"); 
+            } catch (error) {
+                console.error("ダウンロードエラー:", error);
+                alert("エラーが発生しました。");
             } finally {
-                loadingOverlay.style.display = 'none'; 
+                loadingOverlay.style.display = 'none';
             }
-        });
+        }
 
-        // --- 画像貼り付け・生成機能 --- 
+        // --- 画像貼り付け・生成機能 ---
         window.createImageElement = function(left, top, width, height, dataUrl) {
             const wrapper = document.createElement('div');
             wrapper.className = 'canvas-element image-element';
@@ -4024,6 +4073,7 @@
         document.addEventListener('paste', (e) => {
             if (e.target.closest('.text-content') || e.target.tagName === 'INPUT') return;
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let handledImage = false;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
@@ -4031,9 +4081,44 @@
                     const reader = new FileReader();
                     reader.onload = (event) => { insertImageToWorkspace(event.target.result); };
                     reader.readAsDataURL(blob);
+                    handledImage = true;
                 }
             }
+            // OS クリップボードに画像が無ければ、アプリ内クリップボード(図形・マスク等)を貼る
+            if (!handledImage && hasClipboard()) { e.preventDefault(); pasteClipboard(); }
         });
+
+        // --- ファイルのドラッグ&ドロップで開く（画像/PDF→新規作成、.amk→データ読込） ---
+        (function setupDropZone() {
+            const zone = document.getElementById('workspace-outer');
+            if (!zone) return;
+            ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, (e) => {
+                if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    zone.classList.add('drag-over');
+                }
+            }));
+            ['dragleave', 'dragend'].forEach(ev => zone.addEventListener(ev, (e) => {
+                if (e.target === zone) zone.classList.remove('drag-over');
+            }));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                if (!f) return;
+                const isProject = f.name.toLowerCase().endsWith('.amk');
+                const input = document.getElementById(isProject ? 'projectInput' : 'imageInput');
+                if (!input) return;
+                const dt = new DataTransfer();
+                dt.items.add(f);
+                input.files = dt.files;
+                input.dispatchEvent(new Event('change'));
+            });
+        })();
+
+        // 起動直後は履歴が無いので undo/redo を無効表示にしておく
+        updateHistoryButtons();
 
         // --- データ損失防止：離脱警告 ＋ 前回作業の復元 ---
         // 自動保存が完了する前（編集直後）に閉じた場合のみ警告する
