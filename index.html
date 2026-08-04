@@ -251,15 +251,18 @@
 
         .tool-switch {
             display: inline-flex; background: var(--c-glass); backdrop-filter: blur(10px);
-            border-radius: var(--r-pill); padding: 8px; gap: 6px; border: 1px solid var(--c-glass-border);
+            border-radius: var(--r-pill); padding: 6px; gap: 4px; border: 1px solid var(--c-glass-border);
             box-shadow: var(--sh-lg); pointer-events: auto; align-items: center;
         }
 
         .tool-switch label {
-            display: flex; justify-content: center; align-items: center; width: 44px; height: 44px;
+            display: flex; justify-content: center; align-items: center; width: 38px; height: 38px;
             cursor: pointer; border-radius: 50%; color: var(--c-text-muted); transition: all 0.2s ease; position: relative;
         }
-        .tool-switch label .material-symbols-outlined { font-size: 24px; }
+        .tool-switch label .material-symbols-outlined { font-size: 21px; }
+        /* ツールバー内のアイコンボタンも同じ大きさに揃える */
+        .tool-switch .btn-icon { padding: 4px 8px; }
+        .tool-switch .btn-icon .material-symbols-outlined { font-size: 21px; }
 
         .tool-switch label::after, .btn[title]::after, .slider-label[title]::after {
             content: attr(title); position: absolute; top: -35px; background: var(--c-tooltip-bg);
@@ -278,7 +281,7 @@
             background-color: var(--c-accent); color: var(--c-on-accent); box-shadow: 0 4px 10px var(--c-accent-weak);
             transform: translateY(-2px);
         }
-        .tool-divider { width: 1px; height: 24px; background: var(--c-glass-border); margin: 0 4px; }
+        .tool-divider { width: 1px; height: 20px; background: var(--c-glass-border); margin: 0 3px; }
 
         /* --- フローティングプロパティパネル --- */
         #floating-properties {
@@ -356,7 +359,7 @@
 
         .floating-ui {
             position: absolute; z-index: 100; background: var(--c-glass); backdrop-filter: blur(8px);
-            padding: 8px 12px; border-radius: var(--r-lg); box-shadow: var(--sh-md); border: 1px solid var(--c-glass-border); display: flex; align-items: center; gap: 10px;
+            padding: 5px 9px; border-radius: var(--r-lg); box-shadow: var(--sh-md); border: 1px solid var(--c-glass-border); display: flex; align-items: center; gap: 7px;
         }
         #floating-top-left { top: 20px; left: 20px; }
         #floating-bottom-right { bottom: 25px; right: 25px; }
@@ -395,7 +398,10 @@
             #page-input { width: 52px; padding-right: 20px; }
         }
         #page-input { width: 40px; text-align: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 4px; font-size: 14px; font-weight: 700; background-color: var(--c-surface); color: var(--c-text); }
-        #zoom-text { font-weight: 700; width: 55px; text-align: center; font-size: 14px; color: var(--c-text); }
+        #zoom-text { font-weight: 700; width: 46px; text-align: center; font-size: 13px; color: var(--c-text); }
+        /* 浮いているUI（ズーム・ページ移動）のボタンも一回り小さくする */
+        .floating-ui .btn-icon { padding: 4px 8px; }
+        .floating-ui .btn-icon .material-symbols-outlined { font-size: 21px; }
 
         #uploaded-image { display: block; max-width: none; max-height: none; -webkit-touch-callout: none !important; -webkit-user-drag: none; user-drag: none; border-radius: 4px; }
         #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; -webkit-touch-callout: none; }
@@ -810,7 +816,7 @@
         body.compact-ui .tool-switch .btn { width: 42px; height: 42px; padding: 0; }
         body.compact-ui .tool-switch label .material-symbols-outlined,
         body.compact-ui .tool-switch .btn .material-symbols-outlined { font-size: 22px; }
-        body.compact-ui #btn-props-toggle.is-on { background: var(--c-accent); color: var(--c-on-accent); }
+        #btn-props-toggle.is-on { background: var(--c-accent); color: var(--c-on-accent); }
 
         /* プロパティ行：既定は隠す。開いた時は画面幅に収めて折り返す（横スクロールにしない） */
         body.compact-ui #floating-properties {
@@ -908,7 +914,7 @@
                 </div>
 
                 <!-- 狭い画面専用：ヘッダーの操作を1つにまとめる（compact-ui の時だけ出す） -->
-                <div class="dropdown" id="header-menu-container">
+                <div class="dropdown compact-only" id="header-menu-container">
                     <button class="btn btn-icon" id="btn-header-menu" title="メニュー">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
@@ -1096,9 +1102,16 @@
                     <input type="radio" id="tool-pen" name="currentTool" value="pen">
                     <label for="tool-pen" title="ペン / 消しゴム (P)"><span class="material-symbols-outlined">brush</span></label>
                     
-                    <!-- 狭い画面専用：プロパティ行の開閉と、残りの操作をまとめた「…」 -->
+                    <!-- 画像を追加：ペンの直後に置き、区切り線は挟まない -->
+                    <button class="btn btn-icon btn-ghost wide-only" id="btn-add-image" title="画像を追加">
+                        <span class="material-symbols-outlined">add_photo_alternate</span>
+                    </button>
+                    <input type="file" id="overlayImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;">
+
+                    <!-- 「設定」は全画面共通（プロパティ行の開閉）。「…」は狭い画面専用 -->
+                    <div class="tool-divider wide-only"></div>
                     <div class="tool-divider compact-only"></div>
-                    <button class="btn btn-icon btn-ghost compact-only" id="btn-props-toggle" title="設定">
+                    <button class="btn btn-icon btn-ghost" id="btn-props-toggle" title="設定（色・太さ・大きさ）">
                         <span class="material-symbols-outlined">tune</span>
                     </button>
                     <div class="dropdown compact-only" id="tool-more-container">
@@ -1113,12 +1126,6 @@
                         </ul>
                     </div>
 
-                    <div class="tool-divider wide-only"></div>
-
-                    <button class="btn btn-icon btn-ghost wide-only" id="btn-add-image" title="画像を追加">
-                        <span class="material-symbols-outlined">add_photo_alternate</span>
-                    </button>
-                    <input type="file" id="overlayImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;">
                     <div class="tool-divider wide-only"></div>
 
                     <button class="btn btn-icon btn-ghost wide-only" id="btn-duplicate" title="複製 (Ctrl+D)">
@@ -1179,10 +1186,12 @@
         // 「プロパティ行は設定ボタンで開く」挙動の両方がこのフラグを見る。
         const compactMQ = window.matchMedia('(max-width: 640px), (orientation: landscape) and (max-height: 500px)');
         window.isCompactUI = () => compactMQ.matches;
+        // プロパティ行（色・太さ・大きさ）は画面幅を問わず「設定」ボタンで開閉する。
+        // 既定は閉じた状態。開閉の選択は次に開いた時も残す。
         let propsOpen = false;
+        try { propsOpen = localStorage.getItem('propsOpen') === '1'; } catch (_) {}
         const applyCompactUI = () => {
             document.body.classList.toggle('compact-ui', compactMQ.matches);
-            if (!compactMQ.matches) propsOpen = false;
             if (window.__toolbarReady) updateToolbar();
             if (window.updateToolsHeightVar) window.updateToolsHeightVar();
         };
@@ -1222,6 +1231,7 @@
             btnPropsToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 propsOpen = !propsOpen;
+                try { localStorage.setItem('propsOpen', propsOpen ? '1' : '0'); } catch (_) {}
                 if (window.__toolbarReady) updateToolbar();
                 if (window.updateToolsHeightVar) window.updateToolsHeightVar();
             });
@@ -1589,16 +1599,25 @@
         function duplicateSelection() {
             if (selectedStroke) { duplicateSelectedStroke(); return; }
             if (!selectedElements.length) return;
+            // 貼り付けと同じく、複製もカーソル位置に置く（選択範囲の左上をカーソルに合わせる）
+            let dx = 12, dy = 12;
+            if (lastMouseWs) {
+                const minX = Math.min(...selectedElements.map(el => parseFloat(el.style.left || 0)));
+                const minY = Math.min(...selectedElements.map(el => parseFloat(el.style.top || 0)));
+                dx = lastMouseWs.x - minX;
+                dy = lastMouseWs.y - minY;
+            }
             const clones = [];
             selectedElements.forEach(el => {
                 const clone = el.cloneNode(true);
                 clone.classList.remove('selected');
-                clone.style.left = (parseFloat(el.style.left || 0) + 12) + 'px';
-                clone.style.top = (parseFloat(el.style.top || 0) + 12) + 'px';
+                clone.style.left = (parseFloat(el.style.left || 0) + dx) + 'px';
+                clone.style.top = (parseFloat(el.style.top || 0) + dy) + 'px';
                 workspace.appendChild(clone);
                 window.bringToFront(clone);
                 clones.push(clone);
             });
+            alignPastedToCursor(clones);
             window.deselectCurrent();
             selectedElements = clones;
             clones.forEach(c => c.classList.add('selected'));
@@ -1697,12 +1716,56 @@
                 window.bringToFront(clone);
                 clones.push(clone);
             });
+            alignPastedToCursor(clones);
             window.deselectCurrent();
             selectedElements = clones;
             clones.forEach(c => c.classList.add('selected'));
             updateToolbar();
             window.saveState();
         }
+        // テキスト箱を1つだけ置いた時は、テキストツールでの新規作成と同じく
+        // 「文字の左下（キャレット）」をカーソルに合わせる。DOM に入れてからでないと測れない。
+        function alignPastedToCursor(els) {
+            if (!lastMouseWs || els.length !== 1) return;
+            if (!els[0].classList.contains('text-wrapper')) return;
+            moveTextBottomLeftTo(els[0], lastMouseWs.x, lastMouseWs.y);
+        }
+
+        // アプリ内でコピーした印。OS クリップボードにこの型を書き込んでおき、
+        // 貼り付け時に「直前のコピーはアプリ内だった」と判別する。
+        // text/plain は空にする（文字入力中に貼っても何も入らないようにするため）。
+        const CLIP_TYPE = 'text/x-ankimasking';
+        function markClipboard(dt) {
+            try { dt.setData(CLIP_TYPE, '1'); } catch (_) {}
+            dt.setData('text/plain', '');
+        }
+        function isOwnClipboard(dt) {
+            const types = Array.from(dt.types || []);
+            if (types.includes(CLIP_TYPE)) return true;
+            // 独自の型が残らないブラウザ向けの保険：
+            // 画像が無く、text/plain も空なら、直前のコピーはこのアプリのものとみなす
+            return !types.includes('Files') && !dt.getData('text/plain');
+        }
+        function isTypingTarget(t) {
+            if (!t || !t.tagName) return false;
+            const n = t.tagName.toLowerCase();
+            return n === 'input' || n === 'textarea' || t.isContentEditable ||
+                   (t.classList && t.classList.contains('text-content'));
+        }
+        document.addEventListener('copy', (e) => {
+            if (isTypingTarget(e.target)) return;
+            if (!selectedElements.length && !selectedStroke) return;
+            copySelection();
+            markClipboard(e.clipboardData);
+            e.preventDefault();
+        });
+        document.addEventListener('cut', (e) => {
+            if (isTypingTarget(e.target)) return;
+            if (!selectedElements.length && !selectedStroke) return;
+            cutSelection();
+            markClipboard(e.clipboardData);
+            e.preventDefault();
+        });
 
         let nudgeSaveTimer = null;
         function nudgeSelection(dx, dy) {
@@ -1743,10 +1806,10 @@
             if (isTyping) return;
 
             if (cmdOrCtrl && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
-            if (cmdOrCtrl && e.key.toLowerCase() === 'c') { if (selectedElements.length || selectedStroke) { e.preventDefault(); copySelection(); } return; }
-            if (cmdOrCtrl && e.key.toLowerCase() === 'x') { if (selectedElements.length || selectedStroke) { e.preventDefault(); cutSelection(); } return; }
-            // Ctrl+V は preventDefault せず既定の paste イベントに委ねる。
-            // ここで潰すと OS クリップボードの画像貼り付け(paste ハンドラ)が発火しなくなるため。
+            // Ctrl+C / Ctrl+X / Ctrl+V はいずれも preventDefault せず、既定の copy/cut/paste
+            // イベントに委ねる。ここで潰すと OS クリップボードが書き換わらず、前にコピーした
+            // 画像が残り続けて貼り付け時にそちらが優先されてしまう。
+            if (cmdOrCtrl && (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'x')) return;
             if (cmdOrCtrl) return; // 他のCtrl系(Z/Y)は既存ハンドラに委譲
 
             if (e.key === 'Escape') {
@@ -2075,9 +2138,8 @@
 
             const floatingProps = document.getElementById('floating-properties');
             const hasProps = ['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) || hasSel;
-            // 狭い画面では常時出さず、「設定」ボタンで開いた時だけ出す（編集領域を食わないため）
-            const compact = !!(window.isCompactUI && window.isCompactUI());
-            const showProps = hasProps && (!compact || (window.isPropsOpen && window.isPropsOpen()));
+            // 常時は出さず、「設定」ボタンで開いた時だけ出す（作業の邪魔にならないように）
+            const showProps = hasProps && !!(window.isPropsOpen && window.isPropsOpen());
             if(floatingProps) {
                 floatingProps.style.display = showProps ? 'flex' : 'none';
             }
@@ -2653,7 +2715,13 @@
             if (!cmd) return;
             const idx = parseInt(selectedStroke.svg.dataset.canvasIndex);
             const copy = JSON.parse(JSON.stringify(cmd));
-            copy.points = copy.points.map(p => ({ x: p.x + 12, y: p.y + 12 }));
+            // 貼り付けと同じく、線の左上をカーソル位置に合わせる
+            let dx = 12, dy = 12;
+            if (lastMouseWs && copy.points.length) {
+                dx = lastMouseWs.x - Math.min(...copy.points.map(p => p.x));
+                dy = lastMouseWs.y - Math.min(...copy.points.map(p => p.y));
+            }
+            copy.points = copy.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
             window.canvasDrawings[idx].push(copy);
             const svg = selectedStroke.svg;
             selectedStroke = { svg, index: window.canvasDrawings[idx].length - 1 };
@@ -5034,7 +5102,9 @@
             return wrapper;
         };
 
-        function insertImageToWorkspace(dataUrl) {
+        // at を渡すと、その位置（ワークスペース座標）を画像の左上に合わせる。
+        // 渡さなければ従来どおり表示中の領域の中央に置く。
+        function insertImageToWorkspace(dataUrl, at) {
             const img = new Image();
             img.onload = () => {
                 let w = img.width; let h = img.height;
@@ -5050,8 +5120,8 @@
                 const centerX = (workspaceContainer.scrollLeft + containerW / 2 - oldMarginLeft) / zoomLevel;
                 const centerY = (workspaceContainer.scrollTop + containerH / 2 - oldMarginTop) / zoomLevel;
 
-                const left = (centerX - w / 2) + 'px';
-                const top = (centerY - h / 2) + 'px';
+                const left = (at ? at.x : centerX - w / 2) + 'px';
+                const top = (at ? at.y : centerY - h / 2) + 'px';
 
                 const newImgEl = window.createImageElement(left, top, w + 'px', h + 'px', dataUrl);
                 window.deselectCurrent();
@@ -5085,15 +5155,22 @@
 
         // クリップボードからのペースト(Ctrl+V)に対応
         document.addEventListener('paste', (e) => {
-            if (e.target.closest('.text-content') || e.target.tagName === 'INPUT') return;
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            if (isTypingTarget(e.target)) return;
+            const data = e.clipboardData || e.originalEvent.clipboardData;
+            // 直前のコピーがアプリ内なら、OS クリップボードに古い画像が残っていても
+            // そちらを見ない（見てしまうと「コピーしたはずの図形が貼れない」ことになる）
+            if (hasClipboard() && isOwnClipboard(data)) {
+                e.preventDefault(); pasteClipboard(); return;
+            }
+            const items = data.items;
             let handledImage = false;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const blob = item.getAsFile();
+                    const at = lastMouseWs ? { x: lastMouseWs.x, y: lastMouseWs.y } : null;
                     const reader = new FileReader();
-                    reader.onload = (event) => { insertImageToWorkspace(event.target.result); };
+                    reader.onload = (event) => { insertImageToWorkspace(event.target.result, at); };
                     reader.readAsDataURL(blob);
                     handledImage = true;
                 }
