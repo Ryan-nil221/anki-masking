@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>暗記マスキング - 登録不要のPDF・画像を黒塗りできる無料の学習用WEBアプリ！</title>
     <meta name="description" content="PDFや画像をアップロードして、覚えたい部分をサッと黒塗り！「暗記マスキング」は、画面上でカーソルを合わせるだけで答えを確認しながら勉強できる無料の学習WEBアプリです。毎日の学習をスマートに効率化します。">
     
@@ -121,6 +121,9 @@
         body {
             margin: 0;
             height: 100vh;
+            /* スマホはアドレスバーの分だけ 100vh が実際の可視領域より高く、
+               下端のツールバーが画面外へ落ちる。dvh 対応ブラウザではこちらが勝つ。 */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -173,6 +176,11 @@
         }
         
         .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* 編集中のファイル名 */
+        #current-file-name { display: inline-flex; align-items: center; gap: 5px; max-width: 260px; font-size: 13px; font-weight: 600; color: var(--c-text-sub); }
+        #current-file-name .material-symbols-outlined { font-size: 18px; color: var(--c-text-muted); }
+        #current-file-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* --- ボタンデザイン --- */
         .btn {
@@ -354,6 +362,38 @@
         #floating-bottom-right { bottom: 25px; right: 25px; }
 
         #page-navigation { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--c-text); }
+        /* 標準の上下矢印は隠し、同じ場所・同じ見え方の自前の矢印を置く。
+           見た目（幅・出るタイミング）は元のまま、向きだけ「紙の動く向き」に直す。 */
+        #page-input::-webkit-outer-spin-button, #page-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        #page-input { -moz-appearance: textfield; }
+        #page-input-wrap { position: relative; display: inline-flex; align-items: center; }
+        #page-stepper {
+            position: absolute; right: 3px; top: 2px; bottom: 2px; width: 13px;
+            display: flex; flex-direction: column; gap: 1px;
+            opacity: 0; transition: opacity 0.12s; pointer-events: none;
+        }
+        #page-input-wrap:hover #page-stepper, #page-input-wrap:focus-within #page-stepper {
+            opacity: 1; pointer-events: auto;
+        }
+        #page-stepper button {
+            flex: 1; padding: 0; border: none; background: var(--c-surface-3);
+            border-radius: 2px; cursor: pointer; position: relative;
+        }
+        #page-stepper button:hover { background: var(--c-border); }
+        /* 三角は擬似要素で描く（アイコン用フォントの読み込みに左右されないように） */
+        #page-stepper button::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            border-left: 3px solid transparent; border-right: 3px solid transparent;
+        }
+        #btn-page-prev::before { border-bottom: 4px solid var(--c-text-sub); margin-top: -1px; }
+        #btn-page-next::before { border-top: 4px solid var(--c-text-sub); margin-top: 1px; }
+        /* 指で使う端末はホバーが無いので常に出す。潰れないよう入力欄を少しだけ広げる */
+        @media (hover: none) {
+            #page-stepper { opacity: 1; pointer-events: auto; width: 16px; }
+            #page-input { width: 52px; padding-right: 20px; }
+        }
         #page-input { width: 40px; text-align: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 4px; font-size: 14px; font-weight: 700; background-color: var(--c-surface); color: var(--c-text); }
         #zoom-text { font-weight: 700; width: 55px; text-align: center; font-size: 14px; color: var(--c-text); }
 
@@ -409,10 +449,22 @@
 
         /* --- キャンバスエレメント --- */
         .canvas-element { position: absolute; box-sizing: border-box; }
+        /* 選択中は本体の外側6pxまで「つかみ（移動）」判定を広げる。
+           z-index:-1 で本体の中身より下に敷くので、内側は本来のクリック（文字編集等）が通り、
+           外側の帯（他に何も無い所）だけがこの擬似要素に当たって移動になる。角の丸(z50)は上。 */
+        .canvas-element.selected::before {
+            content: ''; position: absolute; inset: -6px; z-index: -1;
+        }
         
         .mask { cursor: pointer; transition: opacity 0.3s; -webkit-touch-callout: none; border-radius: 2px; }
-        .mask:not(.selected):hover { opacity: 0; }
-        
+        /* めくりのホバーはマウス環境限定。指ではホバーが「貼り付いて」剥がれないため、
+           タッチでは下の .revealed（タップでトグル）を使う。 */
+        @media (hover: hover) and (pointer: fine) {
+            .mask:not(.selected):hover { opacity: 0; }
+        }
+        /* タップでめくった状態。学習モード中だけ効く（編集中に勝手に透けない） */
+        body.focus-mode #workspace-container .mask.revealed { opacity: 0 !important; }
+
         div.mask-rect { background-color: black; }
         div.mask-rect.selected { background-color: rgba(0, 0, 0, 0.7); cursor: move; }
         
@@ -425,12 +477,16 @@
 
         /* マスキングツール中は、既存のマスクを最初から半透明（選択時と同じ濃さ）で表示し、
            重ねてもホバーで消えないようにする */
-        #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 1; }
+        @media (hover: hover) and (pointer: fine) {
+            #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 1; }
+        }
         #workspace-container.tool-mask div.mask-rect { background-color: rgba(0, 0, 0, 0.7); }
         #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: rgba(0, 0, 0, 0.7); }
 
         /* 学習モード中はマスクツールの半透明表示を打ち消し、ホバーでめくれるように戻す */
-        body.focus-mode #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 0; }
+        @media (hover: hover) and (pointer: fine) {
+            body.focus-mode #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 0; }
+        }
         body.focus-mode #workspace-container.tool-mask div.mask-rect { background-color: black; }
         body.focus-mode #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: black; }
 
@@ -440,7 +496,7 @@
         div.highlight-freehand-wrapper svg { display: block; overflow: visible; }
         div.highlight-freehand-wrapper .fh-stroke { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
         
-        .text-wrapper { min-width: 30px; min-height: 30px; font-size: 20px; padding: 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
+        .text-wrapper { min-width: 30px; min-height: 0; font-size: 20px; padding: 2px 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
         .text-wrapper.selected { background-color: rgba(255, 255, 255, 0.6); }
         .text-content { width: 100%; height: 100%; outline: none; white-space: pre-wrap; word-wrap: break-word; overflow: visible; pointer-events: none; font-weight: normal; text-orientation: upright; margin: 0;}
         .text-wrapper.selected .text-content { pointer-events: auto; cursor: text; }
@@ -452,12 +508,12 @@
         .highlight-box:not(.highlight-freehand-wrapper).selected,
         .shape-element:not([data-shape-type="line"]).selected,
         .image-element.selected {
-            outline: 2px dashed var(--c-accent);
-            outline-offset: 2px;
+            outline: 1px dashed var(--c-accent);
+            outline-offset: 0;
         }
         /* テキストは箱にぴったり沿わせる（余白を挟まない） */
         .text-wrapper.selected {
-            outline: 2px dashed var(--c-accent);
+            outline: 1px dashed var(--c-accent);
             outline-offset: 0;
         }
         
@@ -489,26 +545,45 @@
         .selected > svg > .fh-center { display: block; }
         /* 両端のつまみ（ドラッグで線を拡大・縮小） */
         .fh-handle {
-            position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px;
-            background-color: var(--c-surface); border: 2px solid var(--c-accent); border-radius: 50%;
+            position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+            background-color: var(--c-surface); border: 1px solid var(--c-accent); border-radius: 50%;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; display: none;
             pointer-events: auto; cursor: crosshair;
         }
         .canvas-element.selected > .fh-handle { display: block; }
 
         /* 通常の四隅のハンドル */
-        .resize-handle { position: absolute; width: 10px; height: 10px; background-color: white; border: 2px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
+        .resize-handle { position: absolute; width: 5px; height: 5px; background-color: white; border: 1px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
         .canvas-element.selected .resize-handle { display: block; }
-        .handle-nw { top: -8px; left: -8px; cursor: nwse-resize; }
-        .handle-ne { top: -8px; right: -8px; cursor: nesw-resize; }
-        .handle-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
-        .handle-se { bottom: -8px; right: -8px; cursor: nwse-resize; }
+        /* 四隅：当たり域を点線の角に対して内2px・外6px（計8px）に広げ、丸(見た目)は角の上に描く */
+        .handle-nw, .handle-ne, .handle-sw, .handle-se {
+            width: 8px; height: 8px; background: transparent; border: none; box-shadow: none; border-radius: 0;
+        }
+        .handle-nw::before, .handle-ne::before, .handle-sw::before, .handle-se::before {
+            content: ''; position: absolute; width: 5px; height: 5px;
+            background: white; border: 1px solid var(--c-accent); border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .handle-nw::before { top: 6px; left: 6px; transform: translate(-50%, -50%); }
+        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .handle-ne::before { top: 6px; right: 6px; transform: translate(50%, -50%); }
+        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .handle-sw::before { bottom: 6px; left: 6px; transform: translate(-50%, 50%); }
+        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .handle-se::before { bottom: 6px; right: 6px; transform: translate(50%, 50%); }
         /* 範囲選択で選んだペン線の囲み */
-        .stroke-multi-sel { position: absolute; border: 2px dashed var(--c-accent); border-radius: 4px; pointer-events: none; z-index: 60; }
+        .stroke-multi-sel { position: absolute; border: 1px dashed var(--c-accent); border-radius: 4px; pointer-events: none; z-index: 60; }
 
-        /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置 */
+        /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置。他ツールと見た目・当たりを揃える */
         .shape-element[data-shape-type="line"] .resize-handle {
-            width: 14px; height: 14px; margin: -7px 0 0 -7px; /* 14pxの真ん中を合わせる */
+            width: 8px; height: 8px; margin: -4px 0 0 -4px; /* 8pxの当たり域の中心を端点に合わせる */
+            background: transparent; border: none; box-shadow: none; border-radius: 0;
+        }
+        .shape-element[data-shape-type="line"] .resize-handle::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 5px; height: 5px; background: white; border: 1px solid var(--c-accent);
+            border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .shape-element[data-shape-type="line"][data-line-dir="\\"] .handle-p1 { top: 0; left: 0; cursor: crosshair; }
         .shape-element[data-shape-type="line"][data-line-dir="\\"] .handle-p2 { top: 100%; left: 100%; cursor: crosshair; }
@@ -539,6 +614,233 @@
             font-size: 14px; color: var(--c-text);
         }
         #restore-banner .material-symbols-outlined { color: var(--c-accent); }
+
+        /* =========================================================
+           スマホ・タブレット対応
+           - 見た目は変えず、指で使えるようにするための追加だけ
+           - PC（マウス）には当たらない条件で囲う
+           ========================================================= */
+
+        /* --- 指での当たり判定を広げる（見た目は据え置き） --- */
+        @media (pointer: coarse) {
+            /* 透明な擬似要素で当たりだけ44pxに広げる。::after はツールチップで使用中なので ::before を使う */
+            .btn, .swatch { position: relative; }
+            .btn::before, .swatch::before {
+                content: ''; position: absolute; top: 50%; left: 50%;
+                width: 44px; height: 44px; min-width: 100%; min-height: 100%;
+                transform: translate(-50%, -50%);
+            }
+            /* 2択スイッチは隣と密着していて擬似要素では食い合うので、実寸を44pxにする */
+            .mini-switch label { width: 44px; height: 44px; }
+            /* 入力欄は擬似要素が描けないので実寸を上げる。16px 未満だと iOS が勝手にズームする */
+            .number-input, .combo-box { min-height: 44px; }
+            .number-input, .combo-input, #page-input { font-size: 16px; }
+            .dropdown-menu li { padding: 13px 15px; }
+            /* 当たりを広げた分、隣同士が食い合わないよう間隔を空ける。
+               選択中の丸は1.15倍に膨らむので、その分も見込んで26px空ける */
+            .color-palette { gap: 26px; }
+            .tool-switch { gap: 10px; }
+
+            /* 四隅・端点のつまみ：白丸の見た目はそのままに、掴める範囲だけ広げる */
+            .handle-nw, .handle-ne, .handle-sw, .handle-se { width: 36px; height: 36px; }
+            .handle-nw { top: -18px; left: -18px; }
+            .handle-nw::before { top: 18px; left: 18px; }
+            .handle-ne { top: -18px; right: -18px; }
+            .handle-ne::before { top: 18px; right: 18px; }
+            .handle-sw { bottom: -18px; left: -18px; }
+            .handle-sw::before { bottom: 18px; left: 18px; }
+            .handle-se { bottom: -18px; right: -18px; }
+            .handle-se::before { bottom: 18px; right: 18px; }
+            .shape-element[data-shape-type="line"] .resize-handle { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+            .fh-handle {
+                width: 36px; height: 36px; margin: -18px 0 0 -18px;
+                background: transparent; border: none; box-shadow: none;
+            }
+            .fh-handle::before {
+                content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                width: 5px; height: 5px; background-color: var(--c-surface);
+                border: 1px solid var(--c-accent); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            }
+            /* 長押しでOSの選択・保存メニューが出て編集を邪魔しないようにする */
+            #workspace-container .textLayer span {
+                pointer-events: none !important; -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important; user-select: none !important;
+            }
+            .image-element img, .canvas-element { -webkit-touch-callout: none; }
+            /* UI の連打がダブルタップ拡大と誤解されないようにする（キャンバスのピンチは残る） */
+            #app-header, #floating-tools-container, .floating-ui, #btn-focus-mode,
+            .dropdown-menu, #pdf-sidebar, #restore-banner { touch-action: manipulation; }
+        }
+
+        /* --- ホバーが無い環境（指）での見た目の後始末 --- */
+        @media (hover: none) {
+            /* タップ後に出っぱなしになるツールチップを出さない */
+            .tool-switch label::after, .btn[title]::after, .slider-label[title]::after { display: none !important; }
+            /* タップ後の「押されたまま」に見える表示を止める。選択中の色が2つに見える等 */
+            .swatch:hover { transform: none; }
+            .swatch.active { transform: scale(1.15); }
+            .btn:hover { background-color: var(--c-surface); border-color: var(--c-border-input); }
+            .btn-primary:hover { background-color: var(--c-accent); border-color: var(--c-accent); }
+            .btn-success:hover { background-color: var(--c-success); border-color: var(--c-success); }
+            .btn-danger:hover { background-color: var(--c-danger-bg); border-color: var(--c-danger-border); }
+            .btn-project:hover { background-color: var(--c-project-bg); border-color: var(--c-project-border); }
+            .btn-ghost:hover { background-color: transparent; border-color: transparent; }
+            .tool-switch label:hover { background-color: transparent; color: var(--c-text-muted); }
+            .tool-switch input[type="radio"]:checked + label { background-color: var(--c-accent); color: var(--c-on-accent); }
+            #btn-focus-mode:hover { background: var(--c-glass); color: var(--c-text-muted); transform: none; }
+            .pdf-thumb:hover { transform: none; box-shadow: var(--sh-md); }
+        }
+
+        /* --- ノッチ・ホームインジケータを避ける（PCでは env() が全て0で無効） --- */
+        #floating-tools-container { bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+        #btn-focus-mode {
+            bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+            left: calc(30px + env(safe-area-inset-left, 0px));
+        }
+        #floating-bottom-right {
+            bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+            right: calc(25px + env(safe-area-inset-right, 0px));
+        }
+        #floating-top-left { left: calc(20px + env(safe-area-inset-left, 0px)); }
+        #app-header {
+            padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
+        }
+        .overlay { height: 100dvh; }
+
+        /* --- 狭い画面：UIが画面外に溢れて押せなくなるのを防ぐ --- */
+        @media (max-width: 640px) {
+            /* 中央寄せの固定幅をやめ、画面幅いっぱいに置いて折り返せるようにする */
+            #floating-tools-container {
+                left: 0; right: 0; transform: none;
+                gap: 8px;
+            }
+            .tool-switch {
+                flex-wrap: wrap; justify-content: center;
+                max-width: calc(100% - 16px);
+            }
+            /* プロパティ行は折り返すと縦を食うので、横スクロールで全項目に届くようにする */
+            #floating-properties {
+                flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                max-width: calc(100% - 16px); padding: 8px 12px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .prop-group { flex: 0 0 auto; }
+            /* 下部の3つ（ツールバー・学習モード・ズーム）は狭い画面だと同じ場所に重なって
+               押せなくなる。ツールバーの実高さ（--tools-h・JSが更新）のぶん上へ逃がす。 */
+            #floating-bottom-right {
+                bottom: calc(var(--tools-h, 170px) + 40px + env(safe-area-inset-bottom, 0px));
+            }
+            /* 学習モードボタンはズームUIとも横に並べられない（ズームUIが画面幅いっぱい）ので、
+               さらにもう一段上に置く */
+            #btn-focus-mode {
+                bottom: calc(var(--tools-h, 170px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
+            }
+            #app-header { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+            /* 学習モードのヘッダーは visibility:hidden で場所だけ残る。狭い画面では
+               画面の2割強を空白に取られるので、たたんで閲覧に使えるようにする */
+            body.focus-mode #app-header { display: none; }
+            h1 { font-size: 17px; }
+            #current-file-name { max-width: 130px; }
+            /* PDFのページ一覧は重ねて出す。押し出すと作業領域が潰れる */
+            #pdf-sidebar {
+                position: absolute; top: 0; left: 0; width: min(220px, 72vw); height: 100%;
+                z-index: 1500; box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+            }
+        }
+
+        /* --- 低い横画面：ツールバーで作業領域が埋まるのを防ぐ --- */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #app-header { padding-top: 6px; padding-bottom: 6px; gap: 6px; }
+            body.focus-mode #app-header { display: none; }
+            h1 { font-size: 16px; }
+            /* 低い横画面でプロパティ行が2段になると、上下の行で押し間違えるうえ
+               作業領域も潰れる。1行に保って横スクロールで届かせる */
+            #floating-properties {
+                flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                max-width: calc(100% - 16px); -webkit-overflow-scrolling: touch;
+            }
+            .prop-group { flex: 0 0 auto; }
+            #floating-tools-container { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+            .tool-switch { padding: 5px; gap: 8px; }
+            .tool-switch label { width: 38px; height: 38px; }
+            .tool-switch label .material-symbols-outlined { font-size: 21px; }
+            #btn-focus-mode { left: calc(10px + env(safe-area-inset-left, 0px)); }
+            #floating-bottom-right { bottom: calc(var(--tools-h, 120px) + 20px + env(safe-area-inset-bottom, 0px)); }
+            #btn-focus-mode {
+                bottom: calc(var(--tools-h, 120px) + var(--br-h, 52px) + 30px + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
+        /* ============================================================
+           狭い画面（compact-ui）：UIが編集領域を食わないように畳む。
+           JSが matchMedia で body に compact-ui を付ける（PCには一切かからない）。
+           ・ヘッダー → ロゴ＋ファイル名＋「≡」の1段
+           ・ツールバー → ツール6個＋「設定」＋「…」の1段
+           ・プロパティ行 → 既定は隠し、「設定」で開く（横スクロールは廃止＝折り返して全部見せる）
+           ============================================================ */
+        .compact-only { display: none; }
+        .menu-sep { height: 1px; background: var(--c-border); margin: 4px 6px; padding: 0 !important; pointer-events: none; }
+        .dropdown-menu li.is-disabled { opacity: 0.4; pointer-events: none; }
+        .dropdown-menu-up { top: auto; bottom: 100%; margin-top: 0; margin-bottom: 8px; right: 0; }
+
+        body.compact-ui .wide-only { display: none !important; }
+        body.compact-ui .compact-only { display: flex; }
+        body.compact-ui .tool-divider.compact-only { display: block; }
+
+        body.compact-ui #app-header { padding: 8px 12px; gap: 0; }
+        body.compact-ui .header-top { flex-wrap: nowrap; gap: 8px; }
+        body.compact-ui .header-title-group { flex-wrap: nowrap; gap: 8px; min-width: 0; flex: 1 1 auto; }
+        body.compact-ui .header-actions { gap: 0; flex-wrap: nowrap; flex: 0 0 auto; }
+        /* ヘッダーの操作は全て「≡」へ集約する */
+        body.compact-ui .custom-file-upload,
+        body.compact-ui label[for="projectInput"],
+        body.compact-ui #save-dropdown-container,
+        body.compact-ui #btn-undo,
+        body.compact-ui #btn-redo,
+        body.compact-ui .header-title-group .v-divider,
+        body.compact-ui .header-actions .v-divider { display: none; }
+        body.compact-ui h1 { font-size: 16px; white-space: nowrap; }
+        body.compact-ui #current-file-name { max-width: none; min-width: 0; overflow: hidden; }
+        body.compact-ui #current-file-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        body.compact-ui #header-dropdown-menu { min-width: min(260px, 86vw); }
+
+        /* ツールバー：1段に収める。当たりは42px＋間隔2px＝実効44pxのピッチを保つ */
+        body.compact-ui .tool-switch { flex-wrap: nowrap; gap: 2px; padding: 5px; max-width: calc(100% - 12px); }
+        body.compact-ui .tool-switch label { width: 42px; height: 42px; }
+        body.compact-ui .tool-switch .btn { width: 42px; height: 42px; padding: 0; }
+        body.compact-ui .tool-switch label .material-symbols-outlined,
+        body.compact-ui .tool-switch .btn .material-symbols-outlined { font-size: 22px; }
+        body.compact-ui #btn-props-toggle.is-on { background: var(--c-accent); color: var(--c-on-accent); }
+
+        /* プロパティ行：既定は隠す。開いた時は画面幅に収めて折り返す（横スクロールにしない） */
+        body.compact-ui #floating-properties {
+            box-sizing: border-box; width: calc(100% - 12px); max-width: none;
+            flex-wrap: wrap; overflow: visible; justify-content: center;
+            padding: 8px 10px; gap: 8px; row-gap: 10px;
+        }
+        /* 色パレットは指用に26px空けてあるので1行に収まらない。折り返して全部見せる */
+        body.compact-ui .prop-group { flex: 0 1 auto; flex-wrap: wrap; justify-content: center; row-gap: 8px; }
+        body.compact-ui .color-palette { flex-wrap: wrap; justify-content: center; row-gap: 14px; }
+        /* まとめたメニューが画面の外に伸びないようにする（項目が多い・横画面で低い時） */
+        body.compact-ui .dropdown-menu { max-height: calc(100dvh - 80px); overflow-y: auto; }
+        body.compact-ui #floating-tools-container { left: 0; right: 0; transform: none; gap: 8px; }
+
+        /* ズームUIも画面幅からはみ出していた。左右に張り付けて中央寄せにする */
+        body.compact-ui #floating-bottom-right {
+            left: 8px; right: 8px; box-sizing: border-box;
+            justify-content: center; flex-wrap: wrap; gap: 2px; padding: 5px 8px;
+        }
+        body.compact-ui #floating-bottom-right .btn { width: 42px; height: 42px; padding: 0; }
+
+        /* 中くらいの幅（例：800px）ではツールバーが横に伸びてズームUIに重なり、
+           拡大ボタンが押せなくなっていた（改修前からの不具合）。実際に重なる時だけ
+           段積みにする。判定は幅の決め打ちではなくJSの実測（bottom-stacked）。 */
+        body.bottom-stacked #floating-bottom-right {
+            bottom: calc(var(--tools-h, 120px) + 40px + env(safe-area-inset-bottom, 0px));
+        }
+        body.bottom-stacked #btn-focus-mode {
+            bottom: calc(var(--tools-h, 120px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
+        }
     </style>
 </head>
 <body>
@@ -568,6 +870,12 @@
                     <span class="material-symbols-outlined">folder_open</span> データ読込
                 </label>
                 <input type="file" id="projectInput" accept=".amk">
+
+                <div class="v-divider"></div>
+                <span id="current-file-name" title="編集中のファイル">
+                    <span class="material-symbols-outlined">description</span>
+                    <span id="current-file-name-text">（未読み込み）</span>
+                </span>
             </div>
             
             <div class="header-actions">
@@ -598,6 +906,25 @@
                         </li>
                     </ul>
                 </div>
+
+                <!-- 狭い画面専用：ヘッダーの操作を1つにまとめる（compact-ui の時だけ出す） -->
+                <div class="dropdown" id="header-menu-container">
+                    <button class="btn btn-icon" id="btn-header-menu" title="メニュー">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <ul class="dropdown-menu" id="header-dropdown-menu">
+                        <li data-proxy="imageInput"><span class="material-symbols-outlined">add_photo_alternate</span> 新規作成</li>
+                        <li data-proxy="projectInput"><span class="material-symbols-outlined">folder_open</span> データ読込</li>
+                        <li class="menu-sep"></li>
+                        <li data-proxy="btn-undo"><span class="material-symbols-outlined">undo</span> 元に戻す</li>
+                        <li data-proxy="btn-redo"><span class="material-symbols-outlined">redo</span> やり直し</li>
+                        <li class="menu-sep"></li>
+                        <li data-proxy="btn-save-project-menu"><span class="material-symbols-outlined">data_object</span> 作業データごと保存 (.amk)</li>
+                        <li data-proxy="btn-download-menu"><span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し</li>
+                        <li data-proxy="btn-export-question"><span class="material-symbols-outlined">quiz</span> 問題版（マスクあり）で書き出し</li>
+                        <li data-proxy="btn-export-answer"><span class="material-symbols-outlined">lightbulb</span> 解答版（マスクなし）で書き出し</li>
+                    </ul>
+                </div>
             </div>
 
         </div>
@@ -623,7 +950,17 @@
                     <span class="material-symbols-outlined">menu</span>
                 </button>
                 <div id="page-navigation">
-                    <input type="number" id="page-input" value="1" min="1"> / <span id="page-total">1</span>
+                    <!-- 見た目は標準の矢印そのまま（入力欄の右端・カーソルを乗せた時だけ出る）。
+                         中身だけ自前にして向きを直す。標準の矢印は「数字を増やす」ものなので、
+                         上を押すと本文が下へ進み、向きが逆に見えていた（Rayan様の報告・08-04）。
+                         ↑＝前のページ（上へ戻る）／↓＝次のページ。 -->
+                    <span id="page-input-wrap">
+                        <input type="number" id="page-input" value="1" min="1">
+                        <span id="page-stepper">
+                            <button type="button" id="btn-page-prev" title="前のページ" aria-label="前のページ"></button>
+                            <button type="button" id="btn-page-next" title="次のページ" aria-label="次のページ"></button>
+                        </span>
+                    </span> / <span id="page-total">1</span>
                 </div>
             </div>
 
@@ -724,12 +1061,6 @@
                         <button class="btn btn-icon" id="btn-text-size-down"><span class="material-symbols-outlined">remove</span></button>
                         <div class="combo-box" id="text-size-combo">
                             <input type="number" id="text-size-input" class="combo-input" value="20" min="10">
-                            <button type="button" class="combo-dropdown-btn" id="text-size-btn"><span class="material-symbols-outlined" style="font-size:16px;">arrow_drop_down</span></button>
-                            <ul class="combo-list" id="text-size-list">
-                                <li data-val="12">12</li><li data-val="16">16</li><li data-val="20">20</li>
-                                <li data-val="24">24</li><li data-val="28">28</li><li data-val="32">32</li>
-                                <li data-val="36">36</li><li data-val="48">48</li><li data-val="64">64</li><li data-val="72">72</li>
-                            </ul>
                         </div>
                         <button class="btn btn-icon" id="btn-text-size-up"><span class="material-symbols-outlined">add</span></button>
                     </span>
@@ -765,21 +1096,38 @@
                     <input type="radio" id="tool-pen" name="currentTool" value="pen">
                     <label for="tool-pen" title="ペン / 消しゴム (P)"><span class="material-symbols-outlined">brush</span></label>
                     
-                    <div class="tool-divider"></div>
+                    <!-- 狭い画面専用：プロパティ行の開閉と、残りの操作をまとめた「…」 -->
+                    <div class="tool-divider compact-only"></div>
+                    <button class="btn btn-icon btn-ghost compact-only" id="btn-props-toggle" title="設定">
+                        <span class="material-symbols-outlined">tune</span>
+                    </button>
+                    <div class="dropdown compact-only" id="tool-more-container">
+                        <button class="btn btn-icon btn-ghost" id="btn-tool-more" title="その他">
+                            <span class="material-symbols-outlined">more_horiz</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-up" id="tool-more-menu">
+                            <li data-proxy="btn-add-image"><span class="material-symbols-outlined">add_photo_alternate</span> 画像を追加</li>
+                            <li data-proxy="btn-duplicate"><span class="material-symbols-outlined">content_copy</span> 複製</li>
+                            <li data-proxy="btn-delete"><span class="material-symbols-outlined">delete</span> 選択したものを消す</li>
+                            <li data-proxy="btn-clear-all"><span class="material-symbols-outlined">delete_forever</span> すべて消す</li>
+                        </ul>
+                    </div>
 
-                    <button class="btn btn-icon btn-ghost" id="btn-add-image" title="画像を追加">
+                    <div class="tool-divider wide-only"></div>
+
+                    <button class="btn btn-icon btn-ghost wide-only" id="btn-add-image" title="画像を追加">
                         <span class="material-symbols-outlined">add_photo_alternate</span>
                     </button>
                     <input type="file" id="overlayImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;">
-                    <div class="tool-divider"></div>
+                    <div class="tool-divider wide-only"></div>
 
-                    <button class="btn btn-icon btn-ghost" id="btn-duplicate" title="複製 (Ctrl+D)">
+                    <button class="btn btn-icon btn-ghost wide-only" id="btn-duplicate" title="複製 (Ctrl+D)">
                         <span class="material-symbols-outlined">content_copy</span>
                     </button>
-                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-delete" title="選択したものを消す (Delete)">
+                    <button class="btn btn-icon btn-danger btn-ghost wide-only" id="btn-delete" title="選択したものを消す (Delete)">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
-                    <button class="btn btn-icon btn-danger btn-ghost" id="btn-clear-all" title="すべて消す">
+                    <button class="btn btn-icon btn-danger btn-ghost wide-only" id="btn-clear-all" title="すべて消す">
                         <span class="material-symbols-outlined">delete_forever</span>
                     </button>
                 </div>
@@ -804,6 +1152,16 @@
         
         window.currentFileName = "暗記マスキング";
         window.isMasksHidden = false; 
+
+        // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
+        // （読み込み・復元の経路が3つあるので、代入は必ずここを通す）。
+        window.setCurrentFileName = function(name) {
+            window.currentFileName = name || window.currentFileName;
+            const el = document.getElementById('current-file-name-text');
+            if (el) el.innerText = window.currentFileName;
+            const box = document.getElementById('current-file-name');
+            if (box) box.title = `編集中: ${window.currentFileName}`;
+        };
         
         let currentTextDirection = 'horizontal-tb'; 
         
@@ -815,6 +1173,61 @@
         document.addEventListener('click', () => {
             saveDropdownMenu.classList.remove('show');
         });
+
+        // --- 狭い画面（compact-ui）のUI集約 ---------------------------------
+        // 画面が狭い時だけ body に compact-ui を付ける。CSS側の畳み込みと、
+        // 「プロパティ行は設定ボタンで開く」挙動の両方がこのフラグを見る。
+        const compactMQ = window.matchMedia('(max-width: 640px), (orientation: landscape) and (max-height: 500px)');
+        window.isCompactUI = () => compactMQ.matches;
+        let propsOpen = false;
+        const applyCompactUI = () => {
+            document.body.classList.toggle('compact-ui', compactMQ.matches);
+            if (!compactMQ.matches) propsOpen = false;
+            if (window.__toolbarReady) updateToolbar();
+            if (window.updateToolsHeightVar) window.updateToolsHeightVar();
+        };
+        if (typeof compactMQ.addEventListener === 'function') compactMQ.addEventListener('change', applyCompactUI);
+        else compactMQ.addListener(applyCompactUI);
+        applyCompactUI();
+
+        // まとめたメニューの項目は、隠した本体のボタン/入力を代理で押す（挙動を二重に書かない）
+        const headerMenu = document.getElementById('header-dropdown-menu');
+        const toolMoreMenu = document.getElementById('tool-more-menu');
+        [headerMenu, toolMoreMenu].forEach(menu => {
+            if (!menu) return;
+            menu.addEventListener('click', (e) => {
+                const li = e.target.closest('li[data-proxy]');
+                if (!li || li.classList.contains('is-disabled')) return;
+                const target = document.getElementById(li.dataset.proxy);
+                menu.classList.remove('show');
+                if (target && !target.disabled) target.click();
+            });
+        });
+        const wireMenuButton = (btnId, menu) => {
+            const btn = document.getElementById(btnId);
+            if (!btn || !menu) return;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const wasOpen = menu.classList.contains('show');
+                document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                if (!wasOpen) menu.classList.add('show');
+            });
+            document.addEventListener('click', () => menu.classList.remove('show'));
+        };
+        wireMenuButton('btn-header-menu', headerMenu);
+        wireMenuButton('btn-tool-more', toolMoreMenu);
+
+        const btnPropsToggle = document.getElementById('btn-props-toggle');
+        if (btnPropsToggle) {
+            btnPropsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                propsOpen = !propsOpen;
+                if (window.__toolbarReady) updateToolbar();
+                if (window.updateToolsHeightVar) window.updateToolsHeightVar();
+            });
+        }
+        window.isPropsOpen = () => propsOpen;
+        window.closeProps = () => { propsOpen = false; };
 
         // CDN(pdf.js)が読み込めなくても他機能（画像モード等）は動くようガード
         if (typeof pdfjsLib !== 'undefined') {
@@ -864,6 +1277,7 @@
 
         // 直前のポインターダウンが「選択解除」を伴ったか（マスキングの空きクリック判定に使う）
         let clearedSelectionOnDown = false;
+        let pressWasSelectedText = false; // 選択済みテキストの再クリック（離した時に編集へ入る）
         // 移動のために掴んだ要素（動かさず離した時に、その1つだけの選択へ絞るのに使う）
         let movePressTarget = null;
         // 手書き線の端をドラッグして拡大・縮小するときの情報
@@ -904,6 +1318,7 @@
         let liveStrokePath = null;  // ドラッグ中のプレビュー用path
         let selectedStroke = null;  // 選択中のペン線 { svg, index }
         let selectedStrokes = [];   // 範囲選択で選んだペン線の集合 [{ svg, index }]
+        let strokesDrag = null;     // 一括移動の最中に控える元の点
         let strokeMoveStart = null; // ペン線ドラッグ開始情報
         
         let tempMaskSvg = null;
@@ -927,7 +1342,53 @@
             return r ? r.value : 'rect';
         }
 
+        // 下部ツールバーの実際の高さを CSS 変数に流す。
+        // 狭い画面では学習モードボタンとズームUIをこの高さのぶん上へ逃がし、重なりを防ぐ。
+        (function trackToolsHeight() {
+            const tools = document.getElementById('floating-tools-container');
+            const bottomRight = document.getElementById('floating-bottom-right');
+            const apply = () => {
+                if (tools) {
+                    const h = Math.round(tools.getBoundingClientRect().height);
+                    if (h > 0) document.documentElement.style.setProperty('--tools-h', h + 'px');
+                }
+                if (bottomRight) {
+                    const h = Math.round(bottomRight.getBoundingClientRect().height);
+                    if (h > 0) document.documentElement.style.setProperty('--br-h', h + 'px');
+                }
+                // ツールバーとズームUIが横方向で重なるなら段積みにする。
+                // 横位置は段積みしても変わらないので、この判定は行ったり来たりしない。
+                const sw = document.querySelector('.tool-switch');
+                if (sw && bottomRight) {
+                    const t = sw.getBoundingClientRect();
+                    const b = bottomRight.getBoundingClientRect();
+                    if (t.width > 0 && b.width > 0) {
+                        document.body.classList.toggle('bottom-stacked', t.right + 12 > b.left);
+                    }
+                }
+            };
+            apply();
+            if (typeof ResizeObserver === 'function') {
+                const ro = new ResizeObserver(apply);
+                if (tools) ro.observe(tools);
+                if (bottomRight) ro.observe(bottomRight);
+                // 作業領域そのものも見る。ページ一覧を開くと幅が縮んでツールバーと
+                // ズームUIが重なるが、UI自身の大きさは変わらないので気づけなかった。
+                const outer = document.getElementById('workspace-outer');
+                if (outer) ro.observe(outer);
+            }
+            window.addEventListener('resize', apply);
+            window.updateToolsHeightVar = apply;
+        })();
+
+        // タップでめくった黒塗りを全て元に戻す（モードや一括表示を切り替える時に呼ぶ）
+        function clearRevealedMasks() {
+            document.querySelectorAll('.mask.revealed').forEach(el => el.classList.remove('revealed'));
+        }
+        window.clearRevealedMasks = clearRevealedMasks;
+
         document.getElementById('btn-focus-mode').addEventListener('click', function() {
+            clearRevealedMasks(); // めくった状態を持ち越さない
             document.body.classList.toggle('focus-mode');
             const icon = this.querySelector('.material-symbols-outlined');
             if (document.body.classList.contains('focus-mode')) {
@@ -942,6 +1403,7 @@
         
         function setMasksHidden(hidden) {
             window.isMasksHidden = hidden;
+            clearRevealedMasks(); // 一括表示に戻した時、めくった分だけ消えたままにしない
             if (hidden) {
                 workspaceContainer.classList.add('masks-hidden');
                 if (iconToggleMasks) iconToggleMasks.innerText = 'visibility';
@@ -985,36 +1447,53 @@
             }
         });
 
-        document.addEventListener('pointercancel', function(e) {
-            if (action) {
-                if (action === 'draw_pen' && activeDrawSvg) {
-                    if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
-                    if (activeCanvasIndex != null) {
-                        const idx = parseInt(activeCanvasIndex);
-                        const actualTool = document.querySelector('input[name="penMode"]:checked').value;
-                        if (!window.canvasDrawings[idx]) window.canvasDrawings[idx] = [];
-                        window.canvasDrawings[idx].push({
-                            tool: actualTool,
-                            points: rawPenPoints,
-                            width: parseFloat(penWidthInput.value),
-                            color: toolColors['pen'],
-                            opacity: penOpacityInput.value
-                        });
-                        renderStrokesToSVG(activeDrawSvg, window.canvasDrawings[idx]);
-                    }
-                    window.saveState();
-                    liveStrokePath = null;
-                } else if ((action === 'draw_freehand_mask' || action === 'draw_freehand_highlight') && tempMaskSvg) {
-                    tempMaskSvg.remove(); tempMaskSvg = null; tempMaskPath = null;
-                } else if (action === 'draw_shape' && currentDrawingShape) {
-                    currentDrawingShape.remove(); currentDrawingShape = null;
-                } else if (action === 'box_select') {
-                    selectionBox.style.display = 'none';
+        // 進行中の操作(action)を安全に畳む。pointercancel と、ウィンドウの
+        // フォーカス喪失(blur)の両方から呼ぶ。blur を拾わないと、ブラウザ窓の外で
+        // ポインタを離した時に pointerup が届かず、状態機械が固まっていた（08-02 修正）。
+        function abortCurrentAction() {
+            if (!action) return;
+            if (action === 'draw_pen' && activeDrawSvg) {
+                if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+                if (activeCanvasIndex != null) {
+                    const idx = parseInt(activeCanvasIndex);
+                    const actualTool = document.querySelector('input[name="penMode"]:checked').value;
+                    if (!window.canvasDrawings[idx]) window.canvasDrawings[idx] = [];
+                    window.canvasDrawings[idx].push({
+                        tool: actualTool,
+                        points: rawPenPoints,
+                        width: parseFloat(penWidthInput.value),
+                        color: toolColors['pen'],
+                        opacity: penOpacityInput.value
+                    });
+                    renderStrokesToSVG(activeDrawSvg, window.canvasDrawings[idx]);
                 }
-                action = null; penPoints = []; rawPenPoints = []; activeCanvas = null; activeCtx = null; activeCanvasIndex = null; activeDrawSvg = null; liveStrokePath = null;
-                drawingBox.style.display = 'none';
+                window.saveState();
+            } else if ((action === 'draw_freehand_mask' || action === 'draw_freehand_highlight') && tempMaskSvg) {
+                tempMaskSvg.remove();
+            } else if (action === 'draw_shape' && currentDrawingShape) {
+                currentDrawingShape.remove();
+            } else if (action === 'pan') {
+                workspaceContainer.classList.remove('panning');
+            }
+            // どの action でも共通で転がっている一時状態を確実に戻す
+            if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+            drawingBox.style.display = 'none'; drawingBox.style.backgroundColor = '';
+            if (typeof selectionBox !== 'undefined' && selectionBox) selectionBox.style.display = 'none';
+            action = null; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
+            movePressTarget = null; pressWasSelectedText = false;
+            freehandScale = null; strokeScale = null; strokeMoveStart = null;
+            activeCanvas = null; activeCtx = null; activeCanvasIndex = null; activeDrawSvg = null;
+            liveStrokePath = null; tempMaskSvg = null; tempMaskPath = null; currentDrawingShape = null;
+        }
+        // ウィンドウのフォーカスが外れたら、触っている指の記録も捨てる（固着防止）
+        window.addEventListener('blur', function () {
+            if (typeof activeTouches !== 'undefined') {
+                activeTouches.clear(); touchGesture = null; touchGestureActive = false;
+                focusTapMask = null; focusTapStart = null;
             }
         });
+        document.addEventListener('pointercancel', abortCurrentAction);
+        window.addEventListener('blur', abortCurrentAction);
 
         document.addEventListener('selectionchange', () => {
             const sel = window.getSelection(); 
@@ -1076,7 +1555,8 @@
         // フォーカスが外れたらキーアップを取り逃すので解除しておく
         window.addEventListener('blur', () => setSpaceHeld(false));
 
-        // --- シフト押しで背景（PDF）の文字選択を一時的に有効化（マウスツール時） ---
+        // --- シフト押しで背景（PDF）の文字選択を一時的に有効化（マウスツール時）。
+        //     複数選択の修飾キーは Ctrl（⌘）（08-02 Rayan様の指示で元に戻した）。 ---
         let shiftHeld = false;
         function setShiftHeld(on) {
             if (shiftHeld === on) return;
@@ -1129,6 +1609,15 @@
         let internalClipboard = [];
         let pasteCount = 0;
         let clipboardStroke = null; // コピーしたペン線 { svg, cmd }
+        // カーソルの現在位置（ワークスペース座標）。ペースト先に使う。
+        let lastMouseWs = null;
+        workspaceContainer.addEventListener('pointermove', (e) => {
+            const rect = workspace.getBoundingClientRect();
+            lastMouseWs = {
+                x: (e.clientX - rect.left) / zoomLevel,
+                y: (e.clientY - rect.top) / zoomLevel
+            };
+        });
         function copySelection() {
             // ペン線が選ばれている場合はその線をコピー
             if (selectedStroke) {
@@ -1163,10 +1652,19 @@
             if (!svg) return;
             const idx = parseInt(svg.dataset.canvasIndex);
             if (!window.canvasDrawings[idx]) window.canvasDrawings[idx] = [];
-            pasteCount++;
-            const offset = 12 * pasteCount;
             const copy = JSON.parse(JSON.stringify(clipboardStroke.cmd));
-            copy.points = copy.points.map(p => ({ x: p.x + offset, y: p.y + offset }));
+            let dx, dy;
+            if (lastMouseWs && copy.points.length) {
+                // 線の左上をカーソル位置に合わせる
+                const minX = Math.min(...copy.points.map(p => p.x));
+                const minY = Math.min(...copy.points.map(p => p.y));
+                dx = lastMouseWs.x - minX;
+                dy = lastMouseWs.y - minY;
+            } else {
+                pasteCount++;
+                dx = dy = 12 * pasteCount;
+            }
+            copy.points = copy.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
             window.canvasDrawings[idx].push(copy);
             window.deselectCurrent();
             selectedStroke = { svg, index: window.canvasDrawings[idx].length - 1 };
@@ -1178,14 +1676,23 @@
         function pasteClipboard() {
             if (clipboardStroke) { pasteStroke(); return; }
             if (!internalClipboard.length) return;
-            pasteCount++;
-            const offset = 12 * pasteCount;
+            let dx, dy;
+            if (lastMouseWs) {
+                // 選択範囲の左上をカーソル位置に合わせ、相対配置を保つ
+                const minX = Math.min(...internalClipboard.map(t => parseFloat(t.style.left || 0)));
+                const minY = Math.min(...internalClipboard.map(t => parseFloat(t.style.top || 0)));
+                dx = lastMouseWs.x - minX;
+                dy = lastMouseWs.y - minY;
+            } else {
+                pasteCount++;
+                dx = dy = 12 * pasteCount;
+            }
             const clones = [];
             internalClipboard.forEach(tpl => {
                 const clone = tpl.cloneNode(true);
                 clone.classList.remove('selected');
-                clone.style.left = (parseFloat(tpl.style.left || 0) + offset) + 'px';
-                clone.style.top = (parseFloat(tpl.style.top || 0) + offset) + 'px';
+                clone.style.left = (parseFloat(tpl.style.left || 0) + dx) + 'px';
+                clone.style.top = (parseFloat(tpl.style.top || 0) + dy) + 'px';
                 workspace.appendChild(clone);
                 window.bringToFront(clone);
                 clones.push(clone);
@@ -1219,7 +1726,8 @@
                 return;
             }
             // 文字入力中の Esc は「編集を終えて箱を選んだ状態」に戻す（一般的なテキストボックスと同じ）
-            if (e.key === 'Escape' && e.target.classList && e.target.classList.contains('text-content')) {
+            // ただし IME 変換中（未確定）の Esc は変換の取り消しに使うので、箱は閉じない（e.isComposing / keyCode 229）
+            if (e.key === 'Escape' && !e.isComposing && e.keyCode !== 229 && e.target.classList && e.target.classList.contains('text-content')) {
                 e.preventDefault();
                 const wrapper = e.target.closest('.text-wrapper');
                 e.target.blur(); // 空なら blur 側で箱ごと消える
@@ -1267,21 +1775,48 @@
             if (t) selectToolByName(t);
         });
 
+        // 自分の外枠を掴んで編集を抜けた時だけ、空でも箱を残す（移動できるように）
+        let preserveEmptyWrapper = null;
         // テキスト編集の確定を委譲で一括処理（複製・貼り付けで作った箱にも効く）
         workspace.addEventListener('focusout', (e) => {
             const tc = e.target.closest && e.target.closest('.text-content');
             if (!tc) return;
             const wrapper = tc.closest('.text-wrapper');
-            if (tc.innerText.trim() === '') { if (wrapper) wrapper.remove(); }
+            if (tc.innerText.trim() === '') {
+                // 外枠を掴んだ時は消さない。それ以外（空きクリック等）の空箱は消す。
+                if (wrapper && wrapper !== preserveEmptyWrapper) wrapper.remove();
+            }
             else window.saveState();
-            // 別のテキストの編集へ移った時はツールを戻さない
+            // 編集を抜けた後の後始末は、選択の付け替えが済んでから見る。
             setTimeout(() => {
                 const a = document.activeElement;
-                if (a && a.classList && a.classList.contains('text-content')) return;
-                // テキストツールのまま選択を外す（続けて空所クリックで新規設置できる）
-                if (currentTool === 'text') { window.deselectCurrent(); updateToolbar(); }
+                if (a && a.classList && a.classList.contains('text-content')) return; // 別の箱の編集へ移った
+                // 別の要素を選び直していたら、それは残す（クリックした箱への選択移動）。
+                // 何も選んでいない時だけ、ツールに関わらず後始末する。
+                if (selectedElements.length === 0 && !selectedStroke) { window.deselectCurrent(); updateToolbar(); }
             }, 0);
         });
+
+        // 押した場所にいちばん近い位置へ文字カーソルを置く。取れなければ末尾。
+        function placeCaretFromPoint(tc, clientX, clientY) {
+            const sel = window.getSelection();
+            let range = null;
+            if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clientX, clientY);
+            } else if (document.caretPositionFromPoint) {
+                const pos = document.caretPositionFromPoint(clientX, clientY);
+                if (pos) { range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); }
+            }
+            if (!range || !tc.contains(range.startContainer)) {
+                range = document.createRange();
+                range.selectNodeContents(tc);
+                range.collapse(false); // 末尾
+            } else {
+                range.collapse(true);
+            }
+            sel.removeAllRanges(); sel.addRange(range);
+            tc.focus();
+        }
 
         // ダブルクリックでテキスト編集に入る
         workspace.addEventListener('dblclick', (e) => {
@@ -1293,7 +1828,8 @@
                 if (tc) {
                     window.deselectCurrent();
                     selectedElements = [wrapper]; wrapper.classList.add('selected');
-                    tc.focus();
+                    // 押した場所にカーソルを置く（従来は必ず先頭に飛んでいた）
+                    placeCaretFromPoint(tc, e.clientX, e.clientY);
                 }
             }
         });
@@ -1538,13 +2074,27 @@
             }
 
             const floatingProps = document.getElementById('floating-properties');
+            const hasProps = ['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) || hasSel;
+            // 狭い画面では常時出さず、「設定」ボタンで開いた時だけ出す（編集領域を食わないため）
+            const compact = !!(window.isCompactUI && window.isCompactUI());
+            const showProps = hasProps && (!compact || (window.isPropsOpen && window.isPropsOpen()));
             if(floatingProps) {
-                floatingProps.style.display = (['text', 'highlight', 'pen', 'mask', 'shape'].includes(currentTool) || hasSel) ? 'flex' : 'none';
+                floatingProps.style.display = showProps ? 'flex' : 'none';
+            }
+            const propsToggle = document.getElementById('btn-props-toggle');
+            if (propsToggle) {
+                propsToggle.disabled = !hasProps;
+                propsToggle.classList.toggle('is-on', showProps);
             }
 
             // 選択が無ければ「複製」「削除」を押せなくする
             const delBtn = document.getElementById('btn-delete'); if (delBtn) delBtn.disabled = !hasSel;
             const dupBtn = document.getElementById('btn-duplicate'); if (dupBtn) dupBtn.disabled = !hasSel;
+            // 「…」メニューは隠した本体を代理で押すので、無効状態も写す
+            document.querySelectorAll('#tool-more-menu li[data-proxy]').forEach(li => {
+                const src = document.getElementById(li.dataset.proxy);
+                li.classList.toggle('is-disabled', !!(src && src.disabled));
+            });
 
             updatePaletteUI(); updateBrushCursor();
         }
@@ -1580,6 +2130,7 @@
         shapeTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         penModeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         
+        window.__toolbarReady = true;
         updateToolbar();
 
         // 太さ変更中に、画面中央へ太さのプレビュー（丸＋数値）を出す
@@ -1616,14 +2167,30 @@
             applyWidthToSelection(e.target.value);
         });
         penWidthInput.addEventListener('input', (e) => {
-            let val = parseFloat(e.target.value); if (val < 0.5) val = 0.5; if (val > 100) val = 100;
-            penWidthSlider.value = val; 
+            let val = parseFloat(e.target.value);
+            // 空欄や不正値の途中入力では NaN 幅の線・マスクを作らない。有効な数値を打つまで何も適用しない。
+            if (!isFinite(val)) return;
+            if (val < 0.5) val = 0.5; if (val > 100) val = 100;
+            penWidthSlider.value = val;
             const activeType = (currentTool === 'pen') ? document.querySelector('input[name="penMode"]:checked').value : currentTool;
             toolWidths[activeType] = val;
             updateBrushCursor();
             showWidthPreview();
             applyWidthToSelection(val);
         });
+        // フォーカスを外した／確定した時に空欄・不正値を有効値へ戻す（描画時に NaN を読ませない）
+        function normalizePenWidthInput() {
+            let val = parseFloat(penWidthInput.value);
+            if (!isFinite(val)) {
+                const activeType = (currentTool === 'pen') ? (document.querySelector('input[name="penMode"]:checked')||{}).value : currentTool;
+                val = parseFloat(penWidthSlider.value);
+                if (!isFinite(val)) val = (activeType && isFinite(toolWidths[activeType])) ? toolWidths[activeType] : 4;
+            }
+            if (val < 0.5) val = 0.5; if (val > 100) val = 100;
+            penWidthInput.value = val; penWidthSlider.value = val;
+        }
+        penWidthInput.addEventListener('change', normalizePenWidthInput);
+        penWidthInput.addEventListener('blur', normalizePenWidthInput);
 
         // 今のツールで選択できる要素の種類
         function currentPickSelector() {
@@ -1682,16 +2249,25 @@
             const newScaledH = workspace.offsetHeight * zoomLevel;
             
             const BOTTOM_SLACK = 200; // 最下部がツールバーに隠れないよう下へスクロールできる余地
-            const PAD_X = 250, PAD_Y = 140; // コンテンツが大きくても四方にパンの余地を残す
-            workspaceWrapper.style.width = newScaledW + 'px';
-            workspaceWrapper.style.height = (newScaledH + BOTTOM_SLACK) + 'px';
+            // コンテンツが大きくても四方にパンの余地を残す。
+            // 固定値のままだとスマホでは余白だけで画面が埋まり、紙が画面外へ出るので幅に応じて縮める。
+            const PAD_X = Math.min(250, containerW * 0.25);
+            const PAD_Y = Math.min(140, containerH * 0.25);
 
-            const newMarginLeft = Math.max(PAD_X, (containerW - newScaledW) / 2);
-            const newMarginTop = Math.max(PAD_Y, (containerH - newScaledH) / 2);
-            
-            workspaceWrapper.style.marginLeft = newMarginLeft + 'px'; 
+            // 余白は**左右・上下の両方**に置く。以前は marginLeft/marginTop だけで、
+            // 右と上に余地が無かった＝紙を左（や上）へ動かせなかった（Rayan様の報告・08-03）。
+            // 紙が画面より小さい時は、はみ出す分の半分を両側に足して中央に置けるようにする。
+            const slackX = PAD_X + Math.max(0, (containerW - newScaledW) / 2);
+            const slackY = PAD_Y + Math.max(0, (containerH - newScaledH) / 2);
+
+            const newMarginLeft = slackX;
+            const newMarginTop = slackY;
+
+            workspaceWrapper.style.width = (newScaledW + slackX) + 'px';
+            workspaceWrapper.style.height = (newScaledH + slackY + BOTTOM_SLACK) + 'px';
+            workspaceWrapper.style.marginLeft = newMarginLeft + 'px';
             workspaceWrapper.style.marginTop = newMarginTop + 'px';
-            
+
             workspaceContainer.scrollLeft = (centerX * zoomLevel) + newMarginLeft - fx;
             workspaceContainer.scrollTop = (centerY * zoomLevel) + newMarginTop - fy;
             
@@ -1710,11 +2286,28 @@
             }, 500);
         }
 
+        // 紙を見やすい位置へ置く。読み込み直後とズームリセットで使う。
+        // setZoom は「いま見ている点」を保つ作りなので、位置を決め直すのは別仕事にする。
+        // 横は中央。縦は、紙が画面に収まるなら中央、収まらないなら**上端**を出す
+        // （教科書やプリントは上から読むので、真ん中から始まると迷う）。
+        window.centerWorkspace = function centerWorkspace() {
+            const marginLeft = parseFloat(workspaceWrapper.style.marginLeft) || 0;
+            const marginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
+            const scaledW = workspace.offsetWidth * zoomLevel;
+            const scaledH = workspace.offsetHeight * zoomLevel;
+            const viewW = workspaceContainer.clientWidth;
+            const viewH = workspaceContainer.clientHeight;
+            workspaceContainer.scrollLeft = marginLeft + scaledW / 2 - viewW / 2;
+            workspaceContainer.scrollTop = (scaledH <= viewH)
+                ? marginTop + scaledH / 2 - viewH / 2
+                : Math.max(0, marginTop - 20);
+        };
+
         window.addEventListener('resize', () => { if(uploadedImage.src || totalPdfPages > 0) setZoom(zoomLevel); });
 
         document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(zoomLevel + 0.1));
         document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(zoomLevel - 0.1));
-        document.getElementById('btn-zoom-reset').addEventListener('click', () => setZoom(1.0));
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => { setZoom(1.0); window.centerWorkspace(); });
 
         // Ctrl + マウスホイールでカーソル位置を中心にズーム（トラックパッドのピンチも同扱い）
         workspaceContainer.addEventListener('wheel', (e) => {
@@ -1728,12 +2321,20 @@
         }, { passive: false });
 
         window.deselectCurrent = function() {
+            // 空のまま置き去りにされたテキスト箱は、選択が外れる時に消す。
+            // 編集中（フォーカス中）のものは focusout 側に任せて触らない。
+            selectedElements.forEach(el => {
+                if (el.classList && el.classList.contains('text-wrapper')) {
+                    const tc = el.querySelector('.text-content');
+                    if (tc && tc.innerText.trim() === '' && document.activeElement !== tc) el.remove();
+                }
+            });
             selectedElements.forEach(el => el.classList.remove('selected'));
             selectedElements = [];
             savedSelectionRange = null;
             if (typeof deselectStroke === 'function') deselectStroke();
             if (typeof clearMultiStrokeSelection === 'function') clearMultiStrokeSelection();
-            if (typeof updateToolbar === 'function') updateToolbar();
+            if (window.__toolbarReady) updateToolbar();
         }
         
         // ===== 手描きレイヤー（ベクターSVG） =====
@@ -1922,10 +2523,10 @@
                 c.setAttribute('class', 'stroke-handle');
                 c.dataset.end = pos;
                 c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
-                c.setAttribute('r', 6 * unit);
+                c.setAttribute('r', 2.5 * unit);
                 c.setAttribute('fill', '#ffffff');
                 c.setAttribute('stroke', '#3b82f6');
-                c.setAttribute('stroke-width', '2');
+                c.setAttribute('stroke-width', '1');
                 c.setAttribute('vector-effect', 'non-scaling-stroke');
                 c.style.pointerEvents = 'auto';
                 c.style.cursor = 'crosshair';
@@ -1992,6 +2593,37 @@
                 box.style.width = (bb.right - bb.left) + 'px';
                 box.style.height = (bb.bottom - bb.top) + 'px';
                 workspace.appendChild(box);
+            });
+        }
+        // 範囲選択した線をまとめて動かすための下ごしらえ。
+        // 今の点を控えておき、ドラッグ中は「控え＋ずれ」で置き直す。
+        function beginStrokesDrag() {
+            if (!selectedStrokes.length) return null;
+            const items = [];
+            selectedStrokes.forEach(s => {
+                const idx = parseInt(s.svg.dataset.canvasIndex);
+                const cmd = (window.canvasDrawings[idx] || [])[s.index];
+                if (cmd && cmd.points) items.push({ svg: s.svg, cmd, orig: cmd.points.map(p => ({ ...p })) });
+            });
+            return items.length ? items : null;
+        }
+        function applyStrokesDrag(items, dx, dy) {
+            const svgs = new Set();
+            items.forEach(it => {
+                it.cmd.points = it.orig.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                svgs.add(it.svg);
+            });
+            svgs.forEach(svg => {
+                const idx = parseInt(svg.dataset.canvasIndex);
+                renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
+            });
+            renderMultiStrokeSelection();
+        }
+        // 押した場所が、範囲選択した線の囲みの中か
+        function insideSelectedStrokes(x, y) {
+            return selectedStrokes.some(s => {
+                const bb = strokeWorkspaceBBox(s);
+                return bb && x >= bb.left && x <= bb.right && y >= bb.top && y <= bb.bottom;
             });
         }
         function deleteMultiStrokes() {
@@ -2550,27 +3182,51 @@
             }
         }
 
-        const textSizeBtn = document.getElementById('text-size-btn');
-        const textSizeList = document.getElementById('text-size-list');
-        const textSizeItems = textSizeList.querySelectorAll('li');
+        // 文字サイズの候補一覧（▼）は廃止（Rayan様の指示・08-01）。
+        // ＋／−と直接入力で足りるうえ、開いても効かない状態だった。
 
-        textSizeBtn.addEventListener('click', (e) => { e.stopPropagation(); textSizeList.style.display = textSizeList.style.display === 'flex' ? 'none' : 'flex'; });
-        textSizeItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.stopPropagation(); const val = e.target.dataset.val; textSizeInput.value = val;
-                textSizeList.style.display = 'none'; textSizeInput.dispatchEvent(new Event('input'));
-            });
-        });
-        document.addEventListener('click', () => { textSizeList.style.display = 'none'; });
-
+        // 「文字の左下」＝入力開始位置（1行目）のキャレット下端を ws 座標で測る。
+        // 空箱は矩形が取れないので、一時的に文字を差し込んで1行目の矩形を測って戻す。
+        function measureTextBottomLeftWs(el) {
+            const tc = el.querySelector('.text-content');
+            const wsRect = workspace.getBoundingClientRect();
+            const z = zoomLevel || 1;
+            let cr;
+            const range = document.createRange();
+            range.selectNodeContents(tc);
+            const rects = range.getClientRects();
+            if (rects.length) {
+                cr = rects[0]; // 1行目
+            } else {
+                const probe = document.createElement('span');
+                probe.textContent = ' '; // 非改行スペースで1行分の高さを得る
+                tc.appendChild(probe);
+                cr = probe.getBoundingClientRect();
+                tc.removeChild(probe);
+            }
+            return { x: (cr.left - wsRect.left) / z, y: (cr.bottom - wsRect.top) / z };
+        }
+        // 箱の「文字の左下」が指定の ws 座標に来るよう平行移動する
+        function moveTextBottomLeftTo(el, x, y) {
+            const cur = measureTextBottomLeftWs(el);
+            el.style.left = (parseFloat(el.style.left || 0) + (x - cur.x)) + 'px';
+            el.style.top = (parseFloat(el.style.top || 0) + (y - cur.y)) + 'px';
+        }
+        // 文字サイズを変えても「文字の左下」が動かないようにする。
+        // 変更前の文字左下を測り、変更後にその位置へ戻す（現在位置基準なので移動後も正しい）。
+        function applyFontSizeKeepBottomLeft(el, size) {
+            const before = measureTextBottomLeftWs(el);
+            el.style.fontSize = size + 'px';
+            moveTextBottomLeftTo(el, before.x, before.y);
+        }
         function changeGlobalTextSize(delta) {
-            let currentSize = parseInt(textSizeInput.value) || 20; let newSize = currentSize + delta; if (newSize < 10) newSize = 10; 
+            let currentSize = parseInt(textSizeInput.value) || 20; let newSize = currentSize + delta; if (newSize < 10) newSize = 10;
             textSizeInput.value = newSize;
             let saved = false;
             selectedElements.forEach(selectedElement => {
-                if (selectedElement.classList.contains('text-wrapper')) { 
-                    selectedElement.style.fontSize = newSize + 'px'; 
-                    saved = true; 
+                if (selectedElement.classList.contains('text-wrapper')) {
+                    applyFontSizeKeepBottomLeft(selectedElement, newSize);
+                    saved = true;
                 }
             });
             if(saved) window.saveState();
@@ -2624,8 +3280,8 @@
             const newSize = parseInt(e.target.value); 
             let saved = false;
             selectedElements.forEach(selectedElement => {
-                if (newSize && selectedElement.classList.contains('text-wrapper')) { 
-                    selectedElement.style.fontSize = newSize + 'px'; 
+                if (newSize && selectedElement.classList.contains('text-wrapper')) {
+                    applyFontSizeKeepBottomLeft(selectedElement, newSize);
                     saved = true;
                 }
             });
@@ -2654,25 +3310,106 @@
                 });
                 
                 setZoom(1.0);
+                window.centerWorkspace();   // 読み込み直後は紙を画面の中央に置く
                 // 空の初期状態を履歴の起点(index 0)として必ず積む（undoで全消去される不具合の防止）
                 window.historyArray = []; window.historyIndex = -1;
                 window.saveState();
             }, 50);
         }
 
-        pageInput.addEventListener('change', () => {
-            let p = parseInt(pageInput.value);
-            if (p < 1) p = 1; if (p > totalPdfPages) p = totalPdfPages;
+        // いま表示しているページ。表示を書き換えるのは変わった時だけにする
+        // （毎フレーム書き換えると、一覧が滑り続けて操作を奪う）。
+        let shownPage = 1;
+        function markActivePage(p, scrollThumb) {
+            if (p === shownPage) return;
+            shownPage = p;
+            // 打ちかけの数字だけは横から書き換えない（ただ触っているだけなら追随する）
+            if (!(document.activeElement === pageInput && pageInputDirty)) pageInput.value = p;
+            document.querySelectorAll('.pdf-thumb').forEach(t => t.classList.toggle('active', parseInt(t.dataset.page) === p));
+            if (!scrollThumb) return;
+            const activeThumb = document.querySelector(`.pdf-thumb[data-page="${p}"]`);
+            // 一覧の中だけを動かす。`scrollIntoView` は親（本文側）まで動かしてしまう。
+            if (activeThumb) {
+                const top = activeThumb.offsetTop - (pdfSidebar.clientHeight - activeThumb.offsetHeight) / 2;
+                pdfSidebar.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            }
+        }
+
+        // 「いま飛んでいる先」。決まっている間は、通過するページで番号や印を書き換えない。
+        // これが無いと、飛んでいる途中のページ番号が入力欄に入り、次の1回がその数字から
+        // 始まる＝矢印を押しているのに戻っていく（Rayan様の報告・08-03）。
+        // 以前は「1200ms のあいだ」という時間で抑えていたが、抑えていたのは一覧の追従だけで
+        // 番号は素通りしていた。目的地そのものを持たせて、着くまで一切触らせない。
+        let jumpTarget = null;
+        let jumpIdleTimer = 0;
+        let jumpScrollTimer = 0;
+
+        // スクロールが止まってから少し待って「着いた」とみなす（時間の決め打ちをやめる）
+        // 着いた時点で必ず実際の位置から番号を引き直す。飛んでいる途中に人が手で
+        // スクロールして割り込むと、番号が飛び先のまま古く残るため。
+        function endJumpWhenSettled() {
+            clearTimeout(jumpIdleTimer);
+            jumpIdleTimer = setTimeout(() => {
+                jumpTarget = null;
+                syncPageFromScroll();
+            }, 220);
+        }
+
+        function goToPage(p) {
+            if (!Number.isFinite(p)) { pageInput.value = shownPage; return; }
+            p = Math.min(Math.max(Math.round(p), 1), totalPdfPages || 1);
+            if (!document.getElementById(`pdf-page-${p}`)) return;
+
+            jumpTarget = p;
             pageInput.value = p;
-            const targetPage = document.getElementById(`pdf-page-${p}`);
-            if (targetPage) { 
+            markActivePage(p, true);
+            endJumpWhenSettled();
+
+            // 連打の途中で毎回スクロールをやり直すとガタつく。押し終わってから1回だけ飛ぶ。
+            clearTimeout(jumpScrollTimer);
+            jumpScrollTimer = setTimeout(() => {
+                const targetPage = document.getElementById(`pdf-page-${jumpTarget}`);
+                if (!targetPage) return;
                 const currentMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
                 workspaceContainer.scrollTo({
                     top: (targetPage.offsetTop * zoomLevel) + currentMarginTop,
                     behavior: 'smooth'
                 });
-            }
+                endJumpWhenSettled();
+            }, 160);
+        }
+
+        // 矢印は紙の動く向きに合わせる：↑＝前のページ、↓＝次のページ。
+        // 入力欄でのキーボードの上下も同じ向きに揃える（ボタンと食い違わないように）。
+        document.getElementById('btn-page-prev').addEventListener('click', () => goToPage((jumpTarget ?? shownPage) - 1));
+        document.getElementById('btn-page-next').addEventListener('click', () => goToPage((jumpTarget ?? shownPage) + 1));
+
+        let pageInputDirty = false;
+        pageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') { e.preventDefault(); goToPage((jumpTarget ?? shownPage) - 1); }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); goToPage((jumpTarget ?? shownPage) + 1); }
         });
+        pageInput.addEventListener('input', () => { pageInputDirty = true; });
+        pageInput.addEventListener('blur', () => { pageInputDirty = false; });
+        pageInput.addEventListener('change', () => { pageInputDirty = false; goToPage(parseInt(pageInput.value)); });
+
+        // いまのスクロール位置から現在ページを割り出して表示に反映する
+        function syncPageFromScroll() {
+            if (pdfContainer.style.display !== 'block') return;
+            const currentMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
+            const containerCenter = (workspaceContainer.scrollTop - currentMarginTop + workspaceContainer.clientHeight / 2) / zoomLevel;
+            // 画面の真ん中にいちばん近いページを今のページとする。
+            // 「真ん中を含むページ」だけを見ると、ページの隙間に来た時に
+            // 1ページ目へ跳ね返っていた。
+            let currentP = shownPage, best = Infinity;
+            document.querySelectorAll('.pdf-page').forEach(p => {
+                const top = p.offsetTop, bottom = top + p.offsetHeight;
+                const d = containerCenter < top ? top - containerCenter
+                        : containerCenter > bottom ? containerCenter - bottom : 0;
+                if (d < best) { best = d; currentP = parseInt(p.dataset.page); }
+            });
+            markActivePage(currentP, true);
+        }
 
         let scrollRafPending = false;
         workspaceContainer.addEventListener('scroll', () => {
@@ -2681,17 +3418,9 @@
             scrollRafPending = true;
             requestAnimationFrame(() => {
                 scrollRafPending = false;
-                const currentMarginTop = parseFloat(workspaceWrapper.style.marginTop) || 0;
-                const containerCenter = (workspaceContainer.scrollTop - currentMarginTop + workspaceContainer.clientHeight / 2) / zoomLevel;
-                let currentP = 1;
-                document.querySelectorAll('.pdf-page').forEach(p => {
-                    const top = p.offsetTop; const bottom = top + p.offsetHeight;
-                    if (containerCenter >= top && containerCenter <= bottom) { currentP = parseInt(p.dataset.page); }
-                });
-                pageInput.value = currentP;
-                document.querySelectorAll('.pdf-thumb').forEach(t => t.classList.remove('active'));
-                const activeThumb = document.querySelector(`.pdf-thumb[data-page="${currentP}"]`);
-                if (activeThumb) { activeThumb.classList.add('active'); activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+                // 指定ページへ飛んでいる最中は、通過するページで番号も一覧も動かさない
+                if (jumpTarget !== null) { endJumpWhenSettled(); return; }
+                syncPageFromScroll();
             });
         });
 
@@ -2775,9 +3504,11 @@
                     loadingOverlay.querySelectorAll('div')[1].innerText = 'PDFを読み込み中...';
                     
                     try {
+                        // 旧 PDF を破棄してから新しいものを読む（destroy しないとワーカ/バッファが積み上がる・08-02 修正）
+                        if (window.currentPdfDoc) { try { await window.currentPdfDoc.destroy(); } catch (_) {} window.currentPdfDoc = null; }
                         const res = await fetch(bgData.dataURL);
                         const arrayBuffer = await res.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise; 
+                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                         pdfContainer.innerHTML = ''; 
                         
                         totalPdfPages = pdf.numPages; pageTotal.innerText = totalPdfPages; pageInput.max = totalPdfPages; pageInput.value = 1;
@@ -2791,7 +3522,8 @@
                         
                         window.currentPdfDoc = pdf;
                         window.pdfBaseScale = baseScale;
-                        window.pdfViewport1 = viewport1; 
+                        window.pdfViewport1 = viewport1;
+                        shownPage = 1; jumpTarget = null; // 新しいPDFなので現在ページを1に戻す
                         
                         if (window.pageObserver) window.pageObserver.disconnect();
                         if (window.thumbObserver) window.thumbObserver.disconnect();
@@ -2858,7 +3590,7 @@
                             pdfSidebar.appendChild(thumbDiv);
                             window.thumbObserver.observe(thumbDiv);
                             
-                            thumbDiv.addEventListener('click', () => { pageInput.value = i; pageInput.dispatchEvent(new Event('change')); });
+                            thumbDiv.addEventListener('click', () => goToPage(i));
                         }
                         
                         loadingOverlay.style.display = 'none'; 
@@ -2890,7 +3622,7 @@
             if (!file) return;
 
             const lastDotIndex = file.name.lastIndexOf('.');
-            window.currentFileName = lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name;
+            window.setCurrentFileName(lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name);
 
             const reader = new FileReader();
             reader.onload = async function(event) {
@@ -2984,7 +3716,7 @@
             if (!file) return;
             
             const lastDotIndex = file.name.lastIndexOf('.');
-            window.currentFileName = lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name;
+            window.setCurrentFileName(lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name);
             
             const reader = new FileReader();
             reader.onload = async (event) => {
@@ -3067,10 +3799,114 @@
             await persistBackground(); // 復元後、以降の自動保存のため背景を確実に保存
         }
 
+        /* =========================================================
+           指での操作（スマホ・タブレット）
+           - #workspace-container は touch-action:none（1本指で描くために必須）なので、
+             拡大・縮小・スクロールはブラウザ任せにできない。ここで自前で実装する。
+           - 2本目の指が触れた時点で、描きかけの操作を畳んでピンチへ移る。
+           - リスナーは document の capture（捕捉）側に置く。document は常に祖先なので、
+             要素側の pointerdown/move/up より必ず先に走り、割り込める。
+           ========================================================= */
+        const activeTouches = new Map();   // pointerId -> {x, y}
+        let touchGesture = null;           // {startDist, startZoom, prevMidX, prevMidY}
+        let touchGestureActive = false;    // 2本指中は要素側の処理を止める
+        // 指のタップは数px ぶれる。マウスより広い許容量を使う
+        const TAP_SLOP = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ? 12 : 5;
+        let focusTapMask = null;           // 学習モードでタップした黒塗り
+        let focusTapStart = null;
+
+        function touchMid(pts) {
+            const a = pts[0], b = pts[1];
+            return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) };
+        }
+        function beginPinch() {
+            const pts = [...activeTouches.values()];
+            if (pts.length < 2) return;
+            const m = touchMid(pts);
+            if (m.d < 1) return;
+            abortCurrentAction();               // 描きかけを畳んでからピンチへ
+            focusTapMask = null; focusTapStart = null; // 2本指はめくりではない
+            touchGestureActive = true;
+            const r = workspaceContainer.getBoundingClientRect();
+            touchGesture = {
+                startDist: m.d, startZoom: zoomLevel,
+                prevMidX: m.x - r.left, prevMidY: m.y - r.top,
+            };
+        }
+        // 指が離れたイベントを取りこぼすと「2本指のまま」で固着し、以後タップが効かなくなる。
+        // 古い記録は捨てて、常に今触っている指だけを見る。
+        function pruneStaleTouches() {
+            const now = Date.now();
+            for (const [id, p] of activeTouches) {
+                if (now - p.t > 3000) activeTouches.delete(id);
+            }
+            if (activeTouches.size < 2) { touchGesture = null; }
+            if (activeTouches.size === 0) touchGestureActive = false;
+        }
+        document.addEventListener('pointerdown', function (e) {
+            if (e.pointerType !== 'touch') return;
+            if (!e.target.closest || !e.target.closest('#workspace-container')) return;
+            pruneStaleTouches();
+            activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY, t: Date.now() });
+            if (activeTouches.size === 2) beginPinch();
+        }, true);
+
+        document.addEventListener('pointermove', function (e) {
+            if (e.pointerType !== 'touch') return;
+            if (!activeTouches.has(e.pointerId)) return;
+            activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY, t: Date.now() });
+            if (!touchGesture || activeTouches.size < 2) return;
+            const pts = [...activeTouches.values()];
+            const m = touchMid(pts);
+            const r = workspaceContainer.getBoundingClientRect();
+            const midX = m.x - r.left, midY = m.y - r.top;
+            // 2本指の間隔の変化＝拡大率。指の中点を動かさないように焦点を渡す
+            if (m.d > 1 && touchGesture.startDist > 1) {
+                setZoom(touchGesture.startZoom * (m.d / touchGesture.startDist), midX, midY);
+            }
+            // 中点の移動ぶんだけ紙を動かす（2本指ドラッグ＝スクロール）
+            workspaceContainer.scrollLeft -= (midX - touchGesture.prevMidX);
+            workspaceContainer.scrollTop -= (midY - touchGesture.prevMidY);
+            touchGesture.prevMidX = midX; touchGesture.prevMidY = midY;
+            e.preventDefault(); e.stopPropagation();
+        }, true);
+
+        function endTouch(e) {
+            if (e.pointerType !== 'touch') return;
+            if (!activeTouches.has(e.pointerId)) return;
+            activeTouches.delete(e.pointerId);
+            if (activeTouches.size < 2) touchGesture = null;
+            if (activeTouches.size === 0) touchGestureActive = false;
+        }
+        document.addEventListener('pointerup', endTouch, true);
+        document.addEventListener('pointercancel', endTouch, true);
+
+        // 学習モード中の指の扱い：黒塗りをタップでめくる／それ以外は1本指でスクロール
+        document.addEventListener('pointerup', function (e) {
+            if (!focusTapStart) return;
+            const moved = Math.hypot(e.clientX - focusTapStart.x, e.clientY - focusTapStart.y);
+            const m = focusTapMask;
+            focusTapMask = null; focusTapStart = null;
+            // 動かさずに離した＝タップ。黒塗りの上ならめくる
+            if (m && m.isConnected && moved <= TAP_SLOP && !window.isMasksHidden) {
+                m.classList.toggle('revealed');
+            }
+        });
+
         // 【改修】ポインターダウン（掴む・描画開始）の制御
         workspaceContainer.addEventListener('pointerdown', function(e) {
-            // 学習モード中は編集を一切受け付けない（マスクのめくりはCSSのホバーで動作）
-            if (document.body.classList.contains('focus-mode')) return;
+            // 2本指の操作（拡大・スクロール）が始まっていたら、編集側は手を出さない
+            if (touchGestureActive) return;
+            // 学習モード：編集はしない。指なら「黒塗りをタップでめくる」「1本指でスクロール」
+            if (document.body.classList.contains('focus-mode')) {
+                if (e.pointerType !== 'mouse') {
+                    focusTapMask = e.target.closest ? e.target.closest('.mask') : null;
+                    focusTapStart = { x: e.clientX, y: e.clientY };
+                    action = 'pan'; startX = e.clientX; startY = e.clientY;
+                    startRect = { scrollLeft: workspaceContainer.scrollLeft, scrollTop: workspaceContainer.scrollTop };
+                }
+                return;
+            }
             // 中ボタン、またはスペース押し＋左クリックで、どのツール中でもパン
             if (e.button === 1 || (spaceHeld && e.button === 0)) {
                 action = 'pan'; startX = e.clientX; startY = e.clientY;
@@ -3081,15 +3917,40 @@
                 return;
             }
             if (e.button !== 0) return;
-            // マウスツール＋シフトは、要素を触らず背景の文字選択をブラウザに任せる
+            // マウスツール＋Shift は、要素を触らず背景（PDF）の文字選択をブラウザに任せる。
+            // `.text-select-on` で canvas 要素は pointer-events:none になっているので、
+            // ここは選択を外して素通りさせるだけでよい。
             if (currentTool === 'select' && shiftHeld) { window.deselectCurrent(); return; }
             if (!e.target.closest('#workspace')) return;
+
             const rect = workspace.getBoundingClientRect(); const mouseX = (e.clientX - rect.left) / zoomLevel; const mouseY = (e.clientY - rect.top) / zoomLevel;
+
+            // 編集中のテキストを触った時の振り分け：
+            //   ・文字の上 → ブラウザに任せる（カーソル移動・ドラッグで範囲選択）
+            //   ・文字の外（外枠の余白）→ 入力を解除してその箱を選択
+            const editingTc = document.activeElement;
+            let justBlurredWrap = null;
+            if (editingTc && editingTc.classList && editingTc.classList.contains('text-content')) {
+                const wrap = editingTc.closest('.text-wrapper');
+                if (wrap && wrap.contains(e.target) && (e.target === editingTc || editingTc.contains(e.target))) {
+                    return; // 文字の上：ブラウザに任せる（カーソル移動・範囲選択）
+                }
+                // 文字の外（外枠の余白）や別の箱を押した＝この編集は終わり。
+                // **明示的に blur する。** 下で preventDefault すると contentEditable は
+                // 自然には focus を失わず、編集が続いたまま次を選ぶことになる（08-01 実測）。
+                // この後は通常の選択処理へ流し、外枠クリックなら「解除して選択」になる
+                // （編集へは戻さない＝下の再クリック判定から除外する）。
+                justBlurredWrap = wrap;
+                // 自分の外枠を掴んだ時は、空でも消さずに移動できるようにする
+                preserveEmptyWrapper = (wrap && wrap.contains(e.target)) ? wrap : null;
+                editingTc.blur();
+                preserveEmptyWrapper = null;
+            }
 
             // 既存オブジェクトの選択・移動・変形はマウスツールのときだけ。
             // 他ツールは新規作成に専念する（作成直後はマウスツールへ戻るので続けて編集できる）。
             // 例外：マスキングツールは、自分が作るマスキングだけはその場で選択・編集できる
-            const canPickExisting = ['select', 'mask', 'highlight', 'text'].includes(currentTool);
+            const canPickExisting = ['select', 'mask', 'highlight', 'text', 'shape'].includes(currentTool);
             const pickSelector = currentPickSelector();
 
             // ペン線の端のつまみ：ドラッグで線全体を拡大・縮小する
@@ -3202,8 +4063,10 @@
 
             const draggableTarget = canPickExisting ? e.target.closest(pickSelector) : null;
             if (draggableTarget) {
-                // Ctrl（Macは⌘）を押しながらのクリックは、選択に足す／外す
-                if (e.ctrlKey || e.metaKey) {
+                // Ctrl（⌘）を押しながらのクリックは、選択に足す／外す
+                // （Shift は背景PDFの文字選択に使うので、複数選択には使わない）
+                const additive = e.ctrlKey || e.metaKey;
+                if (additive) {
                     if (typeof deselectStroke === 'function') deselectStroke();
                     if (draggableTarget.classList.contains('selected')) {
                         draggableTarget.classList.remove('selected');
@@ -3215,6 +4078,15 @@
                     draggableTarget.classList.add('selected');
                     selectedElements.push(draggableTarget);
                 }
+
+                // 選択済みのテキスト箱を（修飾なしで）もう一度クリックしたら編集に入る合図。
+                // ただしドラッグしたら移動なので、実際の判定は pointerup で行う。
+                // 直前まで編集していた箱の外枠クリックは「解除して選択」で止める（編集へ戻さない）
+                pressWasSelectedText = !additive
+                    && draggableTarget !== justBlurredWrap
+                    && draggableTarget.classList.contains('text-wrapper')
+                    && draggableTarget.classList.contains('selected')
+                    && selectedElements.length === 1 && selectedElements[0] === draggableTarget;
 
                 action = 'move';
                 movePressTarget = draggableTarget;
@@ -3234,16 +4106,38 @@
                     left: parseFloat(el.style.left),
                     top: parseFloat(el.style.top)
                 }));
+                // 範囲選択に手書き線も入っていれば一緒に動かす
+                strokesDrag = beginStrokesDrag();
                 startX = mouseX; startY = mouseY;
                 updateToolbar();
                 e.preventDefault(); e.stopPropagation();
                 return;
             }
 
+            // 範囲選択した線の囲みの中を押したら、選んだぶんをまとめて動かす。
+            // **選択を外す前に見る**（下の deselectCurrent が選択を消してしまうため）。
+            if (currentTool === 'select' && selectedStrokes.length && insideSelectedStrokes(mouseX, mouseY)) {
+                strokesDrag = beginStrokesDrag();
+                if (strokesDrag) {
+                    action = 'move';
+                    startX = mouseX; startY = mouseY;
+                    startRects = selectedElements.map(el => ({
+                        el: el, left: parseFloat(el.style.left), top: parseFloat(el.style.top)
+                    }));
+                    e.preventDefault(); e.stopPropagation();
+                    return;
+                }
+            }
+
             // 何もないところをクリックした。選択があったかを覚えておき、
             // マスキングでは「選択解除だけ」で終える判断に使う
             clearedSelectionOnDown = (selectedElements.length > 0 || !!selectedStroke);
-            window.deselectCurrent();
+            // Ctrl（⌘）を押しながら範囲選択を始める時は、今の選択を保つ（足すため）。
+            // 修飾なしの時だけここで解除する。box_select の確定側でも同様に判断する。
+            const additiveSelect = e.ctrlKey || e.metaKey;
+            if (!(currentTool === 'select' && additiveSelect)) {
+                window.deselectCurrent();
+            }
 
             if (currentTool === 'mask') {
                 const maskType = document.querySelector('input[name="maskType"]:checked') ? document.querySelector('input[name="maskType"]:checked').value : 'rect';
@@ -3366,6 +4260,16 @@
                     e.preventDefault();
                     return;
                 }
+                // 指の場合、何もない所を1本指でなぞるのは「紙を動かす」。
+                // スマホは touch-action:none でブラウザのスクロールが効かないため、
+                // マウスツールの1本指をスクロールに充てないと画面外へ移動できない。
+                if (e.pointerType === 'touch') {
+                    action = 'pan'; startX = e.clientX; startY = e.clientY;
+                    startRect = { scrollLeft: workspaceContainer.scrollLeft, scrollTop: workspaceContainer.scrollTop };
+                    workspaceContainer.classList.add('panning');
+                    e.preventDefault();
+                    return;
+                }
                 action = 'box_select';
                 startX = mouseX; startY = mouseY;
                 selectionBox.style.left = startX + 'px'; selectionBox.style.top = startY + 'px';
@@ -3412,13 +4316,22 @@
                 let h = Math.abs(currentY - startY);
                 let lineDir = (startX < currentX && startY > currentY) || (startX > currentX && startY < currentY) ? '/' : '\\';
 
+                const shapeType = currentDrawingShape.dataset.shapeType;
+                // Shift 押しで四角は正方形・円は真円（線は対象外）。始点を角に固定して一辺を揃える。
+                if (shapeType !== 'line' && e.shiftKey) {
+                    const side = Math.max(w, h);
+                    w = side; h = side;
+                    minX = currentX < startX ? startX - side : startX;
+                    minY = currentY < startY ? startY - side : startY;
+                }
+
                 currentDrawingShape.style.left = minX + 'px';
                 currentDrawingShape.style.top = minY + 'px';
-                currentDrawingShape.style.width = w + 'px';
-                currentDrawingShape.style.height = h + 'px';
+                // 幅・高さが 0 になると SVG そのものが描かれない（水平・垂直に引いた線が
+                // 消えて見えた原因）。最低 1px を残す。
+                currentDrawingShape.style.width = Math.max(w, 1) + 'px';
+                currentDrawingShape.style.height = Math.max(h, 1) + 'px';
                 currentDrawingShape.dataset.lineDir = lineDir;
-
-                const shapeType = currentDrawingShape.dataset.shapeType;
                 if (shapeType === 'line') {
                     const shapeNode = currentDrawingShape.querySelector('svg > line');
                     if (lineDir === '/') {
@@ -3454,12 +4367,13 @@
                 const localY = (e.clientY - svgRect.top) * sy;
                 rawPenPoints.push({x: localX, y: localY});
                 liveStrokePath.setAttribute('d', strokePathD(rawPenPoints));
-            } else if (action === 'move' && startRects.length > 0) {
+            } else if (action === 'move' && (startRects.length > 0 || strokesDrag)) {
                 const dx = currentX - startX; const dy = currentY - startY; 
                 startRects.forEach(item => {
                     item.el.style.left = (item.left + dx) + 'px';
                     item.el.style.top = (item.top + dy) + 'px';
                 });
+                if (strokesDrag) applyStrokesDrag(strokesDrag, dx, dy);
             } else if (action === 'resize' && selectedElements.length > 0) {
                 const target = selectedElements[0];
                 
@@ -3526,20 +4440,22 @@
                 drawingBox.style.display = 'none';
                 const dragW = parseFloat(drawingBox.style.width);
                 const dragH = parseFloat(drawingBox.style.height);
-                const isDrag = Math.hypot(dragW, dragH) >= 5;
+                const isDrag = Math.hypot(dragW, dragH) >= TAP_SLOP;
                 // 編集中・選択中だった時のクリックは「編集を終える」ためのもの。新しい箱は作らない
                 if (!isDrag && clearedSelectionOnDown) {
                     action = null;
                     updateToolbar();
                     return;
                 }
-                const boxLeft = isDrag ? parseFloat(drawingBox.style.left) : (startX - 8);
-                const boxTop = isDrag ? parseFloat(drawingBox.style.top) : (startY - 8);
+                const boxLeft = isDrag ? parseFloat(drawingBox.style.left) : startX;
+                const boxTop = isDrag ? parseFloat(drawingBox.style.top) : startY;
                 // ドラッグしたときだけ幅を固定して折り返す
                 const boxW = isDrag ? Math.max(dragW, 30) + 'px' : 'max-content';
                 const newText = window.createTextElement(
                     boxLeft + 'px', boxTop + 'px', boxW, 'max-content', '',
                     textSizeInput.value + 'px', toolColors['text'], 'left', currentTextDirection);
+                // クリック作成は「カーソルの先端＝入力文字（キャレット）の左下」に合わせる
+                if (!isDrag) moveTextBottomLeftTo(newText, startX, startY);
                 window.deselectCurrent();
                 selectedElements = [newText]; newText.classList.add('selected');
                 updateToolbar();
@@ -3556,7 +4472,7 @@
 
                 // マスキング矩形はワンクリック（ほぼ動かさず離す）で既定サイズを配置。
                 // ただし直前まで何かを選択していた場合、そのクリックは「選択解除」として扱い配置しない
-                if (currentTool === 'mask' && Math.hypot(w, h) < 5) {
+                if (currentTool === 'mask' && Math.hypot(w, h) < TAP_SLOP) {
                     if (!clearedSelectionOnDown) {
                         window.createMaskElement(
                             (startX - DEFAULT_MASK_W / 2) + 'px', (startY - DEFAULT_MASK_H / 2) + 'px',
@@ -3594,21 +4510,27 @@
                     right: Math.max(startX, currentX),
                     bottom: Math.max(startY, currentY)
                 };
-                
-                if (boxRect.right - boxRect.left > 5 && boxRect.bottom - boxRect.top > 5) {
+
+                if (boxRect.right - boxRect.left > TAP_SLOP && boxRect.bottom - boxRect.top > TAP_SLOP) {
+                    // Ctrl（⌘）を押しながらの範囲選択は、今の選択を保ったまま足す。
+                    // 押していなければ、まず今の選択を消してから選び直す。
+                    const additive = e.ctrlKey || e.metaKey;
+                    if (!additive) window.deselectCurrent();
                     document.querySelectorAll('.canvas-element').forEach(el => {
                         const elLeft = parseFloat(el.style.left);
                         const elTop = parseFloat(el.style.top);
                         const elRight = elLeft + (parseFloat(el.style.width) || el.offsetWidth);
                         const elBottom = elTop + (parseFloat(el.style.height) || el.offsetHeight);
-                        
+
                         if (elLeft < boxRect.right && elRight > boxRect.left && elTop < boxRect.bottom && elBottom > boxRect.top) {
-                            el.classList.add('selected');
-                            selectedElements.push(el);
+                            if (!el.classList.contains('selected')) {
+                                el.classList.add('selected');
+                                selectedElements.push(el);
+                            }
                         }
                     });
                     // ペン線（canvasDrawings のストローク）も範囲選択に含める
-                    selectedStrokes = [];
+                    if (!additive) selectedStrokes = [];
                     document.querySelectorAll('.drawing-svg').forEach(svg => {
                         const idx = parseInt(svg.dataset.canvasIndex);
                         const cmds = window.canvasDrawings[idx] || [];
@@ -3616,12 +4538,17 @@
                             const bb = strokeWorkspaceBBox({ svg, index: i });
                             if (!bb) return;
                             if (bb.left < boxRect.right && bb.right > boxRect.left && bb.top < boxRect.bottom && bb.bottom > boxRect.top) {
-                                selectedStrokes.push({ svg, index: i });
+                                if (!selectedStrokes.some(s => s.svg === svg && s.index === i)) {
+                                    selectedStrokes.push({ svg, index: i });
+                                }
                             }
                         });
                     });
                     renderMultiStrokeSelection();
                     updateToolbar();
+                } else if (!(e.ctrlKey || e.metaKey)) {
+                    // 何もない所を（修飾なしで）クリックしただけ＝選択を解除する
+                    window.deselectCurrent();
                 }
             } else if (action === 'draw_shape') {
                 if (currentDrawingShape) {
@@ -3629,8 +4556,11 @@
                     let h = parseFloat(currentDrawingShape.style.height);
                     
                     if (Math.hypot(w, h) >= 5) {
-                        if (w < 4) { w = 4; currentDrawingShape.style.width = '4px'; currentDrawingShape.style.left = (parseFloat(currentDrawingShape.style.left) - 2) + 'px'; }
-                        if (h < 4) { h = 4; currentDrawingShape.style.height = '4px'; currentDrawingShape.style.top = (parseFloat(currentDrawingShape.style.top) - 2) + 'px'; }
+                        // 四角・円は掴めるように最低 4px。直線は 1px のままでよい
+                        // （引いた向きを保つ。太さのぶん見た目も当たり判定も足りる）。
+                        const minSide = currentDrawingShape.dataset.shapeType === 'line' ? 1 : 4;
+                        if (w < minSide) { w = minSide; currentDrawingShape.style.width = minSide + 'px'; currentDrawingShape.style.left = (parseFloat(currentDrawingShape.style.left) - minSide / 2) + 'px'; }
+                        if (h < minSide) { h = minSide; currentDrawingShape.style.height = minSide + 'px'; currentDrawingShape.style.top = (parseFloat(currentDrawingShape.style.top) - minSide / 2) + 'px'; }
                         
                         currentDrawingShape.style.pointerEvents = '';
                         window.deselectCurrent(); 
@@ -3707,14 +4637,22 @@
             else if (action === 'move' || action === 'resize') {
                 // 実際に動いた/リサイズされた時だけ履歴に積む（単なる選択クリックで履歴を汚さない）
                 const dx = currentX - startX; const dy = currentY - startY;
-                if (Math.hypot(dx, dy) >= 1) { stateChanged = true; }
-                // 複数選択中に、動かさずただクリックしただけなら、その1つだけの選択に絞る
-                else if (action === 'move' && movePressTarget && selectedElements.length > 1
-                         && !e.ctrlKey && !e.metaKey && movePressTarget.isConnected) {
-                    const only = movePressTarget;
-                    window.deselectCurrent();
-                    only.classList.add('selected');
-                    selectedElements = [only];
+                const dragged = Math.hypot(dx, dy) >= (TAP_SLOP > 5 ? 6 : 1);
+                if (dragged) { stateChanged = true; }
+                // 動かさずに離した時：
+                else if (action === 'move' && movePressTarget && movePressTarget.isConnected) {
+                    // 選択済みテキスト箱の再クリックは編集に入る（クリックした場所にカーソル）
+                    if (pressWasSelectedText && movePressTarget.classList.contains('text-wrapper')) {
+                        const tc = movePressTarget.querySelector('.text-content');
+                        if (tc) placeCaretFromPoint(tc, e.clientX, e.clientY);
+                    }
+                    // 複数選択中にただクリックしただけなら、その1つだけの選択に絞る
+                    else if (selectedElements.length > 1 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                        const only = movePressTarget;
+                        window.deselectCurrent();
+                        only.classList.add('selected');
+                        selectedElements = [only];
+                    }
                 }
             }
             else if (action === 'move_stroke') {
@@ -3728,7 +4666,7 @@
                 strokeMoveStart = null;
             }
             
-            action = null; movePressTarget = null; penPoints = []; rawPenPoints = []; startRects = [];
+            action = null; movePressTarget = null; pressWasSelectedText = false; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
             if (stateChanged) window.saveState();
             updateToolbar(); // 選択状態に応じてプロパティ表示を更新
         });
@@ -4218,7 +5156,7 @@
                 loadingOverlay.style.display = 'flex';
                 loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
                 try {
-                    window.currentFileName = projectData.fileName || window.currentFileName;
+                    window.setCurrentFileName(projectData.fileName);
                     await applyProjectData(projectData);
                 } catch (err) {
                     console.error(err);
