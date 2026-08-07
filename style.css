@@ -1,0 +1,957 @@
+        /* =========================================================
+           デザイントークン（色・角丸・影を一元管理）
+           - ライト値を :root に定義し、prefers-color-scheme: dark で差し替える
+           - アクセント色（青/緑/赤）とユーザー描画色は原則そのまま
+           ========================================================= */
+        :root {
+            /* サーフェス（面） */
+            --c-canvas: #e5e7eb;        /* ワークスペースの背景（ページの外側） */
+            --c-body-bg: #f3f4f6;       /* アプリ全体の背景 */
+            --c-surface: #ffffff;       /* パネル・ボタン・カード */
+            --c-surface-2: #f9fafb;     /* わずかに沈んだ面／ホバー */
+            --c-surface-3: #f3f4f6;     /* インセット・ホバー塗り */
+            --c-glass: rgba(255, 255, 255, 0.95);      /* すりガラス風パネル */
+            --c-glass-border: rgba(229, 231, 235, 0.8);
+            /* テキスト */
+            --c-text: #374151;
+            --c-text-strong: #111827;
+            --c-text-muted: #6b7280;
+            --c-text-sub: #4b5563;
+            --c-on-accent: #ffffff;     /* アクセント上の文字 */
+            /* ボーダー */
+            --c-border: #e5e7eb;
+            --c-border-input: #d1d5db;
+            --c-border-strong: #9ca3af;
+            /* アクセント（ライト/ダーク共通） */
+            --c-accent: #3b82f6;
+            --c-accent-hover: #2563eb;
+            --c-accent-weak: rgba(59, 130, 246, 0.3);
+            --c-accent-tint: #eff6ff;   /* 青系ホバー塗り */
+            --c-success: #10b981;
+            --c-success-hover: #059669;
+            --c-danger: #ef4444;
+            --c-danger-border: #fca5a5;
+            --c-danger-bg: #fef2f2;
+            --c-danger-hover-bg: #fee2e2;
+            --c-danger-hover-border: #f87171;
+            --c-project-bg: #eef2ff;
+            --c-project-text: #4338ca;
+            --c-project-border: #c7d2fe;
+            --c-project-hover-bg: #e0e7ff;
+            --c-project-hover-border: #a5b4fc;
+            /* 影 */
+            --sh-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --sh-panel: 0 1px 3px rgba(0,0,0,0.05);
+            --sh-md: 0 4px 15px rgba(0,0,0,0.1);
+            --sh-lg: 0 10px 25px rgba(0,0,0,0.1);
+            /* 角丸スケール */
+            --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px; --r-pill: 100px;
+            /* ツールチップ */
+            --c-tooltip-bg: rgba(17, 24, 39, 0.85);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --c-canvas: #0f1115;
+                --c-body-bg: #16181d;
+                --c-surface: #1f2228;
+                --c-surface-2: #262a31;
+                --c-surface-3: #2b2f37;
+                --c-glass: rgba(31, 34, 40, 0.95);
+                --c-glass-border: rgba(255, 255, 255, 0.08);
+                --c-text: #e5e7eb;
+                --c-text-strong: #f9fafb;
+                --c-text-muted: #9ca3af;
+                --c-text-sub: #cbd5e1;
+                --c-border: #333842;
+                --c-border-input: #3a3f4a;
+                --c-border-strong: #565d6a;
+                --c-accent-tint: #1e3a5f;
+                --c-danger-bg: #3a1f1f;
+                --c-danger-hover-bg: #4a2626;
+                --c-project-bg: #26294a;
+                --c-project-text: #c7d2fe;
+                --c-project-border: #3a3f6a;
+                --c-project-hover-bg: #2f3358;
+                --c-project-hover-border: #4a5088;
+                --sh-sm: 0 1px 2px rgba(0,0,0,0.4);
+                --sh-panel: 0 1px 3px rgba(0,0,0,0.4);
+                --sh-md: 0 4px 15px rgba(0,0,0,0.5);
+                --sh-lg: 0 10px 25px rgba(0,0,0,0.6);
+                --c-tooltip-bg: rgba(0, 0, 0, 0.9);
+            }
+        }
+
+        /* --- モダンリセット & ベースレイアウト --- */
+        body {
+            margin: 0;
+            height: 100vh;
+            /* スマホはアドレスバーの分だけ 100vh が実際の可視領域より高く、
+               下端のツールバーが画面外へ落ちる。dvh 対応ブラウザではこちらが勝つ。 */
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: var(--c-body-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--c-text);
+        }
+
+        /* アイコンのベーススタイル */
+        .material-symbols-outlined {
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-filled {
+            font-variation-settings: 'FILL' 1;
+        }
+
+        /* --- ヘッダー --- */
+        #app-header {
+            flex-shrink: 0;
+            background: var(--c-glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--c-border);
+            box-shadow: var(--sh-panel);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px 20px;
+        }
+        
+        .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header-title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header-brand { display: flex; align-items: center; gap: 8px; }
+        .header-logo { height: 26px; width: auto; object-fit: contain; }
+        h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--c-text-strong); letter-spacing: -0.5px; }
+
+        /* 縦ディバイダー（ヘッダー等の区切り線・旧インラインstyleを共通化） */
+        .v-divider { width: 1px; height: 20px; background: var(--c-border); margin: 0 5px; align-self: center; }
+        .v-divider-sm { width: 1px; height: 16px; background: var(--c-border-input); margin: 0 4px; align-self: center; }
+
+        /* UI（ツールバー等）はドラッグしても文字選択されないようにする（入力欄は除く） */
+        #app-header, #floating-tools-container, #floating-top-left, #floating-bottom-right,
+        #btn-focus-mode, .dropdown-menu, #restore-banner, #pdf-sidebar {
+            -webkit-user-select: none; user-select: none;
+        }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* 編集中のファイル名 */
+        #current-file-name { display: inline-flex; align-items: center; gap: 5px; max-width: 260px; font-size: 13px; font-weight: 600; color: var(--c-text-sub); }
+        #current-file-name .material-symbols-outlined { font-size: 18px; color: var(--c-text-muted); }
+        #current-file-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* --- ボタンデザイン --- */
+        .btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--r-md);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            background-color: var(--c-surface);
+            color: var(--c-text);
+            border-color: var(--c-border-input);
+            box-shadow: var(--sh-sm);
+            position: relative; /* ツールチップ(::after)の基準にする */
+        }
+        .btn:hover { background-color: var(--c-surface-2); border-color: var(--c-border-strong); }
+        .btn:active { transform: scale(0.97); }
+        /* 押せないボタンは薄く表示して「効かない/もう戻れない」を区別できるようにする */
+        .btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
+        .btn:disabled:hover { background-color: var(--c-surface); border-color: var(--c-border-input); }
+        .btn-icon { padding: 6px 10px; }
+
+        .btn-primary { background-color: var(--c-accent); color: var(--c-on-accent); border-color: var(--c-accent); }
+        .btn-primary:hover { background-color: var(--c-accent-hover); border-color: var(--c-accent-hover); color: var(--c-on-accent); }
+
+        .btn-success { background-color: var(--c-success); color: var(--c-on-accent); border-color: var(--c-success); }
+        .btn-success:hover { background-color: var(--c-success-hover); border-color: var(--c-success-hover); color: var(--c-on-accent); }
+
+        .btn-danger { color: var(--c-danger); border-color: var(--c-danger-border); background-color: var(--c-danger-bg); }
+        .btn-danger:hover { background-color: var(--c-danger-hover-bg); border-color: var(--c-danger-hover-border); }
+
+        .btn-project { background-color: var(--c-project-bg); color: var(--c-project-text); border-color: var(--c-project-border); }
+        .btn-project:hover { background-color: var(--c-project-hover-bg); border-color: var(--c-project-hover-border); }
+
+        /* ゴーストボタン（枠・背景なし。旧インラインstyleを共通化） */
+        .btn-ghost { border-color: transparent; background-color: transparent; box-shadow: none; }
+        .btn-ghost:hover { background-color: var(--c-surface-3); border-color: transparent; }
+
+        .custom-file-upload { display: inline-flex; cursor: pointer; }
+        #imageInput, #projectInput { display: none; }
+
+        /* --- ドロップダウンメニュー --- */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-menu {
+            position: absolute; top: 100%; right: 0; margin-top: 8px; background: var(--c-surface);
+            border: 1px solid var(--c-border); border-radius: var(--r-lg); box-shadow: var(--sh-lg);
+            list-style: none; padding: 5px; display: none; flex-direction: column; gap: 2px;
+            min-width: 220px; z-index: 3000;
+        }
+        .dropdown-menu.show { display: flex; }
+        .dropdown-menu li {
+            padding: 10px 15px; cursor: pointer; border-radius: var(--r-md); font-size: 13px;
+            font-weight: 600; color: var(--c-text); display: flex; align-items: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .dropdown-menu li:hover { background-color: var(--c-surface-3); color: var(--c-accent); }
+        /* メニュー内のリンク項目（使い方ページ）。他の項目と同じ当たり判定にするため
+           li の padding を外し、a 側で埋める */
+        .dropdown-menu li.menu-link { padding: 0; }
+        .dropdown-menu li.menu-link a {
+            display: flex; align-items: center; gap: 8px; width: 100%;
+            padding: 10px 15px; color: inherit; text-decoration: none; border-radius: var(--r-md);
+        }
+        /* ヘッダーのアイコンリンク（使い方）は button と同じ見た目に揃える */
+        a.btn { text-decoration: none; }
+
+        /* --- フローティングツールバー (下部中央) --- */
+        #floating-tools-container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            z-index: 2000; pointer-events: none;
+        }
+
+        .tool-switch {
+            display: inline-flex; background: var(--c-glass); backdrop-filter: blur(10px);
+            border-radius: var(--r-pill); padding: 6px; gap: 4px; border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-lg); pointer-events: auto; align-items: center;
+        }
+
+        .tool-switch label {
+            display: flex; justify-content: center; align-items: center; width: 38px; height: 38px;
+            cursor: pointer; border-radius: 50%; color: var(--c-text-muted); transition: all 0.2s ease; position: relative;
+        }
+        .tool-switch label .material-symbols-outlined { font-size: 21px; }
+        /* ツールバー内のアイコンボタンも同じ大きさに揃える */
+        .tool-switch .btn-icon { padding: 4px 8px; }
+        .tool-switch .btn-icon .material-symbols-outlined { font-size: 21px; }
+
+        /* 説明（ツールチップ）はボタンの中央に揃える。
+           left を指定しないと、文字がボタンの左端から右へ伸びて中心がずれる（08-07 修正） */
+        .tool-switch label::after, .btn[title]::after, .slider-label[title]::after {
+            content: attr(title); position: absolute; top: -35px; left: 50%; background: var(--c-tooltip-bg);
+            color: #fff; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: var(--r-sm);
+            white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+            transform: translate(-50%, 5px); z-index: 5000;
+        }
+        .tool-switch label:hover::after { opacity: 1; transform: translate(-50%, 0); }
+        /* 押した後もカーソルが動かないと :hover が外れず、説明が画面に貼り付いたまま残る。
+           押した時点で JS が .no-tip を付け、離れた時に外す（08-07 修正） */
+        .no-tip::after { opacity: 0 !important; }
+        /* 入り切りのスイッチ（黒塗りを掛ける／外す）。他のアイコンと同じ線画で揃える */
+        .toggle { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px; border-radius: var(--r-md); }
+        .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .toggle-icon { font-size: 34px; color: var(--c-text-muted); transition: color 0.18s; }
+        /* スイッチは行の中央に置く（08-07 Rayan様の指示）。
+           他の設定行は左揃えだが、この行はスイッチ1つだけなので中央のほうが座りが良い */
+        #prop-mask-reveal { justify-content: center; }
+        .toggle input:checked + .toggle-icon { color: var(--c-accent); }
+        .toggle:hover { background: var(--c-surface-3); }
+        /* .btn のツールチップも表示する（従来はホバー時の opacity ルールが無く出ていなかった） */
+        .btn[title]:hover::after { opacity: 1; transform: translate(-50%, 0); }
+        /* ヘッダー内のボタンは上に出すと画面外に切れるため下向きに表示する */
+        header .btn[title]::after { top: calc(100% + 8px); }
+        /* 画面の右端に寄っているボタンは、中央揃えだと説明がはみ出す。右端を揃えて左へ伸ばす */
+        #floating-bottom-right .btn[title]::after,
+        #btn-guide::after, #btn-header-menu::after {
+            left: auto; right: 0; transform: translate(0, 5px);
+        }
+        #floating-bottom-right .btn[title]:hover::after,
+        #btn-guide:hover::after, #btn-header-menu:hover::after { transform: translate(0, 0); }
+        .tool-switch label:hover { background-color: var(--c-surface-3); color: var(--c-text); }
+        .tool-switch input[type="radio"] { display: none; }
+        .tool-switch input[type="radio"]:checked + label {
+            background-color: var(--c-accent); color: var(--c-on-accent); box-shadow: 0 4px 10px var(--c-accent-weak);
+            transform: translateY(-2px);
+        }
+        /* 設定行を開いている間は、そのツールのボタンに白い輪を出す（開いていると分かるように） */
+        .tool-switch input[type="radio"]:checked + label.props-open {
+            box-shadow: 0 0 0 2px var(--c-on-accent), 0 4px 10px var(--c-accent-weak);
+        }
+        .tool-divider { width: 1px; height: 20px; background: var(--c-glass-border); margin: 0 3px; }
+
+        /* --- フローティングプロパティパネル --- */
+        #floating-properties {
+            display: none; background: var(--c-glass); backdrop-filter: blur(10px);
+            border-radius: var(--r-xl); padding: 7px 10px; gap: 6px; border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-md); pointer-events: auto; flex-wrap: wrap; justify-content: center;
+        }
+
+        .prop-group { display: none; align-items: center; gap: 6px; padding: 0 7px; border-left: 1px solid var(--c-border); }
+        /* 先頭の区切り線は要らない。JSが「実際に見えている先頭」に is-first を付ける */
+        .prop-group:first-child, .prop-group.is-first { border-left: none; padding-left: 0; }
+
+        .slider-label { color: var(--c-text-muted); position: relative; cursor: help; }
+        .slider-label:hover { color: var(--c-text); }
+        .slider-label:hover::after { opacity: 1; transform: translateY(0); }
+
+        .mini-switch { display: inline-flex; background: var(--c-surface-3); border-radius: var(--r-lg); padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--c-border); }
+        .mini-switch label { display: flex; justify-content: center; align-items: center; width: 32px; height: 32px; cursor: pointer; border-radius: var(--r-md); color: var(--c-text-muted); transition: 0.2s; position: relative;}
+        .mini-switch label .material-symbols-outlined { font-size: 20px; }
+        .mini-switch label:hover { color: var(--c-text-strong); }
+        .mini-switch label:hover::after { opacity: 1; transform: translateY(0); }
+        .mini-switch input[type="radio"] { display: none; }
+        .mini-switch input[type="radio"]:checked + label { background: var(--c-surface); color: var(--c-accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .color-palette { display: flex; gap: 6px; align-items: center; }
+        .swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); transition: 0.15s; }
+        .swatch:hover { transform: scale(1.15); }
+        .swatch.active { outline: 2px solid var(--c-accent); outline-offset: 2px; transform: scale(1.15); }
+        .swatch.custom-swatch { background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); }
+
+        .combo-box { position: relative; display: inline-flex; align-items: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); background: var(--c-surface); height: 32px; overflow: hidden; }
+        .combo-input { border: none; outline: none; width: 40px; text-align: center; background: transparent; font-size: 13px; font-family: inherit; font-weight: 600; color: var(--c-text); }
+        .combo-input::-webkit-inner-spin-button, .combo-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .combo-dropdown-btn { border: none; background: var(--c-surface-2); cursor: pointer; padding: 0 4px; border-left: 1px solid var(--c-border-input); height: 100%; color: var(--c-text-muted); }
+        .combo-dropdown-btn:hover { background: var(--c-surface-3); }
+
+        .combo-list { position: absolute; top: calc(100% + 4px); left: 0; background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: var(--sh-lg); list-style: none; padding: 5px; margin: 0; display: none; flex-direction: column; max-height: 200px; overflow-y: auto; z-index: 2000; width: 100%; border-radius: var(--r-lg); box-sizing: border-box; }
+        .combo-list li { padding: 8px 5px; cursor: pointer; font-size: 13px; text-align: center; border-radius: var(--r-sm); font-weight: 600; color: var(--c-text); }
+        .combo-list li:hover { background: var(--c-accent-tint); color: var(--c-accent); }
+
+        .number-input { height: 32px; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 0 5px; font-size: 13px; background-color: var(--c-surface); color: var(--c-text); text-align: center; font-weight: 600; width: 45px; }
+
+        /* --- 学習モード（閲覧のみ・UI非表示） --- */
+        .hideable-ui { transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease; }
+        body.focus-mode .hideable-ui { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+        /* 学習モード中は編集を無効化し、マスクのめくり（ホバー）だけを許可する */
+        body.focus-mode #workspace-container .canvas-element { pointer-events: none !important; }
+        body.focus-mode #workspace-container .mask { pointer-events: auto !important; cursor: default; }
+        body.focus-mode #btn-focus-mode { color: var(--c-accent); }
+
+        #btn-focus-mode {
+            position: absolute; bottom: 30px; left: 30px; width: 44px; height: 44px; border-radius: 50%;
+            background: var(--c-glass); backdrop-filter: blur(10px); border: 1px solid var(--c-glass-border);
+            box-shadow: var(--sh-md); color: var(--c-text-muted); cursor: pointer; z-index: 3000;
+            display: flex; justify-content: center; align-items: center; transition: all 0.2s ease;
+        }
+        #btn-focus-mode:hover { background: var(--c-surface-3); color: var(--c-text); transform: scale(1.05); }
+
+        /* --- メインワークスペース --- */
+        #main-area { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
+        
+        #pdf-sidebar { width: 220px; height: 100%; background: var(--c-surface); border-right: 1px solid var(--c-border); overflow-y: auto; display: none; flex-direction: column; align-items: center; padding: 20px 0; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
+        .pdf-thumb { width: 80%; background: var(--c-surface); margin-bottom: 20px; border: 2px solid transparent; border-radius: var(--r-lg); cursor: pointer; box-shadow: var(--sh-md); transition: 0.2s; display: flex; flex-direction: column; align-items: center; padding-bottom: 8px; overflow: hidden; flex-shrink: 0; min-height: 100px; }
+        .pdf-thumb:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .pdf-thumb.active { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-weak); }
+        .pdf-thumb canvas { width: 100%; height: auto; border-bottom: 1px solid var(--c-border); margin-bottom: 8px; object-fit: contain; background: #ffffff; }
+        .pdf-thumb span { font-size: 12px; font-weight: 700; color: var(--c-text-sub); }
+
+        #workspace-outer { flex-grow: 1; position: relative; display: flex; overflow: hidden; background-color: var(--c-canvas); }
+        #workspace-outer.drag-over::after { content: ''; position: absolute; inset: 8px; border: 2px dashed var(--c-accent); border-radius: var(--r-lg); pointer-events: none; z-index: 4000; }
+        #workspace-container { flex-grow: 1; overflow: auto; position: relative; touch-action: none; user-select: none; }
+        #workspace-wrapper { position: relative; }
+        #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
+
+        .floating-ui {
+            position: absolute; z-index: 100; background: var(--c-glass); backdrop-filter: blur(8px);
+            padding: 5px 9px; border-radius: var(--r-lg); box-shadow: var(--sh-md); border: 1px solid var(--c-glass-border); display: flex; align-items: center; gap: 7px;
+        }
+        #floating-top-left { top: 20px; left: 20px; }
+        #floating-bottom-right { bottom: 25px; right: 25px; }
+
+        #page-navigation { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--c-text); }
+        /* 標準の上下矢印は隠し、同じ場所・同じ見え方の自前の矢印を置く。
+           見た目（幅・出るタイミング）は元のまま、向きだけ「紙の動く向き」に直す。 */
+        #page-input::-webkit-outer-spin-button, #page-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        #page-input { -moz-appearance: textfield; }
+        #page-input-wrap { position: relative; display: inline-flex; align-items: center; }
+        #page-stepper {
+            position: absolute; right: 3px; top: 2px; bottom: 2px; width: 13px;
+            display: flex; flex-direction: column; gap: 1px;
+            opacity: 0; transition: opacity 0.12s; pointer-events: none;
+        }
+        #page-input-wrap:hover #page-stepper, #page-input-wrap:focus-within #page-stepper {
+            opacity: 1; pointer-events: auto;
+        }
+        #page-stepper button {
+            flex: 1; padding: 0; border: none; background: var(--c-surface-3);
+            border-radius: 2px; cursor: pointer; position: relative;
+        }
+        #page-stepper button:hover { background: var(--c-border); }
+        /* 三角は擬似要素で描く（アイコン用フォントの読み込みに左右されないように） */
+        #page-stepper button::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            border-left: 3px solid transparent; border-right: 3px solid transparent;
+        }
+        #btn-page-prev::before { border-bottom: 4px solid var(--c-text-sub); margin-top: -1px; }
+        #btn-page-next::before { border-top: 4px solid var(--c-text-sub); margin-top: 1px; }
+        /* 指で使う端末はホバーが無いので常に出す。潰れないよう入力欄を少しだけ広げる */
+        @media (hover: none) {
+            #page-stepper { opacity: 1; pointer-events: auto; width: 16px; }
+            #page-input { width: 52px; padding-right: 20px; }
+        }
+        #page-input { width: 40px; text-align: center; border: 1px solid var(--c-border-input); border-radius: var(--r-md); padding: 4px; font-size: 14px; font-weight: 700; background-color: var(--c-surface); color: var(--c-text); }
+        #zoom-text { font-weight: 700; width: 46px; text-align: center; font-size: 13px; color: var(--c-text); }
+        /* 浮いているUI（ズーム・ページ移動）のボタンも一回り小さくする */
+        .floating-ui .btn-icon { padding: 4px 8px; }
+        .floating-ui .btn-icon .material-symbols-outlined { font-size: 21px; }
+
+        #uploaded-image { display: block; max-width: none; max-height: none; -webkit-touch-callout: none !important; -webkit-user-drag: none; user-drag: none; border-radius: 4px; }
+        #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; -webkit-touch-callout: none; }
+        /* ペン/消しゴムはベクター(SVG)で描画し、ズームしても滲まず再描画も不要 */
+        .drawing-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
+        #pdf-container { display: none; -webkit-touch-callout: none; }
+        .pdf-page { position: relative; margin-bottom: 20px; background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.05); -webkit-touch-callout: none; border-radius: 4px; overflow: hidden; }
+        .textLayer { opacity: 0.2; pointer-events: none !important; } 
+        .textLayer span { pointer-events: auto !important; -webkit-touch-callout: default !important; -webkit-user-select: text !important; user-select: text !important; cursor: text; }
+
+        /* ツールごとのポインターイベント（当たり判定）の制御 */
+        /* 選んだ文字が残っている間は user-select を戻さない。
+           戻すとブラウザが選択そのものを捨てるため（Shift を離した途端に消える不具合） */
+        #workspace-container.tool-select:not(.pdf-text-selected) .textLayer span { user-select: none !important; -webkit-user-select: none !important; }
+        #workspace-container.tool-select .textLayer span { pointer-events: none !important; }
+        /* マウスツールでシフトを押している間だけ、背景（PDF）の文字を選択できる */
+        #workspace-container.tool-select.text-select-on .textLayer span { pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
+        #workspace-container.tool-select.text-select-on .textLayer,
+        #workspace-container.tool-select.pdf-text-selected .textLayer { opacity: 0.35; }
+        #workspace-container.tool-select.text-select-on .canvas-element { pointer-events: none !important; }
+        
+        #workspace-container.tool-mask .textLayer span, 
+        #workspace-container.tool-text .textLayer span, 
+        #workspace-container.tool-pen .textLayer span, 
+        #workspace-container.tool-highlight .textLayer span, 
+        #workspace-container.tool-shape .textLayer span { pointer-events: none !important; }
+        
+        /* 描くツールは十字カーソル。要素側（.mask の pointer 等）は自前の cursor を持つので、
+           ここでは容器にだけ指定して、要素の上では要素の指定が勝つようにする（!important を使わない） */
+        #workspace-container.tool-mask,
+        #workspace-container.tool-highlight,
+        #workspace-container.tool-shape { cursor: crosshair; }
+
+        /* 丸いブラシカーソルを出している間は、OSのカーソルを消す */
+        #workspace-container.hide-cursor, #workspace-container.hide-cursor * { cursor: none !important; }
+        
+        /* 選択中ツール以外の要素の当たり判定を消す（★ただし .mask は常に判定を残す） */
+#workspace-container.tool-mask .canvas-element:not(.mask),
+#workspace-container.tool-highlight .canvas-element:not(.highlight-box):not(.mask),
+#workspace-container.tool-text .canvas-element:not(.text-wrapper):not(.mask),
+#workspace-container.tool-shape .canvas-element:not(.shape-element):not(.mask),
+#workspace-container.tool-pen .canvas-element:not(.mask) { 
+    pointer-events: none !important; 
+}
+
+        /* パンは専用ツールではなく、中ボタン／スペース押しで全ツール共通に発動する。
+           tool-pen の cursor:none より後に置いて優先させる */
+        #workspace-container.pan-ready, #workspace-container.pan-ready * { cursor: grab !important; }
+        #workspace-container.panning, #workspace-container.panning * { cursor: grabbing !important; }
+        /* パン中は要素を掴まないよう当たり判定を消す */
+        #workspace-container.pan-ready .canvas-element,
+        #workspace-container.pan-ready .textLayer span { pointer-events: none !important; }
+
+        #width-preview { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10000; display: none; flex-direction: column; align-items: center; gap: 10px; }
+        #width-preview.visible { display: flex; }
+        #width-preview-dot { border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background-color: rgba(255, 255, 255, 0.4); }
+        #width-preview-label { font-size: 14px; font-weight: bold; color: #fff; background-color: rgba(0, 0, 0, 0.65); padding: 3px 10px; border-radius: 12px; }
+        #brush-cursor { position: fixed; border: 1px solid rgba(0, 0, 0, 0.6); background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; pointer-events: none; display: none; z-index: 9999; transform: translate(-50%, -50%); }
+
+        /* テキストツールのカーソル＝アルファベットの「I」。高さは文字サイズ（×拡大率）に追従する。
+           下端をポインタに合わせるのは、クリック位置＝入力文字の左下だから。
+           白い縁取りは、黒い紙・黒塗りの上でも見えるようにするため。 */
+        #text-cursor {
+            position: fixed; box-sizing: border-box; width: 7px;
+            border-top: 1px solid #111; border-bottom: 1px solid #111;
+            pointer-events: none; display: none; z-index: 9999;
+            transform: translate(-50%, -100%);
+            filter: drop-shadow(0 0 1px rgba(255,255,255,0.95)) drop-shadow(0 0 1px rgba(255,255,255,0.8));
+        }
+        #text-cursor::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: #111; }
+
+        .combo-input, .number-input, .text-content { -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: default !important; }
+
+        /* --- キャンバスエレメント --- */
+        .canvas-element { position: absolute; box-sizing: border-box; }
+        /* 選択中は本体の外側6pxまで「つかみ（移動）」判定を広げる。
+           z-index:-1 で本体の中身より下に敷くので、内側は本来のクリック（文字編集等）が通り、
+           外側の帯（他に何も無い所）だけがこの擬似要素に当たって移動になる。角の丸(z50)は上。 */
+        .canvas-element.selected::before {
+            content: ''; position: absolute; inset: -6px; z-index: -1;
+        }
+        
+        .mask { cursor: pointer; transition: opacity 0.3s; -webkit-touch-callout: none; border-radius: 2px; }
+        /* めくりのホバーはマウス環境限定。指ではホバーが「貼り付いて」剥がれないため、
+           タッチでは下の .revealed（タップでトグル）を使う。 */
+        @media (hover: hover) and (pointer: fine) {
+            .mask:not(.selected):hover { opacity: 0; }
+        }
+        /* タップでめくった状態。学習モード中だけ効く（編集中に勝手に透けない） */
+        body.focus-mode #workspace-container .mask.revealed { opacity: 0 !important; }
+
+        div.mask-rect { background-color: black; }
+        div.mask-rect.selected { background-color: rgba(0, 0, 0, 0.7); cursor: move; }
+        
+        div.mask-freehand-wrapper { background-color: transparent; }
+        div.mask-freehand-wrapper svg { display: block; overflow: visible; }
+        div.mask-freehand-wrapper .fh-stroke { stroke: black; fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; transition: stroke 0.3s; }
+        div.mask-freehand-wrapper .fh-center { stroke: #ffffff; fill: none; }
+        div.mask-freehand-wrapper.selected { cursor: move; }
+        div.mask-freehand-wrapper.selected .fh-stroke { stroke: rgba(0, 0, 0, 0.7); }
+
+        /* マスキングツール中は、既存のマスクを最初から半透明（選択時と同じ濃さ）で表示し、
+           重ねてもホバーで消えないようにする */
+        @media (hover: hover) and (pointer: fine) {
+            #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 1; }
+        }
+        #workspace-container.tool-mask div.mask-rect { background-color: rgba(0, 0, 0, 0.7); }
+        #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: rgba(0, 0, 0, 0.7); }
+
+        /* 学習モード中はマスクツールの半透明表示を打ち消し、ホバーでめくれるように戻す */
+        @media (hover: hover) and (pointer: fine) {
+            body.focus-mode #workspace-container.tool-mask .mask:not(.selected):hover { opacity: 0; }
+        }
+        body.focus-mode #workspace-container.tool-mask div.mask-rect { background-color: black; }
+        body.focus-mode #workspace-container.tool-mask div.mask-freehand-wrapper .fh-stroke { stroke: black; }
+
+        .highlight-box { cursor: pointer; mix-blend-mode: multiply; -webkit-touch-callout: none; border-radius: 2px; } 
+        .highlight-box.selected { cursor: move; }
+        div.highlight-freehand-wrapper { background-color: transparent; }
+        div.highlight-freehand-wrapper svg { display: block; overflow: visible; }
+        div.highlight-freehand-wrapper .fh-stroke { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
+        
+        .text-wrapper { min-width: 30px; min-height: 0; font-size: 20px; padding: 2px 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
+        .text-wrapper.selected { background-color: rgba(255, 255, 255, 0.6); }
+        .text-content { width: 100%; height: 100%; outline: none; white-space: pre-wrap; word-wrap: break-word; overflow: visible; pointer-events: none; font-weight: normal; text-orientation: upright; margin: 0;}
+        .text-wrapper.selected .text-content { pointer-events: auto; cursor: text; }
+        .canvas-element.selected { transition: none; }
+
+        /* 選択時の枠線は全オブジェクト共通。
+           手書き線と直線だけは中心線・つまみで示すので枠線を出さない */
+        div.mask-rect.selected,
+        .highlight-box:not(.highlight-freehand-wrapper).selected,
+        .shape-element:not([data-shape-type="line"]).selected,
+        .image-element.selected {
+            outline: 1px dashed var(--c-accent);
+            outline-offset: 0;
+        }
+        /* テキストは箱にぴったり沿わせる（余白を挟まない） */
+        .text-wrapper.selected {
+            outline: 1px dashed var(--c-accent);
+            outline-offset: 0;
+        }
+        
+        /* 黒塗りを一斉に隠す */
+        #workspace-container.masks-hidden .mask { opacity: 0 !important; pointer-events: none !important; }
+
+        /* 図形の当たり判定は「線の上だけ」。外接四角形では反応させない。
+           掴む判定は透明で太い .shape-hit が受け持つ（手書き線と同じ考え方） */
+        .shape-element { background-color: transparent; border-radius: 2px; pointer-events: none; }
+        .shape-element svg { pointer-events: none; display: block; overflow: visible; }
+        .shape-element svg * { pointer-events: none; }
+        .shape-element .shape-hit { pointer-events: stroke; cursor: pointer; }
+        .shape-element.selected .shape-hit { cursor: move; }
+        .shape-element .resize-handle { pointer-events: auto; }
+        
+        /* 【改修】直線以外の図形は四角い枠線を出す */
+        .shape-element:not([data-shape-type="line"]).selected { cursor: move; }
+        
+        /* 【改修】直線の場合は枠線を消し、カーソルを移動用にする */
+        .shape-element[data-shape-type="line"].selected { outline: none; cursor: move; }
+
+        /* --- 画像エレメント --- */
+        .image-element { background-color: transparent; border-radius: 4px; }
+        .image-element img { display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; border-radius: 4px; overflow: hidden; }
+        .image-element.selected { cursor: move; }
+
+        /* --- 手書き線（マスキング・ハイライト）の当たり判定と選択表示 ---
+           外接四角形ではなく、線そのものの上でしか反応しないようにする */
+        div.mask-freehand-wrapper, div.highlight-freehand-wrapper { pointer-events: none; }
+        div.mask-freehand-wrapper .fh-stroke, div.highlight-freehand-wrapper .fh-stroke { pointer-events: stroke; }
+        div.mask-freehand-wrapper.selected, div.highlight-freehand-wrapper.selected { outline: none; }
+        /* 選択中に出る中心線 */
+        .fh-center { display: none; pointer-events: none; }
+        .selected > svg > .fh-center { display: block; }
+        /* 両端のつまみ（ドラッグで線を拡大・縮小） */
+        .fh-handle {
+            position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+            background-color: var(--c-surface); border: 1px solid var(--c-accent); border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; display: none;
+            pointer-events: auto; cursor: crosshair;
+        }
+        .canvas-element.selected > .fh-handle { display: block; }
+
+        /* 通常の四隅のハンドル */
+        .resize-handle { position: absolute; width: 5px; height: 5px; background-color: white; border: 1px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
+        .canvas-element.selected .resize-handle { display: block; }
+        /* 四隅：当たり域を点線の角に対して内2px・外6px（計8px）に広げ、丸(見た目)は角の上に描く */
+        .handle-nw, .handle-ne, .handle-sw, .handle-se {
+            width: 8px; height: 8px; background: transparent; border: none; box-shadow: none; border-radius: 0;
+        }
+        .handle-nw::before, .handle-ne::before, .handle-sw::before, .handle-se::before {
+            content: ''; position: absolute; width: 5px; height: 5px;
+            background: white; border: 1px solid var(--c-accent); border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .handle-nw::before { top: 6px; left: 6px; transform: translate(-50%, -50%); }
+        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .handle-ne::before { top: 6px; right: 6px; transform: translate(50%, -50%); }
+        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .handle-sw::before { bottom: 6px; left: 6px; transform: translate(-50%, 50%); }
+        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .handle-se::before { bottom: 6px; right: 6px; transform: translate(50%, 50%); }
+        /* 各辺の中央のハンドル（画像のみ）。四隅と同じ見た目・同じ当たり域(8px) */
+        .handle-n, .handle-s, .handle-e, .handle-w {
+            width: 8px; height: 8px; background: transparent; border: none; box-shadow: none; border-radius: 0;
+            margin: -4px 0 0 -4px; /* 8pxの当たり域の中心を辺の中央に合わせる */
+        }
+        .handle-n::before, .handle-s::before, .handle-e::before, .handle-w::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 5px; height: 5px; background: white; border: 1px solid var(--c-accent);
+            border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .handle-n { top: 0; left: 50%; cursor: ns-resize; }
+        .handle-s { top: 100%; left: 50%; cursor: ns-resize; }
+        .handle-w { top: 50%; left: 0; cursor: ew-resize; }
+        .handle-e { top: 50%; left: 100%; cursor: ew-resize; }
+
+        /* 範囲選択で選んだペン線の囲み */
+        .stroke-multi-sel { position: absolute; border: 1px dashed var(--c-accent); border-radius: 4px; pointer-events: none; z-index: 60; }
+
+        /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置。他ツールと見た目・当たりを揃える */
+        .shape-element[data-shape-type="line"] .resize-handle {
+            width: 8px; height: 8px; margin: -4px 0 0 -4px; /* 8pxの当たり域の中心を端点に合わせる */
+            background: transparent; border: none; box-shadow: none; border-radius: 0;
+        }
+        .shape-element[data-shape-type="line"] .resize-handle::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 5px; height: 5px; background: white; border: 1px solid var(--c-accent);
+            border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .shape-element[data-shape-type="line"][data-line-dir="\\"] .handle-p1 { top: 0; left: 0; cursor: crosshair; }
+        .shape-element[data-shape-type="line"][data-line-dir="\\"] .handle-p2 { top: 100%; left: 100%; cursor: crosshair; }
+        .shape-element[data-shape-type="line"][data-line-dir="/"] .handle-p1 { top: 0; left: 100%; cursor: crosshair; }
+        .shape-element[data-shape-type="line"][data-line-dir="/"] .handle-p2 { top: 100%; left: 0; cursor: crosshair; }
+        
+        #drawing-box { position: absolute; border: 2px dashed var(--c-danger); background-color: rgba(239, 68, 68, 0.1); pointer-events: none; display: none; z-index: 10; border-radius: var(--r-xs); }
+        /* マスキング作成中は、出来上がりと同じ半透明の黒で見せる */
+        #workspace-container.tool-mask #drawing-box { border: none; background-color: rgba(0, 0, 0, 0.7); }
+        /* ハイライト作成中も破線を出さない。色は選択中の色をJSで直接指定する */
+        #workspace-container.tool-highlight #drawing-box { border: none; mix-blend-mode: multiply; }
+
+        /* 範囲選択用ボックス */
+        #selection-box { position: absolute; border: 1px solid var(--c-accent); background-color: var(--c-accent-weak); pointer-events: none; display: none; z-index: 10000; border-radius: var(--r-xs); }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; }
+        .overlay-loading { color: white; font-size: 20px; font-weight: bold; flex-direction: column; gap: 10px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- 前回作業の復元バナー --- */
+        #restore-banner {
+            position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+            box-shadow: var(--sh-lg);
+            padding: 10px 16px; z-index: 10001; max-width: calc(100% - 32px);
+            font-size: 14px; color: var(--c-text);
+        }
+        #restore-banner .material-symbols-outlined { color: var(--c-accent); }
+
+        /* =========================================================
+           スマホ・タブレット対応
+           - 見た目は変えず、指で使えるようにするための追加だけ
+           - PC（マウス）には当たらない条件で囲う
+           ========================================================= */
+
+        /* --- 指での当たり判定を広げる（見た目は据え置き） --- */
+        @media (pointer: coarse) {
+            /* 透明な擬似要素で当たりだけ44pxに広げる。::after はツールチップで使用中なので ::before を使う */
+            .btn, .swatch { position: relative; }
+            .btn::before, .swatch::before {
+                content: ''; position: absolute; top: 50%; left: 50%;
+                width: 44px; height: 44px; min-width: 100%; min-height: 100%;
+                transform: translate(-50%, -50%);
+            }
+            /* 2択スイッチは隣と密着していて擬似要素では食い合うので、実寸を44pxにする */
+            .mini-switch label { width: 44px; height: 44px; }
+            /* 入力欄は擬似要素が描けないので実寸を上げる。16px 未満だと iOS が勝手にズームする */
+            .number-input, .combo-box { min-height: 44px; }
+            .number-input, .combo-input, #page-input { font-size: 16px; }
+            .dropdown-menu li { padding: 13px 15px; }
+            /* 当たりを広げた分、隣同士が食い合わないよう間隔を空ける。
+               選択中の丸は1.15倍に膨らむので、その分も見込んで26px空ける */
+            .color-palette { gap: 26px; }
+            .tool-switch { gap: 10px; }
+
+            /* 四隅・端点のつまみ：白丸の見た目はそのままに、掴める範囲だけ広げる */
+            .handle-nw, .handle-ne, .handle-sw, .handle-se { width: 36px; height: 36px; }
+            .handle-nw { top: -18px; left: -18px; }
+            .handle-nw::before { top: 18px; left: 18px; }
+            .handle-ne { top: -18px; right: -18px; }
+            .handle-ne::before { top: 18px; right: 18px; }
+            .handle-sw { bottom: -18px; left: -18px; }
+            .handle-sw::before { bottom: 18px; left: 18px; }
+            .handle-se { bottom: -18px; right: -18px; }
+            .handle-se::before { bottom: 18px; right: 18px; }
+            .shape-element[data-shape-type="line"] .resize-handle { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+            .fh-handle {
+                width: 36px; height: 36px; margin: -18px 0 0 -18px;
+                background: transparent; border: none; box-shadow: none;
+            }
+            .fh-handle::before {
+                content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                width: 5px; height: 5px; background-color: var(--c-surface);
+                border: 1px solid var(--c-accent); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            }
+            /* 長押しでOSの選択・保存メニューが出て編集を邪魔しないようにする */
+            #workspace-container .textLayer span {
+                pointer-events: none !important; -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important; user-select: none !important;
+            }
+            .image-element img, .canvas-element { -webkit-touch-callout: none; }
+            /* UI の連打がダブルタップ拡大と誤解されないようにする（キャンバスのピンチは残る） */
+            #app-header, #floating-tools-container, .floating-ui, #btn-focus-mode,
+            .dropdown-menu, #pdf-sidebar, #restore-banner { touch-action: manipulation; }
+        }
+
+        /* --- ホバーが無い環境（指）での見た目の後始末 --- */
+        @media (hover: none) {
+            /* タップ後に出っぱなしになるツールチップを出さない */
+            .tool-switch label::after, .btn[title]::after, .slider-label[title]::after { display: none !important; }
+            /* タップ後の「押されたまま」に見える表示を止める。選択中の色が2つに見える等 */
+            .swatch:hover { transform: none; }
+            .swatch.active { transform: scale(1.15); }
+            .btn:hover { background-color: var(--c-surface); border-color: var(--c-border-input); }
+            .btn-primary:hover { background-color: var(--c-accent); border-color: var(--c-accent); }
+            .btn-success:hover { background-color: var(--c-success); border-color: var(--c-success); }
+            .btn-danger:hover { background-color: var(--c-danger-bg); border-color: var(--c-danger-border); }
+            .btn-project:hover { background-color: var(--c-project-bg); border-color: var(--c-project-border); }
+            .btn-ghost:hover { background-color: transparent; border-color: transparent; }
+            .tool-switch label:hover { background-color: transparent; color: var(--c-text-muted); }
+            .tool-switch input[type="radio"]:checked + label { background-color: var(--c-accent); color: var(--c-on-accent); }
+            #btn-focus-mode:hover { background: var(--c-glass); color: var(--c-text-muted); transform: none; }
+            .pdf-thumb:hover { transform: none; box-shadow: var(--sh-md); }
+        }
+
+        /* --- ノッチ・ホームインジケータを避ける（PCでは env() が全て0で無効） --- */
+        #floating-tools-container { bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+        #btn-focus-mode {
+            bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+            left: calc(30px + env(safe-area-inset-left, 0px));
+        }
+        #floating-bottom-right {
+            bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+            right: calc(25px + env(safe-area-inset-right, 0px));
+        }
+        #floating-top-left { left: calc(20px + env(safe-area-inset-left, 0px)); }
+        #app-header {
+            padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
+        }
+        .overlay { height: 100dvh; }
+
+        /* --- 狭い画面：UIが画面外に溢れて押せなくなるのを防ぐ --- */
+        @media (max-width: 640px) {
+            /* 中央寄せの固定幅をやめ、画面幅いっぱいに置いて折り返せるようにする */
+            #floating-tools-container {
+                left: 0; right: 0; transform: none;
+                gap: 8px;
+            }
+            .tool-switch {
+                flex-wrap: wrap; justify-content: center;
+                max-width: calc(100% - 16px);
+            }
+            /* プロパティ行は折り返すと縦を食うので、横スクロールで全項目に届くようにする */
+            #floating-properties {
+                flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                max-width: calc(100% - 16px); padding: 6px 8px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .prop-group { flex: 0 0 auto; }
+            /* 下部の3つ（ツールバー・学習モード・ズーム）は狭い画面だと同じ場所に重なって
+               押せなくなる。ツールバーの実高さ（--tools-h・JSが更新）のぶん上へ逃がす。 */
+            #floating-bottom-right {
+                bottom: calc(var(--tools-h, 170px) + 40px + env(safe-area-inset-bottom, 0px));
+            }
+            /* 学習モードボタンはズームUIとも横に並べられない（ズームUIが画面幅いっぱい）ので、
+               さらにもう一段上に置く */
+            #btn-focus-mode {
+                bottom: calc(var(--tools-h, 170px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
+            }
+            #app-header { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+            /* 学習モードのヘッダーは visibility:hidden で場所だけ残る。狭い画面では
+               画面の2割強を空白に取られるので、たたんで閲覧に使えるようにする */
+            body.focus-mode #app-header { display: none; }
+            h1 { font-size: 17px; }
+            #current-file-name { max-width: 130px; }
+            /* PDFのページ一覧は重ねて出す。押し出すと作業領域が潰れる */
+            #pdf-sidebar {
+                position: absolute; top: 0; left: 0; width: min(220px, 72vw); height: 100%;
+                z-index: 1500; box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+            }
+        }
+
+        /* --- 低い横画面：ツールバーで作業領域が埋まるのを防ぐ --- */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #app-header { padding-top: 6px; padding-bottom: 6px; gap: 6px; }
+            body.focus-mode #app-header { display: none; }
+            h1 { font-size: 16px; }
+            /* 低い横画面でプロパティ行が2段になると、上下の行で押し間違えるうえ
+               作業領域も潰れる。1行に保って横スクロールで届かせる */
+            #floating-properties {
+                flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                max-width: calc(100% - 16px); -webkit-overflow-scrolling: touch;
+            }
+            .prop-group { flex: 0 0 auto; }
+            #floating-tools-container { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+            .tool-switch { padding: 5px; gap: 8px; }
+            .tool-switch label { width: 38px; height: 38px; }
+            .tool-switch label .material-symbols-outlined { font-size: 21px; }
+            #btn-focus-mode { left: calc(10px + env(safe-area-inset-left, 0px)); }
+            #floating-bottom-right { bottom: calc(var(--tools-h, 120px) + 20px + env(safe-area-inset-bottom, 0px)); }
+            #btn-focus-mode {
+                bottom: calc(var(--tools-h, 120px) + var(--br-h, 52px) + 30px + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
+        /* ============================================================
+           広い画面：ツールバーを左端に縦置きする（08-06・Rayan様の指示）。
+           PDFは縦長なので上下は貴重・左右は余る。狭い画面（compact-ui）は
+           親指が届く下端のままにするので、ここは body:not(.compact-ui) に閉じる。
+           ============================================================ */
+        body:not(.compact-ui) #floating-tools-container {
+            top: 50%; bottom: auto;
+            left: calc(20px + env(safe-area-inset-left, 0px));
+            transform: translateY(-50%);
+            flex-direction: row; align-items: center; gap: 0;
+        }
+        body:not(.compact-ui) .tool-switch { flex-direction: column; }
+        /* 学習モードボタンは、ページ一覧ボタン・ツールバーと同じ縦の軸に乗せる（08-06・Rayan様の指示）。
+           軸の位置（--rail-cx）はJSがツールバーの実測から流す。画面が低くて縦バーの下端と
+           ぶつかる時は、JSが --eye-bottom を詰めて真下へ逃がす。 */
+        body:not(.compact-ui) #btn-focus-mode {
+            left: calc(var(--rail-cx, 46px) - 22px);
+        }
+        body:not(.compact-ui) .tool-switch .tool-divider { width: 20px; height: 1px; margin: 3px 0; }
+        /* 選ばれているツールは「右へ出っぱる」（横置きの時の上へ浮くの縦版） */
+        body:not(.compact-ui) .tool-switch input[type="radio"]:checked + label { transform: translateX(2px); }
+        /* ツールチップは上ではなく右へ。上に出すと1つ上のボタンに重なる */
+        body:not(.compact-ui) .tool-switch label::after,
+        body:not(.compact-ui) .tool-switch .btn[title]::after {
+            top: 50%; left: calc(100% + 10px); transform: translate(5px, -50%);
+        }
+        body:not(.compact-ui) .tool-switch label:hover::after,
+        body:not(.compact-ui) .tool-switch .btn[title]:hover::after { transform: translate(0, -50%); }
+        /* 設定行はツールバーの右へ、縦に積んで開く。
+           絶対配置にして、開いてもツールバー自体が動かないようにする（押し間違い防止）。
+           縦の位置は「今選んでいるツールのアイコンの真横」（08-06・Rayan様の指示）。
+           JSがアイコンの中心を実測して --props-top に流す（画面からはみ出す時は寄せて止める）。 */
+        body:not(.compact-ui) #floating-properties {
+            position: absolute; left: calc(100% + 12px);
+            top: var(--props-top, 50%); transform: translateY(-50%);
+            flex-direction: column; align-items: flex-start; flex-wrap: nowrap;
+            /* overflow は付けない。付けると中のツールチップ（絶対配置の ::after）が
+               切れてしまう。一番縦に長いテキストの設定でも254pxで、
+               縦置きが効く最小の画面（高さ501px）でも収まるので要らない。 */
+        }
+        /* 紙にかぶる面積を減らすため、縦置きの設定行は1列に畳んで細くする（08-06）。
+           幅を決めていたのは色パレットの8個横一列なので、まずそこを折り返す。
+           幅は固定せず中身なり（max-content）。固定だと色の無いツールで右側が
+           空白のまま紙にかぶる。上限168pxは4個×2段のパレットが収まる幅。 */
+        body:not(.compact-ui) #floating-properties {
+            width: max-content; max-width: 168px; box-sizing: border-box;
+            padding: 5px 7px; gap: 4px;
+        }
+        body:not(.compact-ui) #floating-properties .prop-group {
+            border-left: none; border-top: 1px solid var(--c-border);
+            padding: 4px 0 0; width: 100%;
+            flex-wrap: wrap; justify-content: flex-start; gap: 4px; row-gap: 5px;
+        }
+        body:not(.compact-ui) #floating-properties #prop-mask-reveal { justify-content: center; }
+        /* 「− 20 ＋」が2段に折れないように、数値欄も詰める */
+        body:not(.compact-ui) #floating-properties .combo-input { width: 32px; }
+        /* 色は4個×2段。パレットの幅＝4*22+3*6＝106px で1列に収まる */
+        body:not(.compact-ui) #floating-properties .color-palette { flex-wrap: wrap; row-gap: 6px; max-width: 106px; }
+        /* 細い列に収めるため、スライダーとアイコンボタンを詰める */
+        body:not(.compact-ui) #floating-properties input[type="range"] { width: 62px !important; }
+        body:not(.compact-ui) #floating-properties .btn-icon { padding: 6px; }
+        body:not(.compact-ui) #floating-properties .number-input { width: 34px; }
+        body:not(.compact-ui) #floating-properties .prop-group:first-child,
+        body:not(.compact-ui) #floating-properties .prop-group.is-first {
+            border-top: none; padding-top: 0;
+        }
+
+        /* ============================================================
+           狭い画面（compact-ui）：UIが編集領域を食わないように畳む。
+           JSが matchMedia で body に compact-ui を付ける（PCには一切かからない）。
+           ・ヘッダー → ロゴ＋ファイル名＋「≡」の1段
+           ・ツールバー → ツール6個＋「設定」＋「…」の1段
+           ・プロパティ行 → 既定は隠し、「設定」で開く（横スクロールは廃止＝折り返して全部見せる）
+           ============================================================ */
+        .compact-only { display: none; }
+        .menu-sep { height: 1px; background: var(--c-border); margin: 4px 6px; padding: 0 !important; pointer-events: none; }
+        .dropdown-menu li.is-disabled { opacity: 0.4; pointer-events: none; }
+        .dropdown-menu-up { top: auto; bottom: 100%; margin-top: 0; margin-bottom: 8px; right: 0; }
+
+        body.compact-ui .wide-only { display: none !important; }
+        body.compact-ui .compact-only { display: flex; }
+        body.compact-ui .tool-divider.compact-only { display: block; }
+
+        body.compact-ui #app-header { padding: 8px 12px; gap: 0; }
+        body.compact-ui .header-top { flex-wrap: nowrap; gap: 8px; }
+        body.compact-ui .header-title-group { flex-wrap: nowrap; gap: 8px; min-width: 0; flex: 1 1 auto; }
+        body.compact-ui .header-actions { gap: 0; flex-wrap: nowrap; flex: 0 0 auto; }
+        /* ヘッダーの操作は全て「≡」へ集約する */
+        body.compact-ui .custom-file-upload,
+        body.compact-ui label[for="projectInput"],
+        body.compact-ui #save-dropdown-container,
+        body.compact-ui #btn-undo,
+        body.compact-ui #btn-redo,
+        body.compact-ui .header-title-group .v-divider,
+        body.compact-ui .header-actions .v-divider { display: none; }
+        body.compact-ui h1 { font-size: 16px; white-space: nowrap; }
+        body.compact-ui #current-file-name { max-width: none; min-width: 0; overflow: hidden; }
+        body.compact-ui #current-file-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        body.compact-ui #header-dropdown-menu { min-width: min(260px, 86vw); }
+
+        /* ツールバー：1段に収める。当たりは42px＋間隔2px＝実効44pxのピッチを保つ */
+        body.compact-ui .tool-switch { flex-wrap: nowrap; gap: 2px; padding: 5px; max-width: calc(100% - 12px); }
+        body.compact-ui .tool-switch label { width: 42px; height: 42px; }
+        body.compact-ui .tool-switch .btn { width: 42px; height: 42px; padding: 0; }
+        body.compact-ui .tool-switch label .material-symbols-outlined,
+        body.compact-ui .tool-switch .btn .material-symbols-outlined { font-size: 22px; }
+
+        /* プロパティ行：既定は隠す。開いた時は画面幅に収めて折り返す（横スクロールにしない） */
+        body.compact-ui #floating-properties {
+            box-sizing: border-box; width: calc(100% - 12px); max-width: none;
+            flex-wrap: wrap; overflow: visible; justify-content: center;
+            padding: 6px 8px; gap: 6px; row-gap: 6px;
+        }
+        /* 色パレットは指用に26px空けてあるので1行に収まらない。折り返して全部見せる */
+        body.compact-ui .prop-group { flex: 0 1 auto; flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+        body.compact-ui .color-palette { flex-wrap: wrap; justify-content: center; row-gap: 8px; }
+        /* まとめたメニューが画面の外に伸びないようにする（項目が多い・横画面で低い時） */
+        body.compact-ui .dropdown-menu { max-height: calc(100dvh - 80px); overflow-y: auto; }
+        body.compact-ui #floating-tools-container { left: 0; right: 0; transform: none; gap: 8px; }
+
+        /* ズームUIも画面幅からはみ出していた。左右に張り付けて中央寄せにする */
+        body.compact-ui #floating-bottom-right {
+            left: 8px; right: 8px; box-sizing: border-box;
+            justify-content: center; flex-wrap: wrap; gap: 2px; padding: 5px 8px;
+        }
+        body.compact-ui #floating-bottom-right .btn { width: 42px; height: 42px; padding: 0; }
+
+        /* 中くらいの幅（例：800px）ではツールバーが横に伸びてズームUIに重なり、
+           拡大ボタンが押せなくなっていた（改修前からの不具合）。実際に重なる時だけ
+           段積みにする。判定は幅の決め打ちではなくJSの実測（bottom-stacked）。 */
+        body.bottom-stacked #floating-bottom-right {
+            bottom: calc(var(--tools-h, 120px) + 40px + env(safe-area-inset-bottom, 0px));
+        }
+        body.bottom-stacked #btn-focus-mode {
+            bottom: calc(var(--tools-h, 120px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
+        }

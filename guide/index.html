@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暗記マスキングの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法</title>
+<meta name="description" content="赤シートの代わりに、パソコンのブラウザだけで暗記シートを作る方法。教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。テキスト入力・手書き・蛍光ペンでの書き込みや、PDFでの書き出しまで解説します。登録・インストール不要、無料。">
+<link rel="canonical" href="https://ankimasking.com/guide/">
+
+<meta property="og:url" content="https://ankimasking.com/guide/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="暗記マスキングの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法">
+<meta property="og:description" content="教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。パソコンのブラウザだけで暗記シートが作れます。登録・インストール不要、無料。">
+<meta property="og:site_name" content="暗記マスキング">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://ankimasking.com/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="../favicon.png">
+
+<style>
+  /* トップ（道具本体）の style.css は body を 100dvh・overflow:hidden に固定するため
+     読み込めない。トークンだけ揃えた独立のスタイルにしている。 */
+  :root {
+    --c-bg: #f8fafc; --c-surface: #ffffff; --c-surface-2: #f1f5f9;
+    --c-text: #1f2937; --c-text-strong: #0f172a; --c-text-muted: #64748b;
+    --c-border: #e2e8f0; --c-accent: #3b82f6; --c-accent-hover: #2563eb;
+    --c-accent-tint: #eff6ff; --c-on-accent: #ffffff;
+    --r-md: 8px; --r-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-bg: #0f1115; --c-surface: #1f2228; --c-surface-2: #262a31;
+      --c-text: #e5e7eb; --c-text-strong: #f9fafb; --c-text-muted: #9ca3af;
+      --c-border: #333842; --c-accent-tint: #1e3a5f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--c-bg); color: var(--c-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", Meiryo, Roboto, sans-serif;
+    line-height: 1.85; font-size: 16px; -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--c-accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ヘッダー */
+  .site-header {
+    position: sticky; top: 0; z-index: 10; background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .site-header .inner {
+    max-width: 760px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .site-header img { width: 26px; height: 26px; }
+  .site-header .name { font-weight: 800; font-size: 17px; color: var(--c-text-strong); text-decoration: none; }
+  .site-header .spacer { flex: 1; }
+  .btn-app {
+    background: var(--c-accent); color: var(--c-on-accent); text-decoration: none;
+    font-weight: 700; font-size: 14px; padding: 9px 16px; border-radius: var(--r-md);
+    white-space: nowrap;
+  }
+  .btn-app:hover { background: var(--c-accent-hover); }
+
+  h1 {
+    font-size: 30px; line-height: 1.45; letter-spacing: -0.5px; font-weight: 900;
+    color: var(--c-text-strong); margin: 40px 0 8px;
+  }
+  .lead { font-size: 17px; color: var(--c-text-muted); margin: 0 0 28px; }
+  h2 {
+    font-size: 23px; font-weight: 800; color: var(--c-text-strong);
+    margin: 56px 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border);
+  }
+  h3 { font-size: 18px; font-weight: 800; color: var(--c-text-strong); margin: 30px 0 6px; }
+  p { margin: 0 0 16px; }
+
+  .cta { text-align: center; margin: 36px 0; }
+  .cta a {
+    display: inline-block; background: var(--c-accent); color: var(--c-on-accent);
+    text-decoration: none; font-weight: 800; font-size: 17px;
+    padding: 15px 36px; border-radius: var(--r-lg);
+  }
+  .cta a:hover { background: var(--c-accent-hover); }
+  .cta small { display: block; margin-top: 10px; color: var(--c-text-muted); font-size: 13px; }
+
+  /* 手順 */
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps > li {
+    counter-increment: s; position: relative; padding: 0 0 4px 52px; margin-bottom: 26px;
+  }
+  ol.steps > li::before {
+    content: counter(s); position: absolute; left: 0; top: 2px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--c-accent); color: var(--c-on-accent);
+    font-weight: 800; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.steps h3 { margin: 3px 0 4px; }
+  ol.steps p { margin: 0; }
+
+  /* できること */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--r-lg); padding: 18px 20px;
+  }
+  .card b { display: block; color: var(--c-text-strong); font-size: 16px; margin-bottom: 4px; }
+  .card span { font-size: 14.5px; color: var(--c-text-muted); line-height: 1.7; }
+
+  /* 比較表：角丸はテーブルではなく外側の枠に付ける（table は中身をうまく切り取れない） */
+  .table-scroll {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    background: var(--c-surface);
+  }
+  .cmp { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+  .cmp th, .cmp td {
+    padding: 13px 16px; text-align: left; vertical-align: top;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: none; }
+  .cmp thead th { font-size: 14px; font-weight: 800; background: var(--c-surface-2); color: var(--c-text-muted); }
+  .cmp thead th.ours { background: var(--c-accent); color: var(--c-on-accent); font-size: 15px; }
+  .cmp tbody th { width: 24%; font-weight: 700; color: var(--c-text-strong); background: var(--c-surface-2); }
+  .cmp td.ours { background: var(--c-accent-tint); color: var(--c-text-strong); font-weight: 600; }
+  .cmp td.ours::before { content: '✓'; color: var(--c-accent); font-weight: 900; margin-right: 6px; }
+  .cmp td.other { color: var(--c-text-muted); }
+  .table-note { font-size: 13px; color: var(--c-text-muted); margin-top: 10px; }
+
+  /* FAQ */
+  details {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 10px;
+  }
+  details summary {
+    cursor: pointer; font-weight: 700; color: var(--c-text-strong); list-style: none;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '＋'; color: var(--c-accent); font-weight: 800; flex: 0 0 auto; }
+  details[open] summary::after { content: '−'; }
+  details p { margin: 12px 0 0; font-size: 15px; }
+
+  .note {
+    background: var(--c-accent-tint); border-left: 4px solid var(--c-accent);
+    padding: 14px 18px; border-radius: 0 var(--r-md) var(--r-md) 0; margin: 20px 0;
+    font-size: 15px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+
+  footer {
+    border-top: 1px solid var(--c-border); margin-top: 60px; padding: 24px 20px 40px;
+    text-align: center; color: var(--c-text-muted); font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 25px; }
+    h2 { font-size: 20px; }
+    body { font-size: 15.5px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <img src="../favicon.png" alt="">
+    <a href="/" class="name">暗記マスキング</a>
+    <span class="spacer"></span>
+    <a href="/" class="btn-app">アプリを開く</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h1>パソコンで使える、赤シートの代わりの暗記アプリ</h1>
+  <p class="lead">
+    教科書や授業の資料をPDFや写真で取り込み、覚えたい部分をなぞって黒く隠すだけ。
+    隠した所はカーソルを合わせると答えが見えます。登録もインストールも要らず、ブラウザだけで動く無料のアプリです。
+  </p>
+
+  <div class="cta">
+    <a href="/">暗記マスキングを開く</a>
+    <small>登録不要・インストール不要・無料</small>
+  </div>
+
+  <h2>「赤シートの代わり」とはどういう意味か</h2>
+  <p>
+    紙の赤シートは、赤いペンで書いた文字に緑の下敷きを重ねて消す道具です。
+    暗記マスキングは仕組みが違い、<strong>覚えたい部分の上に黒い四角を重ねて隠します</strong>。
+    赤い文字を用意する必要はなく、印刷された教科書やコピーした資料にもそのまま使えます。
+  </p>
+  <p>
+    隠した部分は、カーソルを合わせると一時的に答えが見えます。
+    覚えたかどうかを確かめて、また離せば隠れる。使い方は赤シートと同じで、
+    元の教材に赤ペンを入れる手間だけが要らなくなる、と考えてください。
+  </p>
+  <div class="note">
+    <p>色は黒で固定です。赤や緑のシートを再現するものではないので、
+    「赤いシートで隠したい」という目的の道具ではありません。目的が「答えを隠して覚える」ことなら同じ用途に使えます。</p>
+  </div>
+
+  <h2>使い方は3ステップ</h2>
+  <ol class="steps">
+    <li>
+      <h3>教材を読み込む</h3>
+      <p>「新規作成」からPDFか写真を選びます。教科書を撮った写真、授業で配られたPDF、
+      問題集をスキャンした画像など、手元にあるものをそのまま使えます。複数ページのPDFにも対応していて、
+      ページ一覧から行き来できます。</p>
+    </li>
+    <li>
+      <h3>覚えたい部分をなぞる</h3>
+      <p>マスクの道具を選んで、隠したい語句の上をドラッグします。四角で囲うほか、
+      手書きでなぞって好きな形に隠すこともできます。位置や大きさは後から動かせるので、
+      ずれても直せます。</p>
+    </li>
+    <li>
+      <h3>カーソルを合わせて確かめる</h3>
+      <p>黒く隠れた部分にカーソルを合わせると、その場所だけ答えが見えます。
+      「学習モード」に切り替えると編集の道具が隠れ、めくることだけに集中できます。
+      まとめて答え合わせをしたいときは、すべての黒塗りを一度に外すこともできます。</p>
+    </li>
+  </ol>
+
+  <h2>暗記シートを作る以外にできること</h2>
+  <div class="cards">
+    <div class="card"><b>テキスト入力</b><span>補足や訳を書き込めます。縦書きにも対応。太字・下線・取り消し線も使えます。</span></div>
+    <div class="card"><b>手書きのペンと消しゴム</b><span>ノート代わりに直接書き込めます。太さと色は自由に変えられます。</span></div>
+    <div class="card"><b>蛍光ペン</b><span>隠さずに目立たせたい所に。四角でも手書きでも塗れます。</span></div>
+    <div class="card"><b>図形と直線</b><span>四角・丸・直線で図に印を付けられます。線の太さと色も選べます。</span></div>
+    <div class="card"><b>画像の貼り付け</b><span>別の写真を重ねて貼れます。四隅をつまむと縦横比を保ったまま拡大縮小できます。</span></div>
+    <div class="card"><b>PDF・画像で書き出し</b><span>黒塗りや書き込みを載せたまま、PDFや画像として保存できます。元のPDFの画質は落ちません。</span></div>
+  </div>
+
+  <h2>赤シートアプリとの違い</h2>
+  <p>
+    赤シートのアプリは携帯端末向けのものが主流で、多くはApp StoreやGoogle Playからの
+    インストールが必要です。暗記マスキングはパソコンのブラウザで動くので、置かれている状況が違います。
+  </p>
+  <div class="table-scroll">
+    <table class="cmp">
+      <thead>
+        <tr><th></th><th class="ours">暗記マスキング</th><th>一般的な赤シートアプリ</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>使える機器</th><td class="ours">パソコン（Windows・Mac）</td><td class="other">主に携帯端末向け</td></tr>
+        <tr><th>準備</th><td class="ours">ブラウザで開くだけ。登録なし</td><td class="other">インストール。会員登録が要るものも</td></tr>
+        <tr><th>取り込めるもの</th><td class="ours">PDF（複数ページ）・写真</td><td class="other">写真が中心。PDF対応は製品による</td></tr>
+        <tr><th>隠し方</th><td class="ours">四角でも手書きでも、好きな形に</td><td class="other">四角い範囲で隠すものが多い</td></tr>
+        <tr><th>書き込み</th><td class="ours">テキスト・手書き・蛍光ペン・図形・画像</td><td class="other">隠す機能が中心のものが多い</td></tr>
+        <tr><th>持ち出し</th><td class="ours">PDF・画像で保存（元の画質のまま）</td><td class="other">アプリの中で見るのが基本</td></tr>
+        <tr><th>料金</th><td class="ours">無料</td><td class="other">無料。一部の機能が有料のものも</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">右側は特定の製品ではなく、赤シートアプリ全般に見られる傾向をまとめたものです。</p>
+  <p>
+    逆に言えば、外出先で手早く済ませたいだけなら携帯端末向けの専用アプリのほうが軽快です。
+    <strong>パソコンで資料を広げて作りたい、PDFをそのまま扱いたい、隠すだけでなく書き込みもしたい</strong>——
+    このどれかに当てはまるなら暗記マスキングが向いています。
+  </p>
+
+  <h2>こんな場面で使われています</h2>
+  <h3>定期テストの勉強</h3>
+  <p>教科書やノートを写真に撮り、用語と年号を隠して繰り返す。ノートを作り直すより速く、
+  範囲が変わっても隠す場所を足すだけで済みます。</p>
+  <h3>資格の勉強</h3>
+  <p>宅建・簿記・看護師国家試験のように、PDFの過去問やテキストを持っている勉強と相性がいい構成です。
+  範囲が広くても、覚えていない所だけ隠し足していけます。</p>
+  <h3>授業の資料</h3>
+  <p>配布されたPDFに直接、答えを隠す黒塗りと補足のメモを両方入れられます。
+  資料を作り直さずに、そのまま暗記用に変えられます。</p>
+
+  <h2>よくある質問</h2>
+
+  <details>
+    <summary>本当に無料ですか。登録は必要ですか</summary>
+    <p>無料です。会員登録もログインも要りません。ページを開けばすぐ使えます。</p>
+  </details>
+  <details>
+    <summary>使うために何か入れる必要はありますか</summary>
+    <p>ありません。パソコンのブラウザで開くだけで使えます。Windows・Macのどちらでも同じように動き、
+    ソフトのインストールも会員登録も不要です。</p>
+  </details>
+  <details>
+    <summary>読み込んだファイルはどこかに送られますか</summary>
+    <p>送られません。PDFや写真の処理はすべて自分のブラウザの中で行われ、
+    ファイルがサーバーに上がることはありません。試験問題や個人情報を含む資料でも安心して使えます。</p>
+  </details>
+  <details>
+    <summary>隠した答えはどうやって見ますか</summary>
+    <p>黒塗りの上にカーソルを合わせると、その部分だけ一時的に見えます。
+    すべての黒塗りをまとめて外して答え合わせをすることもできます。</p>
+  </details>
+  <details>
+    <summary>作ったものを書き出せますか</summary>
+    <p>できます。黒塗りや書き込みを載せた状態で、PDFや画像として書き出せます。
+    元がPDFの場合は画質を落とさずに書き出します。</p>
+  </details>
+  <details>
+    <summary>途中で保存して、続きから再開できますか</summary>
+    <p>できます。作業データを .amk という形式で保存し、「データ読込」から呼び戻せます。
+    保存を忘れたときのために自動保存も入っており、ブラウザの中に一時的に残ります。</p>
+  </details>
+  <details>
+    <summary>複数ページのPDFにも使えますか</summary>
+    <p>使えます。ページ一覧から好きなページへ移動でき、ページごとに黒塗りや書き込みを入れられます。
+    書き出しのときも全ページがまとまって出ます。</p>
+  </details>
+  <details>
+    <summary>手書きの文字や図にも使えますか</summary>
+    <p>使えます。手書きのノートを写真に撮って読み込めば、印刷物と同じように隠せます。
+    四角で囲いにくい形は、手書きのマスクで自由になぞってください。</p>
+  </details>
+
+  <div class="cta">
+    <a href="/">暗記マスキングを開く</a>
+    <small>登録不要・インストール不要・無料</small>
+  </div>
+
+</div>
+
+<footer>
+  <p><a href="/">暗記マスキング</a>｜赤シートの代わりにPDF・画像を隠せる無料アプリ</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "暗記マスキング",
+      "url": "https://ankimasking.com/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "ウェブブラウザ（Windows, macOS）",
+      "inLanguage": "ja",
+      "description": "赤シートの代わりに、教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠せる無料の暗記アプリ。テキスト入力・手書き・蛍光ペンにも対応し、PDFや画像として書き出せます。",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+    },
+    {
+      "@type": "HowTo",
+      "name": "赤シートの代わりに暗記シートを作る方法",
+      "inLanguage": "ja",
+      "step": [
+        { "@type": "HowToStep", "name": "教材を読み込む", "text": "「新規作成」からPDFか写真を選びます。複数ページのPDFにも対応しています。" },
+        { "@type": "HowToStep", "name": "覚えたい部分をなぞる", "text": "マスクの道具で隠したい語句をドラッグします。四角のほか手書きで自由な形にも隠せます。" },
+        { "@type": "HowToStep", "name": "カーソルを合わせて確かめる", "text": "黒塗りにカーソルを合わせると答えが見えます。学習モードでは編集の道具が隠れます。" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "inLanguage": "ja",
+      "mainEntity": [
+        { "@type": "Question", "name": "本当に無料ですか。登録は必要ですか",
+          "acceptedAnswer": { "@type": "Answer", "text": "無料です。会員登録もログインも要りません。ページを開けばすぐ使えます。" } },
+        { "@type": "Question", "name": "使うために何か入れる必要はありますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "ありません。パソコンのブラウザで開くだけで使えます。Windows・Macのどちらでも同じように動き、ソフトのインストールも会員登録も不要です。" } },
+        { "@type": "Question", "name": "読み込んだファイルはどこかに送られますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "送られません。PDFや写真の処理はすべて自分のブラウザの中で行われ、ファイルがサーバーに上がることはありません。" } },
+        { "@type": "Question", "name": "隠した答えはどうやって見ますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "黒塗りの上にカーソルを合わせると、その部分だけ一時的に見えます。すべての黒塗りをまとめて外すこともできます。" } },
+        { "@type": "Question", "name": "作ったものを書き出せますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "できます。黒塗りや書き込みを載せた状態で、PDFや画像として書き出せます。元がPDFの場合は画質を落とさずに書き出します。" } },
+        { "@type": "Question", "name": "途中で保存して、続きから再開できますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "できます。作業データを .amk という形式で保存し、「データ読込」から呼び戻せます。自動保存も入っています。" } },
+        { "@type": "Question", "name": "複数ページのPDFにも使えますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "使えます。ページ一覧から好きなページへ移動でき、ページごとに黒塗りや書き込みを入れられます。" } },
+        { "@type": "Question", "name": "手書きの文字や図にも使えますか",
+          "acceptedAnswer": { "@type": "Answer", "text": "使えます。手書きのノートを写真に撮って読み込めば、印刷物と同じように隠せます。" } }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "暗記マスキング", "item": "https://ankimasking.com/" },
+        { "@type": "ListItem", "position": 2, "name": "使い方", "item": "https://ankimasking.com/guide/" }
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>

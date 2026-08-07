@@ -1,0 +1,3 @@
+# robots.txt は既定で text/html として配られていた。Google は text/plain を期待するため明示する。
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
