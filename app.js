@@ -112,7 +112,12 @@
         const brushCursor = document.getElementById('brush-cursor');
         const textCursor = document.getElementById('text-cursor');
         const loadingOverlay = document.getElementById('loading-overlay');
-        
+        // 読み込み中オーバーレイの補足行。要素の並び順ではなくidで指す
+        function setLoadingDetail(text) {
+            const el = document.getElementById('loading-detail');
+            if (el) el.innerText = text;
+        }
+
         const pdfSidebar = document.getElementById('pdf-sidebar');
         const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
         const pageNavigation = document.getElementById('page-navigation');
@@ -165,8 +170,6 @@
         let rawPenPoints = []; 
         let totalPdfPages = 0;
 
-        let activeCanvas = null;
-        let activeCtx = null;
         let activeCanvasIndex = null;
         let activeDrawSvg = null;   // 現在描画中のSVGレイヤー
         let liveStrokePath = null;  // ドラッグ中のプレビュー用path
@@ -183,8 +186,7 @@
 
         window.canvasDrawings = []; 
         let currentBackground = null;
-        let savedCanvasState = null;
-        
+
         const toolColors = { text: '#ef4444', highlight: '#ffff00', pen: '#ef4444', shape: '#ef4444' };
         
         // 【改修】図形のデフォルトの太さを2pxに変更
@@ -373,7 +375,7 @@
             action = null; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
             movePressTarget = null; pressWasSelectedText = false;
             freehandScale = null; strokeScale = null; strokeMoveStart = null;
-            activeCanvas = null; activeCtx = null; activeCanvasIndex = null; activeDrawSvg = null;
+            activeCanvasIndex = null; activeDrawSvg = null;
             liveStrokePath = null; tempMaskSvg = null; tempMaskPath = null; currentDrawingShape = null;
         }
         // ウィンドウのフォーカスが外れたら、触っている指の記録も捨てる（固着防止）
@@ -1363,6 +1365,24 @@
             return d;
         }
 
+        // ドラッグ中は点が増えるたびに全点からパスを作り直すと点の数の2乗で重くなる。
+        // 末尾の "L 最後の点" を除いた部分を持ち回り、増えたぶんだけ継ぎ足す。
+        let livePathPrefix = '';
+        function livePathStart(p) {
+            livePathPrefix = `M ${p.x} ${p.y}`;
+            return strokePathD([p]);
+        }
+        // pts は追加後の配列（末尾が新しい点）
+        function livePathAppend(pts) {
+            const n = pts.length;
+            const p = pts[n - 1];
+            if (n >= 3) {
+                const q = pts[n - 2];
+                livePathPrefix += ` Q ${q.x} ${q.y} ${(q.x + p.x) / 2} ${(q.y + p.y) / 2}`;
+            }
+            return `${livePathPrefix} L ${p.x} ${p.y}`;
+        }
+
         // 手描きSVGレイヤーを生成（viewBoxはページのCSS座標系）
         function createDrawSVG(vw, vh) {
             const svg = document.createElementNS(SVGNS, 'svg');
@@ -1546,14 +1566,6 @@
                     opacity: penOpacityInput.value
                 });
             }
-        }
-
-        // 全ての手描きSVGを canvasDrawings から再構築
-        function redrawAllStrokeLayers() {
-            workspace.querySelectorAll('.drawing-svg').forEach(svg => {
-                const idx = parseInt(svg.dataset.canvasIndex);
-                renderStrokesToSVG(svg, window.canvasDrawings[idx] || []);
-            });
         }
 
         // ===== ペン線の選択（JSによる距離判定。消しゴムの部分削りは不変） =====
@@ -1777,18 +1789,26 @@
             window.saveState();
         }
 
+        /* 古い .amk の手描きは1枚の画像として入っている。画像は読み込みを待たないと描けないので、
+           この場合だけ Promise を返す。呼ぶ側は executeCanvasCommands で待つこと
+           （待たずに合成すると、書き出しに手描きが1本も写らない）。 */
         function executeCanvasCommand(ctx, cmd) {
             if (cmd.tool === 'legacy_base64') {
-                const img = new Image();
-                img.onload = () => {
-                    ctx.save();
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.drawImage(img, 0, 0);
-                    ctx.restore();
-                };
-                img.src = cmd.dataURL;
-                return;
+                return new Promise(resolve => {
+                    const img = new Image();
+                    const draw = () => {
+                        ctx.save();
+                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+                        ctx.globalCompositeOperation = 'source-over';
+                        // 画面と同じく、描く面いっぱいに引き伸ばす（元は当時の表示サイズで撮った画像）
+                        ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                        ctx.restore();
+                        resolve();
+                    };
+                    img.onload = draw;
+                    img.onerror = () => { console.error('古い手描き画像を読めませんでした'); resolve(); };
+                    img.src = cmd.dataURL;
+                });
             }
 
             const pts = cmd.points;
@@ -1818,6 +1838,14 @@
                 ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
             }
             ctx.stroke();
+        }
+
+        // 手描きを順に描く。画像（古い .amk）が混じっていれば、その読み込みを待ってから次へ進む
+        async function executeCanvasCommands(ctx, cmds) {
+            for (const cmd of (cmds || [])) {
+                const pending = executeCanvasCommand(ctx, cmd);
+                if (pending && typeof pending.then === 'function') await pending;
+            }
         }
 
         // --- ワークスペースのシリアライズ（履歴・.amk保存・自動保存で共通利用） ---
@@ -1924,7 +1952,7 @@
             if (typeof PDFLib === 'undefined') { alert('PDFの部品が読み込めていません。ページを開き直してください。'); return; }
 
             const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.querySelectorAll('div')[1].innerText = '編集できるPDFを作成中...';
+            setLoadingDetail('編集できるPDFを作成中...');
             loadingOverlay.style.display = 'flex';
             await new Promise(r => setTimeout(r, 50));
 
@@ -1966,6 +1994,24 @@
             }
         }
 
+        /* PDFの文字列オブジェクトから中身を取り出す。
+           pdf-lib の decodeText() は内部で String.fromCharCode(...配列) を使うため、
+           数百KBを超えると「Maximum call stack size exceeded」で落ちる
+           （写真を貼ると作業データがその大きさになる）。
+           刻む中身は必ず Base64＋印だけ＝エスケープが起きない文字なので、
+           生の value をそのまま使う。念のため、印の付いていない時だけ従来の方法に戻す。 */
+        function readPdfStringValue(v) {
+            if (!v) return null;
+            const val = v.value;
+            if (typeof val === 'string' && /^(gz|raw):/.test(val)) return val;
+            try {
+                if (typeof v.decodeText === 'function') return v.decodeText();
+            } catch (e) {
+                console.error(e);
+            }
+            return typeof val === 'string' ? val : null;
+        }
+
         // PDFに作業データが刻まれていれば取り出す。無ければ null
         async function readEmbeddedProject(arrayBuffer) {
             if (typeof PDFLib === 'undefined') return null;
@@ -1977,7 +2023,8 @@
                 if (!info || typeof info.get !== 'function') return null;
                 const v = info.get(PDFLib.PDFName.of(AMK_PDF_KEY));
                 if (!v) return null;
-                const raw = typeof v.decodeText === 'function' ? v.decodeText() : String(v);
+                const raw = readPdfStringValue(v);
+                if (!raw) return null;
                 return await unpackProjectPayload(raw);
             } catch (e) {
                 console.error(e);
@@ -2043,9 +2090,16 @@
             catch (err) { console.error('背景の保存に失敗しました', err); }
         }
 
+        // 履歴に積む控えは、後で命令を書き換えても（例：色の付け替え）過去に影響しないよう
+        // 深い複製にする必要がある。JSON の往復は文字列を経由するぶん重いので、
+        // 使える環境では structuredClone を使う。
+        function deepCloneCommands(v) {
+            return (typeof structuredClone === 'function') ? structuredClone(v) : JSON.parse(JSON.stringify(v));
+        }
+
         window.saveState = function() {
             const elements = serializeElements();
-            const canvasCommandsArray = JSON.parse(JSON.stringify(window.canvasDrawings));
+            const canvasCommandsArray = deepCloneCommands(window.canvasDrawings);
             const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-svg')).map(c => c.style.zIndex);
 
             window.historyArray = window.historyArray.slice(0, window.historyIndex + 1);
@@ -2082,7 +2136,7 @@
                 }
             });
             
-            window.canvasDrawings = JSON.parse(JSON.stringify(state.canvasCommandsArray));
+            window.canvasDrawings = deepCloneCommands(state.canvasCommandsArray);
             const svgs = Array.from(workspace.querySelectorAll('.drawing-svg'));
 
             svgs.forEach((svg, i) => {
@@ -2229,8 +2283,10 @@
         }
 
         // --- 線の明るさに応じて中心線の色（黒 or 白）を決める ---
+        // 名前が後段の parseCssColor（0〜1を返す・PDF書き出し用）とぶつかると
+        // 巻き上げで後者が勝ち、明度判定が常に同じ側へ倒れる。名前を分けておく。
         const colorProbeCtx = document.createElement('canvas').getContext('2d');
-        function parseCssColor(c) {
+        function parseCssColor255(c) {
             if (!c) return null;
             colorProbeCtx.fillStyle = '#000';
             colorProbeCtx.fillStyle = c;              // 不正な値なら黒のまま残る
@@ -2247,7 +2303,7 @@
         }
         // 白い紙の上に置いたときの見た目の明るさで判定する
         function centerLineColorFor(cssColor) {
-            const c = parseCssColor(cssColor);
+            const c = parseCssColor255(cssColor);
             if (!c) return '#ffffff';
             const r = c.a * c.r + (1 - c.a) * 255;
             const g = c.a * c.g + (1 - c.a) * 255;
@@ -2673,7 +2729,7 @@
         });
 
         async function renderPdfPageAsync(pageDiv, targetZoom = 1.0) {
-            pageDiv.dataset.rendered = "true";
+            pageDiv.dataset.rendering = "true";
             const pageNum = parseInt(pageDiv.dataset.page);
             try {
                 const page = await window.currentPdfDoc.getPage(pageNum);
@@ -2707,13 +2763,18 @@
                     const canvasIndex = parseInt(drawSvg.dataset.canvasIndex);
                     renderStrokesToSVG(drawSvg, window.canvasDrawings[canvasIndex] || []);
                 }
+                pageDiv.dataset.rendered = "true";
             } catch(e) {
                 console.error("Page rendering failed", e);
+                // 失敗したページは未描画に戻し、次に視界へ入った時に描き直せるようにする
+                pageDiv.dataset.rendered = "false";
+            } finally {
+                pageDiv.dataset.rendering = "false";
             }
         }
 
         async function renderPdfThumbAsync(thumbDiv) {
-            thumbDiv.dataset.rendered = "true";
+            thumbDiv.dataset.rendering = "true";
             const pageNum = parseInt(thumbDiv.dataset.page);
             try {
                 const page = await window.currentPdfDoc.getPage(pageNum);
@@ -2724,8 +2785,12 @@
                 thumbCanvas.width = thumbViewport.width; 
                 thumbCanvas.height = thumbViewport.height;
                 await page.render({ canvasContext: thumbCanvas.getContext('2d'), viewport: thumbViewport }).promise;
+                thumbDiv.dataset.rendered = "true";
             } catch(e) {
                 console.error("Thumb rendering failed", e);
+                thumbDiv.dataset.rendered = "false";
+            } finally {
+                thumbDiv.dataset.rendering = "false";
             }
         }
 
@@ -2743,7 +2808,7 @@
                     uploadedImage.style.display = 'none'; pdfContainer.style.display = 'block';
                     const loadingOverlay = document.getElementById('loading-overlay');
                     loadingOverlay.style.display = 'flex';
-                    loadingOverlay.querySelectorAll('div')[1].innerText = 'PDFを読み込み中...';
+                    setLoadingDetail('PDFを読み込み中...');
                     
                     try {
                         // 旧 PDF を破棄してから新しいものを読む（destroy しないとワーカ/バッファが積み上がる・08-02 修正）
@@ -2772,7 +2837,7 @@
                         
                         window.pageObserver = new IntersectionObserver((entries) => {
                             entries.forEach(entry => {
-                                if (entry.isIntersecting && entry.target.dataset.rendered !== "true") {
+                                if (entry.isIntersecting && entry.target.dataset.rendered !== "true" && entry.target.dataset.rendering !== "true") {
                                     renderPdfPageAsync(entry.target, zoomLevel);
                                 }
                             });
@@ -2780,7 +2845,7 @@
 
                         window.thumbObserver = new IntersectionObserver((entries) => {
                             entries.forEach(entry => {
-                                if (entry.isIntersecting && entry.target.dataset.rendered !== "true") {
+                                if (entry.isIntersecting && entry.target.dataset.rendered !== "true" && entry.target.dataset.rendering !== "true") {
                                     renderPdfThumbAsync(entry.target);
                                 }
                             });
@@ -2838,8 +2903,9 @@
                         loadingOverlay.style.display = 'none'; 
                         initWorkspace(true);
                         setTimeout(resolve, 100);
-                    } catch (error) { 
-                        console.error("PDFの読み込みに失敗:", error); loadingOverlay.style.display = 'none'; alert('PDFの読み込みに失敗しました。');
+                    } catch (error) {
+                        // 知らせるのは呼んだ側の仕事。ここで alert すると二重に出る
+                        console.error("PDFの読み込みに失敗:", error); loadingOverlay.style.display = 'none';
                         reject(error);
                     }
                 } else {
@@ -2866,16 +2932,34 @@
             const lastDotIndex = file.name.lastIndexOf('.');
             window.setCurrentFileName(lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name);
 
+            const isPdfFile = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
             const reader = new FileReader();
             reader.onload = async function(event) {
-                currentBackground = {
-                    type: file.type === 'application/pdf' ? 'pdf' : 'image',
-                    dataURL: event.target.result
-                };
-                await loadBackground(currentBackground);
-                await persistBackground(); // 新しい背景を自動保存に反映
-                scheduleAutosave();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                try {
+                    currentBackground = {
+                        type: isPdfFile ? 'pdf' : 'image',
+                        dataURL: event.target.result
+                    };
+                    await loadBackground(currentBackground);
+                    await persistBackground(); // 新しい背景を自動保存に反映
+                    scheduleAutosave();
+                } catch (error) {
+                    console.error(error);
+                    currentBackground = null;
+                    loadingOverlay.style.display = 'none';
+                    alert(isPdfFile
+                        ? 'このPDFを開けませんでした。\nファイルが壊れているか、パスワードで保護されている可能性があります。'
+                        : 'この画像を開けませんでした。\n対応していない形式か、ファイルが壊れている可能性があります。');
+                } finally {
+                    // 失敗した時こそ空にする。空にしないと同じファイルを選び直しても反応しない
+                    e.target.value = '';
+                }
+            };
+            reader.onerror = () => {
+                console.error(reader.error);
                 e.target.value = '';
+                alert('ファイルを読み取れませんでした。もう一度選び直してください。');
             };
             reader.readAsDataURL(file);
         });
@@ -2888,7 +2972,7 @@
             }
             
             const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.querySelectorAll('div')[1].innerText = 'プロジェクトを保存中...';
+            setLoadingDetail('プロジェクトを保存中...');
             loadingOverlay.style.display = 'flex';
             
             try {
@@ -2901,7 +2985,8 @@
                 a.download = `${window.currentFileName}.amk`;
                 a.href = url;
                 a.click();
-                URL.revokeObjectURL(url);
+                // すぐ捨てると保存が途中で切られることがある。他の書き出しと同じく遅らせる
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             } catch (e) {
                 console.error(e);
                 alert("保存エラーが発生しました。");
@@ -2967,7 +3052,7 @@
                 r.onload = async (ev) => {
                     const loadingOverlay = document.getElementById('loading-overlay');
                     try {
-                        loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
+                        setLoadingDetail('データを復元中...');
                         loadingOverlay.style.display = 'flex';
                         await new Promise(res => setTimeout(res, 50));
 
@@ -2985,13 +3070,19 @@
                         }
                         await persistBackground();
                         scheduleAutosave();
-                        loadingOverlay.style.display = 'none';
-                        e.target.value = '';
                     } catch (error) {
                         console.error(error);
-                        alert('ファイルの読み込みに失敗しました。');
+                        alert('このPDFを開けませんでした。\nファイルが壊れているか、パスワードで保護されている可能性があります。');
+                    } finally {
                         loadingOverlay.style.display = 'none';
+                        // 失敗した時こそ空にする。空にしないと同じファイルを選び直しても反応しない
+                        e.target.value = '';
                     }
+                };
+                r.onerror = () => {
+                    console.error(r.error);
+                    e.target.value = '';
+                    alert('ファイルを読み取れませんでした。もう一度選び直してください。');
                 };
                 r.readAsArrayBuffer(file);
                 return;
@@ -3002,18 +3093,23 @@
                 const loadingOverlay = document.getElementById('loading-overlay');
                 try {
                     loadingOverlay.style.display = 'flex';
-                    loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
+                    setLoadingDetail('データを復元中...');
 
                     let projectData = JSON.parse(event.target.result);
                     await applyProjectData(projectData);
-
-                    loadingOverlay.style.display = 'none';
-                    e.target.value = '';
                 } catch (error) {
                     console.error(error);
                     alert("ファイルの読み込みに失敗しました。正しいデータを選択してください。");
+                } finally {
                     loadingOverlay.style.display = 'none';
+                    // 失敗した時こそ空にする。空にしないと同じファイルを選び直しても反応しない
+                    e.target.value = '';
                 }
+            };
+            reader.onerror = () => {
+                console.error(reader.error);
+                e.target.value = '';
+                alert('ファイルを読み取れませんでした。もう一度選び直してください。');
             };
             reader.readAsText(file);
         });
@@ -3532,7 +3628,7 @@
                 } else {
                     liveStrokePath.setAttribute('stroke', 'rgba(140,140,140,0.6)'); // 消しゴムのプレビュー
                 }
-                liveStrokePath.setAttribute('d', strokePathD(rawPenPoints));
+                liveStrokePath.setAttribute('d', livePathStart(rawPenPoints[0]));
                 activeDrawSvg.appendChild(liveStrokePath);
             } else if (currentTool === 'select') {
                 // まずペン線のクリック選択を試す（当たれば移動開始、外れたら範囲選択）
@@ -3663,7 +3759,7 @@
                 const localX = (e.clientX - svgRect.left) * sx;
                 const localY = (e.clientY - svgRect.top) * sy;
                 rawPenPoints.push({x: localX, y: localY});
-                liveStrokePath.setAttribute('d', strokePathD(rawPenPoints));
+                liveStrokePath.setAttribute('d', livePathAppend(rawPenPoints));
             } else if (action === 'move' && (startRects.length > 0 || strokesDrag)) {
                 const dx = currentX - startX; const dy = currentY - startY; 
                 startRects.forEach(item => {
@@ -4206,7 +4302,7 @@
             
             const loadingOverlay = document.getElementById('loading-overlay');
             loadingOverlay.style.display = 'flex'; 
-            loadingOverlay.querySelectorAll('div')[1].innerText = 'ネイティブ書き出し中...';
+            setLoadingDetail('ネイティブ書き出し中...');
             
             await new Promise(resolve => setTimeout(resolve, 50)); 
 
@@ -4243,7 +4339,7 @@
                         penLayer.height = natHeight;
                         const pCtx = penLayer.getContext('2d');
                         pCtx.scale(scaleRatio, scaleRatio);
-                        cmds.forEach(cmd => executeCanvasCommand(pCtx, cmd));
+                        await executeCanvasCommands(pCtx, cmds);
                         eCtx.drawImage(penLayer, 0, 0);
                     }
 
@@ -4308,7 +4404,7 @@
                 penLayer.height = canvas.height;
                 const pCtx = penLayer.getContext('2d');
                 pCtx.scale(drawScale, drawScale);
-                cmds.forEach(cmd => executeCanvasCommand(pCtx, cmd));
+                await executeCanvasCommands(pCtx, cmds);
                 ctx.drawImage(penLayer, 0, 0);
             }
 
@@ -4403,7 +4499,7 @@
             const ST = 5; // テキスト等のラスタ部分の解像度倍率
 
             for (let i = 1; i <= totalPdfPages; i++) {
-                loadingOverlay.querySelectorAll('div')[1].innerText = `PDFを生成中... (${i}/${totalPdfPages})`;
+                setLoadingDetail(`PDFを生成中... (${i}/${totalPdfPages})`);
                 await new Promise(r => setTimeout(r, 10));
 
                 const page = await window.currentPdfDoc.getPage(i);
@@ -4443,7 +4539,7 @@
                         pcv.height = Math.max(1, Math.round(dispH * ST));
                         const pctx = pcv.getContext('2d');
                         pctx.scale(ST, ST);
-                        cmds.forEach(cmd => executeCanvasCommand(pctx, cmd));
+                        await executeCanvasCommands(pctx, cmds);
                         const img = await embedCanvas(pcv);
                         body.push(...imageOps(outPage, img, 0, 0, dispW, dispH));
                     } else {
@@ -4559,7 +4655,7 @@
             const EXPORT_RENDER_SCALE = 3.0;
 
             for (let i = 1; i <= totalPdfPages; i++) {
-                loadingOverlay.querySelectorAll('div')[1].innerText = `PDFを生成中... (${i}/${totalPdfPages})`;
+                setLoadingDetail(`PDFを生成中... (${i}/${totalPdfPages})`);
                 await new Promise(r => setTimeout(r, 10));
 
                 const page = await window.currentPdfDoc.getPage(i);
@@ -4582,7 +4678,7 @@
                     penLayer.height = exportCanvas.height;
                     const pCtx = penLayer.getContext('2d');
                     pCtx.scale(drawScale, drawScale);
-                    cmds.forEach(cmd => executeCanvasCommand(pCtx, cmd));
+                    await executeCanvasCommands(pCtx, cmds);
                     eCtx.drawImage(penLayer, 0, 0);
                 }
 
@@ -4753,7 +4849,7 @@
                 bar.remove();
                 const loadingOverlay = document.getElementById('loading-overlay');
                 loadingOverlay.style.display = 'flex';
-                loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
+                setLoadingDetail('データを復元中...');
                 try {
                     window.setCurrentFileName(projectData.fileName);
                     await applyProjectData(projectData);
