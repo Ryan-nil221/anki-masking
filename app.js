@@ -1878,6 +1878,113 @@
             return { ...buildSessionData(), background: currentBackground };
         }
 
+        /* ── 編集できるPDF（PDFの中に作業データを忍ばせる）─────────────────
+           黒塗りを焼き込まないPDFを出し、PDFの情報欄に作業データを入れておく。
+           人の目には出ず、他のソフトで開いても普通のPDFに見える。
+           容量は元PDF＋数十KB程度（作業データは gzip で圧縮して入れる）。
+           焼き込み版と違って、これを開き直せば続きから編集できる。
+           ※注意：他のPDFソフトで開いて保存し直すと、情報欄が捨てられることがある。 */
+        const AMK_PDF_KEY = 'AnkiMaskingData';
+
+        function bytesToBase64(bytes) {
+            let s = ''; const chunk = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunk) {
+                s += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+            }
+            return btoa(s);
+        }
+        function base64ToBytes(b64) {
+            const bin = atob(b64); const out = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+            return out;
+        }
+        // 印は先頭に付ける。gz: は圧縮あり、raw: は圧縮なし（古いブラウザ向けの退避）
+        async function packProjectPayload(obj) {
+            const bytes = new TextEncoder().encode(JSON.stringify(obj));
+            if (typeof CompressionStream === 'undefined') return 'raw:' + bytesToBase64(bytes);
+            const cs = new CompressionStream('gzip');
+            const w = cs.writable.getWriter(); w.write(bytes); w.close();
+            const buf = await new Response(cs.readable).arrayBuffer();
+            return 'gz:' + bytesToBase64(new Uint8Array(buf));
+        }
+        async function unpackProjectPayload(payload) {
+            const isGz = payload.startsWith('gz:');
+            const bytes = base64ToBytes(payload.replace(/^(gz|raw):/, ''));
+            if (!isGz) return JSON.parse(new TextDecoder().decode(bytes));
+            const ds = new DecompressionStream('gzip');
+            const w = ds.writable.getWriter(); w.write(bytes); w.close();
+            const buf = await new Response(ds.readable).arrayBuffer();
+            return JSON.parse(new TextDecoder().decode(buf));
+        }
+
+        // 元PDF（または画像を入れた1ページのPDF）に作業データを刻んで書き出す
+        async function exportEditablePdf() {
+            saveDropdownMenu.classList.remove('show');
+            if (!currentBackground) { alert('まずは画像かPDFを新規作成で開いてください。'); return; }
+            if (typeof PDFLib === 'undefined') { alert('PDFの部品が読み込めていません。ページを開き直してください。'); return; }
+
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.querySelectorAll('div')[1].innerText = '編集できるPDFを作成中...';
+            loadingOverlay.style.display = 'flex';
+            await new Promise(r => setTimeout(r, 50));
+
+            try {
+                let doc;
+                if (currentBackground.type === 'pdf') {
+                    const bytes = await (await fetch(currentBackground.dataURL)).arrayBuffer();
+                    doc = await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
+                } else {
+                    // 画像は1ページのPDFに入れる。原寸のまま入れるので画質は落ちない
+                    doc = await PDFLib.PDFDocument.create();
+                    const bytes = await (await fetch(currentBackground.dataURL)).arrayBuffer();
+                    const isPng = /^data:image\/png/i.test(currentBackground.dataURL);
+                    const img = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+                    const page = doc.addPage([img.width, img.height]);
+                    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+                }
+
+                const payload = await packProjectPayload(buildSessionData());
+                let info = doc.context.trailerInfo.Info ? doc.context.lookup(doc.context.trailerInfo.Info) : null;
+                if (!info || typeof info.set !== 'function') {
+                    info = doc.context.obj({});
+                    doc.context.trailerInfo.Info = doc.context.register(info);
+                }
+                info.set(PDFLib.PDFName.of(AMK_PDF_KEY), PDFLib.PDFString.of(payload));
+
+                const out = await doc.save({ updateMetadata: false });
+                const blob = new Blob([out], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.download = `${window.currentFileName}_編集用.pdf`;
+                a.href = url; a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (err) {
+                console.error(err);
+                alert('編集できるPDFの作成に失敗しました。');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // PDFに作業データが刻まれていれば取り出す。無ければ null
+        async function readEmbeddedProject(arrayBuffer) {
+            if (typeof PDFLib === 'undefined') return null;
+            try {
+                const doc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true, updateMetadata: false });
+                const infoRef = doc.context.trailerInfo.Info;
+                if (!infoRef) return null;
+                const info = doc.context.lookup(infoRef);
+                if (!info || typeof info.get !== 'function') return null;
+                const v = info.get(PDFLib.PDFName.of(AMK_PDF_KEY));
+                if (!v) return null;
+                const raw = typeof v.decodeText === 'function' ? v.decodeText() : String(v);
+                return await unpackProjectPayload(raw);
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+
         // --- 自動保存（IndexedDB） ---
         const AUTOSAVE_DB = 'ankimasking', AUTOSAVE_STORE = 'autosave';
         function idbOpen() {
@@ -2849,10 +2956,47 @@
         document.getElementById('projectInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             const lastDotIndex = file.name.lastIndexOf('.');
             window.setCurrentFileName(lastDotIndex > 0 ? file.name.substring(0, lastDotIndex) : file.name);
-            
+
+            // 「編集用」として書き出したPDFなら、中の作業データを取り出して続きから開く
+            const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+            if (isPdf) {
+                const r = new FileReader();
+                r.onload = async (ev) => {
+                    const loadingOverlay = document.getElementById('loading-overlay');
+                    try {
+                        loadingOverlay.querySelectorAll('div')[1].innerText = 'データを復元中...';
+                        loadingOverlay.style.display = 'flex';
+                        await new Promise(res => setTimeout(res, 50));
+
+                        const buf = ev.target.result;
+                        const embedded = await readEmbeddedProject(buf);
+                        const dataURL = 'data:application/pdf;base64,' + bytesToBase64(new Uint8Array(buf));
+
+                        if (embedded) {
+                            await applyProjectData({ ...embedded, background: { type: 'pdf', dataURL } });
+                        } else {
+                            // 作業データが入っていないPDF＝ただのPDF。新規として開く
+                            currentBackground = { type: 'pdf', dataURL };
+                            await loadBackground(currentBackground);
+                            alert('このPDFには作業データが入っていません。新しいPDFとして開きました。\n（続きから編集するには「編集できるPDFで保存」で出したファイルを選んでください）');
+                        }
+                        await persistBackground();
+                        scheduleAutosave();
+                        loadingOverlay.style.display = 'none';
+                        e.target.value = '';
+                    } catch (error) {
+                        console.error(error);
+                        alert('ファイルの読み込みに失敗しました。');
+                        loadingOverlay.style.display = 'none';
+                    }
+                };
+                r.readAsArrayBuffer(file);
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = async (event) => {
                 const loadingOverlay = document.getElementById('loading-overlay');
@@ -4053,6 +4197,7 @@
         // 【改修】オリジナル画質での書き出し処理（PDF解像度対応）
         // 書き出しは1つだけ。今の画面の見た目（黒塗りを隠しているかどうか）そのままで出す。
         document.getElementById('btn-download-menu').addEventListener('click', () => runNativeExport());
+        document.getElementById('btn-save-editable-pdf-menu').addEventListener('click', () => exportEditablePdf());
 
         async function runNativeExport() {
             saveDropdownMenu.classList.remove('show');

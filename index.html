@@ -66,10 +66,10 @@
                 </label>
                 <input type="file" id="imageInput" accept="image/*, application/pdf">
                 
-                <label for="projectInput" class="btn btn-project" title="「作業データごと保存 (.amk)」で保存したファイルを開きます">
+                <label for="projectInput" class="btn btn-project" title="「作業データごと保存 (.amk)」または「編集できるPDFで保存」で保存したファイルを開きます">
                     <span class="material-symbols-outlined">folder_open</span> データを開く
                 </label>
-                <input type="file" id="projectInput" accept=".amk">
+                <input type="file" id="projectInput" accept=".amk,application/pdf,.pdf">
 
                 <div class="v-divider"></div>
                 <span id="current-file-name" title="編集中のファイル">
@@ -95,7 +95,10 @@
                         <li id="btn-save-project-menu">
                             <span class="material-symbols-outlined">data_object</span> 作業データごと保存 (.amk)
                         </li>
-                        <li id="btn-download-menu" title="今の画面のとおりに書き出します（黒塗りツールの「マスクを外す」で外していれば、その状態で出ます）">
+                        <li id="btn-save-editable-pdf-menu" title="黒塗りを焼き込まず、作業データをPDFの中に入れて保存します。「データを開く」で開き直せば続きから編集できます">
+                            <span class="material-symbols-outlined">picture_as_pdf</span> 編集できるPDFで保存
+                        </li>
+                        <li id="btn-download-menu" title="今の画面のとおりに書き出します（黒塗りツールの「マスクを外す」で外していれば、その状態で出ます）。こちらは焼き込みなので、開き直しても編集は再開できません">
                             <span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し
                         </li>
                     </ul>
@@ -121,6 +124,7 @@
                         <li data-proxy="btn-redo"><span class="material-symbols-outlined">redo</span> やり直し</li>
                         <li class="menu-sep"></li>
                         <li data-proxy="btn-save-project-menu"><span class="material-symbols-outlined">data_object</span> 作業データごと保存 (.amk)</li>
+                        <li data-proxy="btn-save-editable-pdf-menu"><span class="material-symbols-outlined">picture_as_pdf</span> 編集できるPDFで保存</li>
                         <li data-proxy="btn-download-menu"><span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し</li>
                         <li class="menu-sep"></li>
                         <li class="menu-link"><a href="/guide/" target="_blank" rel="noopener"><span class="material-symbols-outlined">help</span> 使い方</a></li>
