@@ -356,4 +356,14 @@
             </div>
         </div>
     </div>
-    <script src="app.js"></script>
+    <!-- 元は app.js 1本（4,557行）。役割ごとに分割した。
+         素のスクリプトなので変数は全ファイルで共有される。順番を変えると壊れる。 -->
+    <script src="js/00-base.js"></script>
+    <script src="js/10-shortcuts.js"></script>
+    <script src="js/20-strokes.js"></script>
+    <script src="js/30-history.js"></script>
+    <script src="js/40-elements.js"></script>
+    <script src="js/50-pages.js"></script>
+    <script src="js/60-input.js"></script>
+    <script src="js/70-export.js"></script>
+    <script src="js/80-images.js"></script>
