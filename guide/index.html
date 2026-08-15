@@ -150,6 +150,18 @@
   }
   .note p:last-child { margin-bottom: 0; }
 
+  /* 実際の画面 */
+  .shot { margin: 6px 0 30px; }
+  .shot img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    background: var(--c-surface);
+  }
+  .shot figcaption {
+    margin: 10px 0 0; text-align: center;
+    font-size: 13.5px; color: var(--c-text-muted); line-height: 1.6;
+  }
+
   footer {
     border-top: 1px solid var(--c-border); margin-top: 60px; padding: 24px 20px 40px;
     text-align: center; color: var(--c-text-muted); font-size: 14px;
@@ -180,6 +192,12 @@
     教科書や授業の資料をPDFや写真で取り込み、覚えたい部分をなぞって黒く隠すだけ。
     隠した所はカーソルを合わせると答えが見えます。登録もインストールも要らず、ブラウザだけで動く無料のアプリです。
   </p>
+
+  <figure class="shot">
+    <img src="screenshot-app.jpg" width="1568" height="741" fetchpriority="high"
+         alt="暗記マスキングの画面。取り込んだ「日本国憲法のまとめ」のプリントで、公布・施行・三大原則などの答えの部分が黒く塗りつぶされている。">
+    <figcaption>実際の画面。取り込んだ教材の上を、覚えたい所だけなぞって黒く隠します。</figcaption>
+  </figure>
 
   <div class="cta">
     <a href="/">暗記マスキングを開く</a>
