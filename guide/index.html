@@ -150,16 +150,69 @@
   }
   .note p:last-child { margin-bottom: 0; }
 
-  /* 実際の画面 */
+  /* 実際の画面。写真は1枚で、黒塗りとカーソルはCSSで重ねて動かしている */
   .shot { margin: 6px 0 30px; }
-  .shot img {
-    display: block; width: 100%; height: auto;
-    border: 1px solid var(--c-border); border-radius: var(--r-lg);
-    background: var(--c-surface);
-  }
   .shot figcaption {
     margin: 10px 0 0; text-align: center;
     font-size: 13.5px; color: var(--c-text-muted); line-height: 1.6;
+  }
+  .demo {
+    position: relative; line-height: 0;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    overflow: hidden; background: var(--c-surface);
+  }
+  .demo img { display: block; width: 100%; height: auto; }
+  .demo .m {
+    position: absolute; background: #111; border-radius: 2px;
+    transition: opacity .28s ease;
+  }
+  .demo .cursor {
+    position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -2px;
+    pointer-events: none;
+    transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .demo .m1 { animation: reveal1 12s infinite; }
+  @keyframes reveal1 {
+    0%, 9.1667% { opacity: 1; }
+    9.9667%, 21.6667% { opacity: 0; }
+    22.4667%, 100% { opacity: 1; }
+  }
+  .demo .m2 { animation: reveal2 12s infinite; }
+  @keyframes reveal2 {
+    0%, 34.1667% { opacity: 1; }
+    34.9667%, 46.6667% { opacity: 0; }
+    47.4667%, 100% { opacity: 1; }
+  }
+  .demo .m3 { animation: reveal3 12s infinite; }
+  @keyframes reveal3 {
+    0%, 59.1667% { opacity: 1; }
+    59.9667%, 71.6667% { opacity: 0; }
+    72.4667%, 100% { opacity: 1; }
+  }
+  .demo .m5 { animation: reveal4 12s infinite; }
+  @keyframes reveal4 {
+    0%, 84.1667% { opacity: 1; }
+    84.9667%, 96.6667% { opacity: 0; }
+    97.4667%, 100% { opacity: 1; }
+  }
+  .demo .cursor { animation: cursor 12s infinite; }
+  @keyframes cursor {
+    0% { left: 46.137%; top: 74.8014%; }
+    9.1667%, 24.99% { left: 36.4215%; top: 43.9579%; }
+    25% { left: 36.4215%; top: 43.9579%; }
+    34.1667%, 49.99% { left: 35.9514%; top: 51.6688%; }
+    50% { left: 35.9514%; top: 51.6688%; }
+    59.1667%, 74.99% { left: 37.3095%; top: 59.3796%; }
+    75% { left: 37.3095%; top: 59.3796%; }
+    84.1667%, 99.99% { left: 46.137%; top: 74.8014%; }
+    100% { left: 46.137%; top: 74.8014%; }
+  }
+
+  /* 動きを減らす設定の人には、黒塗りしたままの静止画として見せる */
+  @media (prefers-reduced-motion: reduce) {
+    .demo .m, .demo .cursor { animation: none; }
+    .demo .cursor { display: none; }
   }
 
   footer {
@@ -194,9 +247,21 @@
   </p>
 
   <figure class="shot">
-    <img src="screenshot-app.jpg" width="1568" height="741" fetchpriority="high"
-         alt="暗記マスキングの画面。取り込んだ「日本国憲法のまとめ」のプリントで、公布・施行・三大原則などの答えの部分が黒く塗りつぶされている。">
-    <figcaption>実際の画面。取り込んだ教材の上を、覚えたい所だけなぞって黒く隠します。</figcaption>
+    <div class="demo">
+      <img src="screenshot-anim.jpg" width="1564" height="784" fetchpriority="high"
+           alt="暗記マスキングの画面。取り込んだ「日本国憲法のまとめ」の確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
+      <span class="m m1" style="left:30.3102%;top:41.6655%;width:12.2227%;height:4.5848%"></span>
+      <span class="m m2" style="left:30.3102%;top:49.3763%;width:11.2825%;height:4.5848%"></span>
+      <span class="m m3" style="left:33.6531%;top:57.0872%;width:7.3127%;height:4.5848%"></span>
+      <span class="m m4" style="left:36.9961%;top:64.7981%;width:3.9698%;height:4.5848%"></span>
+      <span class="m m5" style="left:43.682%;top:72.5089%;width:4.91%;height:4.5848%"></span>
+      <span class="m m6" style="left:40.339%;top:80.2198%;width:5.8502%;height:4.5848%"></span>
+      <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 2.5 L5 19 L9.2 15.1 L11.9 21.2 L14.8 19.9 L12.1 13.9 L18 13.6 Z"
+              fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <figcaption>実際の画面です。括弧の中の答えを黒く隠し、カーソルを合わせた所だけ見えます。</figcaption>
   </figure>
 
   <div class="cta">
