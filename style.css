@@ -719,43 +719,44 @@
             pointer-events: none;
             transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
         }
-        /* 1周 8.4秒。1か所あたり2.1秒＝移動1.1秒＋留まり1.0秒。
+        /* 1周 6.84秒。1か所あたり1.71秒＝移動1.1秒＋留まり0.61秒。
+           答えが見えている時間はちょうど0.8秒になる（留まり＋外し始め0.14秒＋隠し始め0.05秒）。
            説明ページ側（12秒・留まり1.9秒）より留まりを短くしてある。
            答えを見せている間が長いと、動きが止まって見えるため。 */
-        #welcome-box .demo .m1 { animation: wc-reveal1 8.4s infinite; }
+        #welcome-box .demo .m1 { animation: wc-reveal1 6.84s infinite; }
         @keyframes wc-reveal1 {
-            0%, 11.428% { opacity: 1; }
-            12.142%, 25.595% { opacity: 0; }
-            26.309%, 100% { opacity: 1; }
+            0%, 14.034% { opacity: 1; }
+            14.911%, 25.731% { opacity: 0; }
+            26.608%, 100% { opacity: 1; }
         }
-        #welcome-box .demo .m2 { animation: wc-reveal2 8.4s infinite; }
+        #welcome-box .demo .m2 { animation: wc-reveal2 6.84s infinite; }
         @keyframes wc-reveal2 {
-            0%, 36.428% { opacity: 1; }
-            37.142%, 50.595% { opacity: 0; }
-            51.309%, 100% { opacity: 1; }
+            0%, 39.034% { opacity: 1; }
+            39.911%, 50.731% { opacity: 0; }
+            51.608%, 100% { opacity: 1; }
         }
-        #welcome-box .demo .m3 { animation: wc-reveal3 8.4s infinite; }
+        #welcome-box .demo .m3 { animation: wc-reveal3 6.84s infinite; }
         @keyframes wc-reveal3 {
-            0%, 61.428% { opacity: 1; }
-            62.142%, 75.595% { opacity: 0; }
-            76.309%, 100% { opacity: 1; }
+            0%, 64.034% { opacity: 1; }
+            64.911%, 75.731% { opacity: 0; }
+            76.608%, 100% { opacity: 1; }
         }
-        #welcome-box .demo .m5 { animation: wc-reveal4 8.4s infinite; }
+        #welcome-box .demo .m5 { animation: wc-reveal4 6.84s infinite; }
         @keyframes wc-reveal4 {
-            0%, 86.428% { opacity: 1; }
-            87.142%, 99.4% { opacity: 0; }
+            0%, 89.034% { opacity: 1; }
+            89.911%, 99.4% { opacity: 0; }
             99.9%, 100% { opacity: 1; }
         }
-        #welcome-box .demo .cursor { animation: wc-cursor 8.4s infinite; }
+        #welcome-box .demo .cursor { animation: wc-cursor 6.84s infinite; }
         @keyframes wc-cursor {
             0% { left: 46.137%; top: 74.8014%; }
-            13.095%, 24.99% { left: 36.4215%; top: 43.9579%; }
+            16.081%, 24.99% { left: 36.4215%; top: 43.9579%; }
             25% { left: 36.4215%; top: 43.9579%; }
-            38.095%, 49.99% { left: 35.9514%; top: 51.6688%; }
+            41.081%, 49.99% { left: 35.9514%; top: 51.6688%; }
             50% { left: 35.9514%; top: 51.6688%; }
-            63.095%, 74.99% { left: 37.3095%; top: 59.3796%; }
+            66.081%, 74.99% { left: 37.3095%; top: 59.3796%; }
             75% { left: 37.3095%; top: 59.3796%; }
-            88.095%, 99.99% { left: 46.137%; top: 74.8014%; }
+            91.081%, 99.99% { left: 46.137%; top: 74.8014%; }
             100% { left: 46.137%; top: 74.8014%; }
         }
         /* 動きを減らす設定の人には、隠したままの静止画として見せる */
