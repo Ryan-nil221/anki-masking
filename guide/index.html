@@ -150,6 +150,15 @@
   }
   .note p:last-child { margin-bottom: 0; }
 
+  /* あわせて読む */
+  .more { margin: 0; padding: 0; list-style: none; }
+  .more li {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 10px;
+  }
+  .more a { font-weight: 700; text-decoration: none; }
+  .more span { display: block; font-size: 14px; color: var(--c-text-muted); }
+
   /* 実際の画面。写真は1枚で、暗記マーカーとカーソルはCSSで重ねて動かしている */
   /* 注釈を写真の外に出すため、この図だけ本文の幅からはみ出させる */
   .shot {
@@ -457,6 +466,14 @@
     <p>使えます。手書きのノートを写真に撮って読み込めば、印刷物と同じように隠せます。
     四角で囲いにくい形は、手書きのマーカーで自由になぞってください。</p>
   </details>
+
+  <h2>あわせて読む</h2>
+  <ul class="more">
+    <li>
+      <a href="/guide/pdf-red-sheet/">PDFを赤シートで隠す方法</a>
+      <span>印刷する・編集ソフトを使う・ブラウザで隠すの3つを、費用と手間で比べます</span>
+    </li>
+  </ul>
 
   <div class="cta">
     <a href="/">暗記マスキングを開く</a>
