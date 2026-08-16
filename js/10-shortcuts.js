@@ -217,16 +217,17 @@
         }
         // テキスト箱が含まれていれば、テキストツールでの新規作成と同じく
         // 「文字の左下（キャレット）」をカーソルに合わせる。DOM に入れてからでないと測れない。
-        // 複数の時は、一番左上にあるテキスト箱を基準にし、他は相対のまま一緒に動かす
-        // （Rayan様の指示・08-15）。テキストが1つも無い時は、まとまりの左上のままにする。
+        // 複数の時は、一番下にあるテキスト箱を基準にし、他は相対のまま一緒に動かす
+        // （Rayan様の指示・08-15。カーソルがまとまりの左下に来て、貼ったものは上に出る）。
+        // テキストが1つも無い時は、まとまりの左上のままにする。
         function alignPastedToCursor(els) {
             if (!lastMouseWs || !els.length) return;
             const texts = els.filter(e => e.classList.contains('text-wrapper'));
             if (!texts.length) return;
-            // 上にあるものを優先し、同じくらいの高さなら左のものを選ぶ
+            // 下にあるものを優先し、同じくらいの高さなら左のものを選ぶ
             const anchor = texts.reduce((a, b) => {
                 const ay = parseFloat(a.style.top || 0), by = parseFloat(b.style.top || 0);
-                if (Math.abs(ay - by) > 1) return ay < by ? a : b;
+                if (Math.abs(ay - by) > 1) return ay > by ? a : b;
                 return parseFloat(a.style.left || 0) <= parseFloat(b.style.left || 0) ? a : b;
             });
             const cur = measureTextBottomLeftWs(anchor);
