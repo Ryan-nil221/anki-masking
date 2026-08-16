@@ -180,7 +180,8 @@
   }
   .demo .m {
     position: absolute; background: #111; border-radius: 2px;
-    transition: opacity .28s ease;
+    /* transition は付けない。付けるとキーフレームの指示に0.28秒かけて追従し、
+       カーソルが着いた後に外れる（＝外れるのが遅い）。 */
   }
   /* 写真の外側に置く注釈。文字は写真の幅に合わせて伸び縮みさせる */
   .demo .cal {
@@ -211,40 +212,40 @@
     transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
   }
 
-  .demo .m1 { animation: reveal1 12s infinite; }
+  .demo .m1 { animation: reveal1 5.6s infinite; }
   @keyframes reveal1 {
-    0%, 8% { opacity: 1; }
-    8.5%, 25.4167% { opacity: 0; }
-    25.9167%, 100% { opacity: 1; }
+    0%, 14.107% { opacity: 1; }
+    15.178%, 25.893% { opacity: 0; }
+    26.964%, 100% { opacity: 1; }
   }
-  .demo .m2 { animation: reveal2 12s infinite; }
+  .demo .m2 { animation: reveal2 5.6s infinite; }
   @keyframes reveal2 {
-    0%, 33% { opacity: 1; }
-    33.5%, 50.4167% { opacity: 0; }
-    50.9167%, 100% { opacity: 1; }
+    0%, 39.107% { opacity: 1; }
+    40.178%, 50.893% { opacity: 0; }
+    51.964%, 100% { opacity: 1; }
   }
-  .demo .m3 { animation: reveal3 12s infinite; }
+  .demo .m3 { animation: reveal3 5.6s infinite; }
   @keyframes reveal3 {
-    0%, 58% { opacity: 1; }
-    58.5%, 75.4167% { opacity: 0; }
-    75.9167%, 100% { opacity: 1; }
+    0%, 64.107% { opacity: 1; }
+    65.178%, 75.893% { opacity: 0; }
+    76.964%, 100% { opacity: 1; }
   }
-  .demo .m5 { animation: reveal4 12s infinite; }
+  .demo .m5 { animation: reveal4 5.6s infinite; }
   @keyframes reveal4 {
-    0%, 83% { opacity: 1; }
-    83.5%, 99.4% { opacity: 0; }
+    0%, 89.107% { opacity: 1; }
+    90.178%, 99.4% { opacity: 0; }
     99.9%, 100% { opacity: 1; }
   }
-  .demo .cursor { animation: cursor 12s infinite; }
+  .demo .cursor { animation: cursor 5.6s infinite; }
   @keyframes cursor {
     0% { left: 46.137%; top: 74.8014%; }
-    9.1667%, 24.99% { left: 36.4215%; top: 43.9579%; }
+    19.643%, 24.99% { left: 36.4215%; top: 43.9579%; }
     25% { left: 36.4215%; top: 43.9579%; }
-    34.1667%, 49.99% { left: 35.9514%; top: 51.6688%; }
+    44.643%, 49.99% { left: 35.9514%; top: 51.6688%; }
     50% { left: 35.9514%; top: 51.6688%; }
-    59.1667%, 74.99% { left: 37.3095%; top: 59.3796%; }
+    69.643%, 74.99% { left: 37.3095%; top: 59.3796%; }
     75% { left: 37.3095%; top: 59.3796%; }
-    84.1667%, 99.99% { left: 46.137%; top: 74.8014%; }
+    94.643%, 99.99% { left: 46.137%; top: 74.8014%; }
     100% { left: 46.137%; top: 74.8014%; }
   }
 
