@@ -662,13 +662,13 @@
         #welcome-box {
             position: relative;
             box-sizing: border-box;
-            width: min(1060px, calc(100% - 32px));
+            width: min(980px, calc(100% - 32px));
             max-height: calc(100% - 32px);
             overflow-y: auto;
             background: var(--c-surface);
             border-radius: var(--r-lg);
             box-shadow: var(--sh-lg);
-            padding: 28px 28px 20px;
+            padding: 22px 24px 14px;
             text-align: center;
         }
         #welcome-close {
@@ -680,15 +680,15 @@
         }
         #welcome-lead {
             margin: 0 auto 18px; font-size: 14.5px; line-height: 1.8; color: var(--c-text-sub);
-            max-width: 46em;   /* 横に伸ばしすぎない。1行が長いと読みにくい */
+            max-width: 56em;   /* 横に伸ばしすぎない。1行が長いと読みにくい */
         }
         #welcome-foot {
-            margin-top: 16px; display: flex; justify-content: center;
+            margin-top: 10px; display: flex; justify-content: center;
         }
         #welcome-never { font-size: 13px; color: var(--c-text-muted); }
 
         /* 道具の名前は写真の外側へ出す。その場所を padding で空ける（説明ページと同じ） */
-        #welcome-box .stage { padding: 7% 13% 2%; }
+        #welcome-box .stage { padding: 5.5% 12% 1%; }
         #welcome-box .demo { position: relative; line-height: 0; container-type: inline-size; }
         /* 写真の外側に置く注釈。文字は写真の幅に合わせて伸び縮みさせる */
         #welcome-box .demo .cal {
@@ -760,6 +760,18 @@
             #welcome-box .demo .m, #welcome-box .demo .cursor { animation: none; }
             #welcome-box .demo .cursor { display: none; }
         }
+        /* 画面が低い時は、箱ごと一回り小さくして「今後は表示しない」まで収める。
+           写真の高さは幅で決まるので、幅を絞ると縦も一緒に縮む。 */
+        @media (max-height: 660px) {
+            #welcome-box { width: min(760px, calc(100% - 32px)); padding: 16px 18px 12px; }
+            #welcome-title { font-size: 19px; }
+            #welcome-lead { font-size: 13.5px; margin-bottom: 10px; }
+        }
+        @media (max-height: 540px) {
+            #welcome-box { width: min(600px, calc(100% - 32px)); }
+            #welcome-lead { display: none; }   /* ここまで低いと本文まで載らない */
+        }
+
         /* 幅が足りない画面では注釈をたたみ、写真だけを見せる */
         @media (max-width: 760px) {
             #welcome-box .stage { padding: 0; }
