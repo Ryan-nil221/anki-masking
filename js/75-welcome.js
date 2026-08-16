@@ -53,6 +53,6 @@
             let seen = false;
             try { seen = !!localStorage.getItem(WELCOME_SEEN_KEY); } catch (_) {}
             if (seen) return;
-            // 開いた直後にいきなり被せない。画面が出てから1秒おいて出す
-            setTimeout(() => window.openWelcome(), 1000);
+            // 開いた直後にいきなり被せない。画面が出てから半秒おいて出す
+            setTimeout(() => window.openWelcome(), 500);
         };
