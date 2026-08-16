@@ -51,6 +51,39 @@
         <div id="loading-detail" style="font-size: 14px; font-weight: normal; opacity: 0.8;">少し時間がかかる場合があります</div>
     </div>
 
+    <!-- 初めて来た人にだけ出す「使い方」の箱。
+         中の動きは説明ページ(/guide/)の冒頭と同じもの。写真1枚に黒塗りとカーソルを
+         CSSで重ねているだけで、動画でもGIFでもない。座標は写真に対する％なので、
+         箱の中に入れても位置はずれない。閉じ方は3通り：ばつ印・枠の外・今後は表示しない。 -->
+    <div id="welcome-overlay" class="overlay">
+        <div id="welcome-box" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+            <button id="welcome-close" class="btn btn-icon btn-ghost" title="閉じる" aria-label="閉じる">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h2 id="welcome-title">なぞって隠して、覚える</h2>
+            <p id="welcome-lead">
+                覚えたい所をなぞると黒く隠れます。隠した所はカーソルを合わせると答えが見えます。
+            </p>
+            <div class="demo">
+                <img src="guide/screenshot-anim.jpg" width="1564" height="784" loading="lazy" decoding="async"
+                     alt="暗記マスキングの画面。取り込んだ確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
+                <span class="m m1" style="left:30.3102%;top:41.6655%;width:12.2227%;height:4.5848%"></span>
+                <span class="m m2" style="left:30.3102%;top:49.3763%;width:11.2825%;height:4.5848%"></span>
+                <span class="m m3" style="left:33.6531%;top:57.0872%;width:7.3127%;height:4.5848%"></span>
+                <span class="m m4" style="left:36.9961%;top:64.7981%;width:3.9698%;height:4.5848%"></span>
+                <span class="m m5" style="left:43.682%;top:72.5089%;width:4.91%;height:4.5848%"></span>
+                <span class="m m6" style="left:40.339%;top:80.2198%;width:5.8502%;height:4.5848%"></span>
+                <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 2.5 L5 19 L9.2 15.1 L11.9 21.2 L14.8 19.9 L12.1 13.9 L18 13.6 Z"
+                          fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div id="welcome-foot">
+                <button id="welcome-never" class="btn btn-ghost">今後は表示しない</button>
+            </div>
+        </div>
+    </div>
+
     <header id="app-header" class="hideable-ui">
         <div class="header-top">
             
@@ -366,4 +399,5 @@
     <script src="js/50-pages.js"></script>
     <script src="js/60-input.js"></script>
     <script src="js/70-export.js"></script>
+    <script src="js/75-welcome.js"></script>
     <script src="js/80-images.js"></script>

@@ -171,7 +171,11 @@
             try {
                 const session = await idbGet('session');
                 const background = await idbGet('background');
-                if (!session || !background) return;
+                if (!session || !background) {
+                    // 前回の作業が無い＝初めて来た人。使い方の箱を出す
+                    if (window.maybeShowWelcome) window.maybeShowWelcome();
+                    return;
+                }
                 showRestoreBanner({ ...session, background });
             } catch (err) { console.error('自動保存データの読み込みに失敗しました', err); }
         })();

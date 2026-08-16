@@ -652,6 +652,101 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* =========================================================
+           初めて来た人に出す「使い方」の箱
+           - 中の動きは説明ページ(/guide/)の冒頭と同じ作り。
+             写真1枚に黒塗り(.m)とカーソル(.cursor)をCSSで重ね、12秒で1周する。
+           - 座標は写真に対する％なので、箱の幅が変わっても位置はずれない。
+           ========================================================= */
+        #welcome-overlay { z-index: 10002; }   /* 復元バナーより上に出す */
+        #welcome-box {
+            position: relative;
+            box-sizing: border-box;
+            width: min(880px, calc(100% - 32px));
+            max-height: calc(100% - 32px);
+            overflow-y: auto;
+            background: var(--c-surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--sh-lg);
+            padding: 28px 28px 20px;
+            text-align: center;
+        }
+        #welcome-close {
+            position: absolute; top: 10px; right: 10px;
+        }
+        #welcome-title {
+            margin: 0 0 8px; font-size: 22px; font-weight: 700; color: var(--c-text-strong);
+        }
+        #welcome-lead {
+            margin: 0 0 18px; font-size: 14.5px; line-height: 1.7; color: var(--c-text-sub);
+        }
+        #welcome-foot {
+            margin-top: 16px; display: flex; justify-content: center;
+        }
+        #welcome-never { font-size: 13px; color: var(--c-text-muted); }
+
+        #welcome-box .demo { position: relative; line-height: 0; }
+        #welcome-box .demo img {
+            display: block; width: 100%; height: auto;
+            border: 1px solid var(--c-border); border-radius: var(--r-lg);
+        }
+        #welcome-box .demo .m {
+            position: absolute; background: #111; border-radius: 2px;
+            transition: opacity .28s ease;
+        }
+        #welcome-box .demo .cursor {
+            position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -2px;
+            pointer-events: none;
+            transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+        }
+        #welcome-box .demo .m1 { animation: wc-reveal1 12s infinite; }
+        @keyframes wc-reveal1 {
+            0%, 8% { opacity: 1; }
+            8.5%, 25.4167% { opacity: 0; }
+            25.9167%, 100% { opacity: 1; }
+        }
+        #welcome-box .demo .m2 { animation: wc-reveal2 12s infinite; }
+        @keyframes wc-reveal2 {
+            0%, 33% { opacity: 1; }
+            33.5%, 50.4167% { opacity: 0; }
+            50.9167%, 100% { opacity: 1; }
+        }
+        #welcome-box .demo .m3 { animation: wc-reveal3 12s infinite; }
+        @keyframes wc-reveal3 {
+            0%, 58% { opacity: 1; }
+            58.5%, 75.4167% { opacity: 0; }
+            75.9167%, 100% { opacity: 1; }
+        }
+        #welcome-box .demo .m5 { animation: wc-reveal4 12s infinite; }
+        @keyframes wc-reveal4 {
+            0%, 83% { opacity: 1; }
+            83.5%, 99.4% { opacity: 0; }
+            99.9%, 100% { opacity: 1; }
+        }
+        #welcome-box .demo .cursor { animation: wc-cursor 12s infinite; }
+        @keyframes wc-cursor {
+            0% { left: 46.137%; top: 74.8014%; }
+            9.1667%, 24.99% { left: 36.4215%; top: 43.9579%; }
+            25% { left: 36.4215%; top: 43.9579%; }
+            34.1667%, 49.99% { left: 35.9514%; top: 51.6688%; }
+            50% { left: 35.9514%; top: 51.6688%; }
+            59.1667%, 74.99% { left: 37.3095%; top: 59.3796%; }
+            75% { left: 37.3095%; top: 59.3796%; }
+            84.1667%, 99.99% { left: 46.137%; top: 74.8014%; }
+            100% { left: 46.137%; top: 74.8014%; }
+        }
+        /* 動きを減らす設定の人には、黒塗りしたままの静止画として見せる */
+        @media (prefers-reduced-motion: reduce) {
+            #welcome-box .demo .m, #welcome-box .demo .cursor { animation: none; }
+            #welcome-box .demo .cursor { display: none; }
+        }
+        /* 狭い画面では字と余白を詰める */
+        @media (max-width: 600px) {
+            #welcome-box { padding: 22px 16px 16px; }
+            #welcome-title { font-size: 19px; }
+            #welcome-lead { font-size: 13.5px; margin-bottom: 14px; }
+        }
+
         /* --- 前回作業の復元バナー --- */
         #restore-banner {
             position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
