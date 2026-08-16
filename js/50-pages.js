@@ -360,6 +360,8 @@
                     await loadBackground(currentBackground);
                     await persistBackground(); // 新しい背景を自動保存に反映
                     scheduleAutosave();
+                    // 開けた時だけ数える（失敗した回を混ぜない）
+                    window.track('create_document', { file_type: isPdfFile ? 'pdf' : 'image' });
                 } catch (error) {
                     console.error(error);
                     currentBackground = null;
@@ -403,6 +405,7 @@
                 a.click();
                 // すぐ捨てると保存が途中で切られることがある。他の書き出しと同じく遅らせる
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
+                window.track('save_document', { method: 'amk' });
             } catch (e) {
                 console.error(e);
                 alert("保存エラーが発生しました。");

@@ -280,6 +280,7 @@
                     link.download = `${window.currentFileName}_マスキング.png`; 
                     link.href = exportCanvas.toDataURL('image/png'); 
                     link.click();
+                    window.track('save_document', { method: 'export_image' });
 
                 } else if (pdfContainer.style.display === 'block') {
                     // 本命＝元PDFをラスタ化せず注釈だけ重ねる（劣化ゼロ・文字選択も生きる・サイズも元PDFとほぼ同じ）。
@@ -297,6 +298,7 @@
                     if (!usedVector) {
                         await exportPdfRaster(state, loadingOverlay);
                     }
+                    window.track('save_document', { method: 'export_pdf' });
                 }
             } catch (error) {
                 console.error("ダウンロードエラー:", error);

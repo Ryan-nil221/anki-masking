@@ -140,6 +140,7 @@
                 a.download = `${window.currentFileName}_編集用.pdf`;
                 a.href = url; a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
+                window.track('save_document', { method: 'editable_pdf' });
             } catch (err) {
                 console.error(err);
                 alert('編集できるPDFの作成に失敗しました。');

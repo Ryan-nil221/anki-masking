@@ -7,7 +7,14 @@
         const saveDropdownMenu = document.getElementById('save-dropdown-menu');
         
         window.currentFileName = "暗記マスキング";
-        window.isMasksHidden = false; 
+        window.isMasksHidden = false;
+
+        // Google アナリティクスへ印を送る。gtag が読み込めていない環境（広告ブロック等）でも
+        // 本体の動きを止めないよう、必ず握り潰す。ここ以外から gtag を直接呼ばないこと。
+        window.track = function(name, params) {
+            try { if (typeof gtag === 'function') gtag('event', name, params || {}); }
+            catch (_) { /* 計測の失敗で操作を止めない */ }
+        };
 
         // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
         // （読み込み・復元の経路が3つあるので、代入は必ずここを通す）。
