@@ -603,6 +603,6 @@
         let touchGestureActive = false;    // 2本指中は要素側の処理を止める
         // 指のタップは数px ぶれる。マウスより広い許容量を使う
         const TAP_SLOP = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ? 12 : 5;
-        let focusTapMask = null;           // 学習モードでタップした黒塗り
+        let focusTapMask = null;           // 学習モードでタップした暗記マーカー
         let focusTapStart = null;
 

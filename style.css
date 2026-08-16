@@ -250,7 +250,7 @@
         /* 押した後もカーソルが動かないと :hover が外れず、説明が画面に貼り付いたまま残る。
            押した時点で JS が .no-tip を付け、離れた時に外す（08-07 修正） */
         .no-tip::after { opacity: 0 !important; }
-        /* 入り切りのスイッチ（黒塗りを掛ける／外す）。他のアイコンと同じ線画で揃える */
+        /* 入り切りのスイッチ（暗記マーカーを掛ける／外す）。他のアイコンと同じ線画で揃える */
         .toggle { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px; border-radius: var(--r-md); }
         .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
         .toggle-icon { font-size: 34px; color: var(--c-text-muted); transition: color 0.18s; }
@@ -463,7 +463,7 @@
 
         /* テキストツールのカーソル＝アルファベットの「I」。高さは文字サイズ（×拡大率）に追従する。
            下端をポインタに合わせるのは、クリック位置＝入力文字の左下だから。
-           白い縁取りは、黒い紙・黒塗りの上でも見えるようにするため。 */
+           白い縁取りは、黒い紙・暗記マーカーの上でも見えるようにするため。 */
         #text-cursor {
             position: fixed; box-sizing: border-box; width: 7px;
             border-top: 1px solid #111; border-bottom: 1px solid #111;
@@ -545,7 +545,7 @@
             outline-offset: 0;
         }
         
-        /* 黒塗りを一斉に隠す */
+        /* 暗記マーカーを一斉に隠す */
         #workspace-container.masks-hidden .mask { opacity: 0 !important; pointer-events: none !important; }
 
         /* 図形の当たり判定は「線の上だけ」。外接四角形では反応させない。
@@ -655,14 +655,14 @@
         /* =========================================================
            初めて来た人に出す「使い方」の箱
            - 中の動きは説明ページ(/guide/)の冒頭と同じ作り。
-             写真1枚に黒塗り(.m)とカーソル(.cursor)をCSSで重ね、12秒で1周する。
+             写真1枚に暗記マーカー(.m)とカーソル(.cursor)をCSSで重ね、12秒で1周する。
            - 座標は写真に対する％なので、箱の幅が変わっても位置はずれない。
            ========================================================= */
         #welcome-overlay { z-index: 10002; }   /* 復元バナーより上に出す */
         #welcome-box {
             position: relative;
             box-sizing: border-box;
-            width: min(880px, calc(100% - 32px));
+            width: min(1060px, calc(100% - 32px));
             max-height: calc(100% - 32px);
             overflow-y: auto;
             background: var(--c-surface);
@@ -676,16 +676,36 @@
         }
         #welcome-title {
             margin: 0 0 8px; font-size: 22px; font-weight: 700; color: var(--c-text-strong);
+            padding: 0 30px;   /* 折り返した時に、右上のばつ印と重ならないようにする */
         }
         #welcome-lead {
-            margin: 0 0 18px; font-size: 14.5px; line-height: 1.7; color: var(--c-text-sub);
+            margin: 0 auto 18px; font-size: 14.5px; line-height: 1.8; color: var(--c-text-sub);
+            max-width: 46em;   /* 横に伸ばしすぎない。1行が長いと読みにくい */
         }
         #welcome-foot {
             margin-top: 16px; display: flex; justify-content: center;
         }
         #welcome-never { font-size: 13px; color: var(--c-text-muted); }
 
-        #welcome-box .demo { position: relative; line-height: 0; }
+        /* 道具の名前は写真の外側へ出す。その場所を padding で空ける（説明ページと同じ） */
+        #welcome-box .stage { padding: 7% 13% 2%; }
+        #welcome-box .demo { position: relative; line-height: 0; container-type: inline-size; }
+        /* 写真の外側に置く注釈。文字は写真の幅に合わせて伸び縮みさせる */
+        #welcome-box .demo .cal {
+            position: absolute; z-index: 2; white-space: nowrap;
+            font-size: 11px; font-size: 1.9cqw; line-height: 1.3; font-weight: 700;
+            color: #1d4ed8; background: var(--c-surface);
+            border: 1px solid #93c5fd; border-radius: 5px; padding: .3em .6em;
+        }
+        /* 左の道具の名前。段が細かいので、字を小さくして各段の高さに収める */
+        #welcome-box .demo .cal-t {
+            font-size: 11px; font-size: 1.75cqw; line-height: 1.25;
+            padding: .22em .5em; font-weight: 700;
+        }
+        #welcome-box .demo .cal-lines {
+            position: absolute; left: -25%; top: -14%; width: 150%; height: 130%;
+            z-index: 1; pointer-events: none;
+        }
         #welcome-box .demo img {
             display: block; width: 100%; height: auto;
             border: 1px solid var(--c-border); border-radius: var(--r-lg);
@@ -735,10 +755,15 @@
             84.1667%, 99.99% { left: 46.137%; top: 74.8014%; }
             100% { left: 46.137%; top: 74.8014%; }
         }
-        /* 動きを減らす設定の人には、黒塗りしたままの静止画として見せる */
+        /* 動きを減らす設定の人には、暗記マーカーしたままの静止画として見せる */
         @media (prefers-reduced-motion: reduce) {
             #welcome-box .demo .m, #welcome-box .demo .cursor { animation: none; }
             #welcome-box .demo .cursor { display: none; }
+        }
+        /* 幅が足りない画面では注釈をたたみ、写真だけを見せる */
+        @media (max-width: 760px) {
+            #welcome-box .stage { padding: 0; }
+            #welcome-box .demo .cal, #welcome-box .demo .cal-lines { display: none; }
         }
         /* 狭い画面では字と余白を詰める */
         @media (max-width: 600px) {

@@ -6,7 +6,7 @@
         const btnSaveMenu = document.getElementById('btn-save-menu');
         const saveDropdownMenu = document.getElementById('save-dropdown-menu');
         
-        window.currentFileName = "暗記マスキング";
+        window.currentFileName = "暗記マーカー";
         window.isMasksHidden = false; 
 
         // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
@@ -290,7 +290,7 @@
             window.updateToolsHeightVar = apply;
         })();
 
-        // タップでめくった黒塗りを全て元に戻す（モードや一括表示を切り替える時に呼ぶ）
+        // タップでめくった暗記マーカーを全て元に戻す（モードや一括表示を切り替える時に呼ぶ）
         function clearRevealedMasks() {
             document.querySelectorAll('.mask.revealed').forEach(el => el.classList.remove('revealed'));
         }

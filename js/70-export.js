@@ -219,7 +219,7 @@
         }
 
         // 【改修】オリジナル画質での書き出し処理（PDF解像度対応）
-        // 書き出しは1つだけ。今の画面の見た目（黒塗りを隠しているかどうか）そのままで出す。
+        // 書き出しは1つだけ。今の画面の見た目（暗記マーカーを隠しているかどうか）そのままで出す。
         document.getElementById('btn-download-menu').addEventListener('click', () => runNativeExport());
         document.getElementById('btn-save-editable-pdf-menu').addEventListener('click', () => exportEditablePdf());
 
@@ -309,7 +309,7 @@
         // 注釈だけを透明キャンバスに描き、元PDFのそのページへPNGとして重ねる。
         // page.render() を呼ばない＝元PDFの文字はベクタのまま残り、劣化ゼロ・文字選択も生きる。
         async function buildAnnotationCanvas(page, pageIndex, state) {
-            // 注釈（黒塗り/図形/ペン/文字）の解像度。背景がベクタでくっきりな分、注釈のラスタが甘く見えるため
+            // 注釈（暗記マーカー/図形/ペン/文字）の解像度。背景がベクタでくっきりな分、注釈のラスタが甘く見えるため
             // 従来の3.0から引き上げる。ただしキャンバスの最長辺を上限で抑えてメモリ暴走を防ぐ。
             const base1 = page.getViewport({ scale: 1.0 });
             const maxDim = Math.max(base1.width, base1.height);
@@ -392,7 +392,7 @@
         }
 
         // 本命：元PDFはベクタのまま、注釈もできる限りベクタで描き込む（劣化ゼロ・拡大に強い）。
-        // 黒塗り/図形/手描きマスク/ペン線＝ベクタ、テキストと消しゴム入りのペン層＝高精細画像、
+        // 暗記マーカー/図形/手描きマスク/ペン線＝ベクタ、テキストと消しゴム入りのペン層＝高精細画像、
         // 貼り込んだ画像＝原寸で埋め込み。回転・CropBoxはページ毎の1枚のCTMで吸収する。
         async function exportPdfVector(state, loadingOverlay) {
             const L = PDFLib;

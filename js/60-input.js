@@ -68,13 +68,13 @@
         document.addEventListener('pointerup', endTouch, true);
         document.addEventListener('pointercancel', endTouch, true);
 
-        // 学習モード中の指の扱い：黒塗りをタップでめくる／それ以外は1本指でスクロール
+        // 学習モード中の指の扱い：暗記マーカーをタップでめくる／それ以外は1本指でスクロール
         document.addEventListener('pointerup', function (e) {
             if (!focusTapStart) return;
             const moved = Math.hypot(e.clientX - focusTapStart.x, e.clientY - focusTapStart.y);
             const m = focusTapMask;
             focusTapMask = null; focusTapStart = null;
-            // 動かさずに離した＝タップ。黒塗りの上ならめくる
+            // 動かさずに離した＝タップ。暗記マーカーの上ならめくる
             if (m && m.isConnected && moved <= TAP_SLOP && !window.isMasksHidden) {
                 m.classList.toggle('revealed');
             }
@@ -84,7 +84,7 @@
         workspaceContainer.addEventListener('pointerdown', function(e) {
             // 2本指の操作（拡大・スクロール）が始まっていたら、編集側は手を出さない
             if (touchGestureActive) return;
-            // 学習モード：編集はしない。指なら「黒塗りをタップでめくる」「1本指でスクロール」
+            // 学習モード：編集はしない。指なら「暗記マーカーをタップでめくる」「1本指でスクロール」
             if (document.body.classList.contains('focus-mode')) {
                 if (e.pointerType !== 'mouse') {
                     focusTapMask = e.target.closest ? e.target.closest('.mask') : null;

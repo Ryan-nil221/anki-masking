@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>暗記マスキングの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法</title>
+<title>暗記マーカーの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法</title>
 <meta name="description" content="赤シートの代わりに、パソコンのブラウザだけで暗記シートを作る方法。教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。テキスト入力・手書き・蛍光ペンでの書き込みや、PDFでの書き出しまで解説します。登録・インストール不要、無料。">
 <link rel="canonical" href="https://ankimasking.com/guide/">
 
 <meta property="og:url" content="https://ankimasking.com/guide/">
 <meta property="og:type" content="article">
-<meta property="og:title" content="暗記マスキングの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法">
+<meta property="og:title" content="暗記マーカーの使い方｜赤シートの代わりにPDFや写真を隠して暗記する方法">
 <meta property="og:description" content="教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。パソコンのブラウザだけで暗記シートが作れます。登録・インストール不要、無料。">
-<meta property="og:site_name" content="暗記マスキング">
+<meta property="og:site_name" content="暗記マーカー">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:image" content="https://ankimasking.com/ogp.png">
 <meta property="og:image:width" content="1200">
@@ -150,7 +150,7 @@
   }
   .note p:last-child { margin-bottom: 0; }
 
-  /* 実際の画面。写真は1枚で、黒塗りとカーソルはCSSで重ねて動かしている */
+  /* 実際の画面。写真は1枚で、暗記マーカーとカーソルはCSSで重ねて動かしている */
   /* 注釈を写真の外に出すため、この図だけ本文の幅からはみ出させる */
   .shot {
     margin: 6px 0 30px; margin-left: 50%; transform: translateX(-50%);
@@ -239,7 +239,7 @@
     100% { left: 46.137%; top: 74.8014%; }
   }
 
-  /* 動きを減らす設定の人には、黒塗りしたままの静止画として見せる */
+  /* 動きを減らす設定の人には、暗記マーカーしたままの静止画として見せる */
   @media (prefers-reduced-motion: reduce) {
     .demo .m, .demo .cursor { animation: none; }
     .demo .cursor { display: none; }
@@ -262,7 +262,7 @@
 <header class="site-header">
   <div class="inner">
     <img src="../favicon.png" alt="">
-    <a href="/" class="name">暗記マスキング</a>
+    <a href="/" class="name">暗記マーカー</a>
     <span class="spacer"></span>
     <a href="/" class="btn-app">アプリを開く</a>
   </div>
@@ -280,7 +280,7 @@
    <div class="stage">
     <div class="demo">
       <img src="screenshot-anim.jpg" width="1564" height="784" fetchpriority="high"
-           alt="暗記マスキングの画面。取り込んだ「日本国憲法のまとめ」の確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
+           alt="暗記マーカーの画面。取り込んだ「日本国憲法のまとめ」の確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
       <span class="m m1" style="left:30.3102%;top:41.6655%;width:12.2227%;height:4.5848%"></span>
       <span class="m m2" style="left:30.3102%;top:49.3763%;width:11.2825%;height:4.5848%"></span>
       <span class="m m3" style="left:33.6531%;top:57.0872%;width:7.3127%;height:4.5848%"></span>
@@ -291,7 +291,7 @@
       <span class="cal" style="left:27.49%;top:-7.9%;transform:translateX(-50%)">データ読み込み</span>
       <span class="cal" style="left:85.04%;top:-7.9%;transform:translateX(-50%)">元に戻す・やり直し</span>
       <span class="cal cal-t" style="left:-4.8%;top:18.458%;transform:translate(-100%,-50%)">選択</span>
-      <span class="cal cal-t" style="left:-4.8%;top:28.152%;transform:translate(-100%,-50%)">黒塗りマスク</span>
+      <span class="cal cal-t" style="left:-4.8%;top:28.152%;transform:translate(-100%,-50%)">暗記マーカー</span>
       <span class="cal cal-t" style="left:-4.8%;top:37.846%;transform:translate(-100%,-50%)">蛍光ペン</span>
       <span class="cal cal-t" style="left:-4.8%;top:47.540%;transform:translate(-100%,-50%)">テキスト</span>
       <span class="cal cal-t" style="left:-4.8%;top:57.234%;transform:translate(-100%,-50%)">図形・直線</span>
@@ -325,14 +325,14 @@
   </figure>
 
   <div class="cta">
-    <a href="/">暗記マスキングを開く</a>
+    <a href="/">暗記マーカーを開く</a>
     <small>登録不要・インストール不要・無料</small>
   </div>
 
   <h2>「赤シートの代わり」とはどういう意味か</h2>
   <p>
     紙の赤シートは、赤いペンで書いた文字に緑の下敷きを重ねて消す道具です。
-    暗記マスキングは仕組みが違い、<strong>覚えたい部分の上に黒い四角を重ねて隠します</strong>。
+    暗記マーカーは仕組みが違い、<strong>覚えたい部分の上に黒い四角を重ねて隠します</strong>。
     赤い文字を用意する必要はなく、印刷された教科書やコピーした資料にもそのまま使えます。
   </p>
   <p>
@@ -355,7 +355,7 @@
     </li>
     <li>
       <h3>覚えたい部分をなぞる</h3>
-      <p>マスクの道具を選んで、隠したい語句の上をドラッグします。四角で囲うほか、
+      <p>暗記マーカーを選んで、隠したい語句の上をドラッグします。四角で囲うほか、
       手書きでなぞって好きな形に隠すこともできます。位置や大きさは後から動かせるので、
       ずれても直せます。</p>
     </li>
@@ -363,7 +363,7 @@
       <h3>カーソルを合わせて確かめる</h3>
       <p>黒く隠れた部分にカーソルを合わせると、その場所だけ答えが見えます。
       「学習モード」に切り替えると編集の道具が隠れ、めくることだけに集中できます。
-      まとめて答え合わせをしたいときは、すべての黒塗りを一度に外すこともできます。</p>
+      まとめて答え合わせをしたいときは、すべてのマーカーを一度に外すこともできます。</p>
     </li>
   </ol>
 
@@ -374,18 +374,18 @@
     <div class="card"><b>蛍光ペン</b><span>隠さずに目立たせたい所に。四角でも手書きでも塗れます。</span></div>
     <div class="card"><b>図形と直線</b><span>四角・丸・直線で図に印を付けられます。線の太さと色も選べます。</span></div>
     <div class="card"><b>画像の貼り付け</b><span>別の写真を重ねて貼れます。四隅をつまむと縦横比を保ったまま拡大縮小できます。</span></div>
-    <div class="card"><b>PDF・画像で書き出し</b><span>黒塗りや書き込みを載せたまま、PDFや画像として保存できます。元のPDFの画質は落ちません。</span></div>
+    <div class="card"><b>PDF・画像で書き出し</b><span>マーカーや書き込みを載せたまま、PDFや画像として保存できます。元のPDFの画質は落ちません。</span></div>
   </div>
 
   <h2>赤シートアプリとの違い</h2>
   <p>
     赤シートのアプリは携帯端末向けのものが主流で、多くはApp StoreやGoogle Playからの
-    インストールが必要です。暗記マスキングはパソコンのブラウザで動くので、置かれている状況が違います。
+    インストールが必要です。暗記マーカーはパソコンのブラウザで動くので、置かれている状況が違います。
   </p>
   <div class="table-scroll">
     <table class="cmp">
       <thead>
-        <tr><th></th><th class="ours">暗記マスキング</th><th>一般的な赤シートアプリ</th></tr>
+        <tr><th></th><th class="ours">暗記マーカー</th><th>一般的な赤シートアプリ</th></tr>
       </thead>
       <tbody>
         <tr><th>使える機器</th><td class="ours">パソコン（Windows・Mac）</td><td class="other">主に携帯端末向け</td></tr>
@@ -402,7 +402,7 @@
   <p>
     逆に言えば、外出先で手早く済ませたいだけなら携帯端末向けの専用アプリのほうが軽快です。
     <strong>パソコンで資料を広げて作りたい、PDFをそのまま扱いたい、隠すだけでなく書き込みもしたい</strong>——
-    このどれかに当てはまるなら暗記マスキングが向いています。
+    このどれかに当てはまるなら暗記マーカーが向いています。
   </p>
 
   <h2>こんな場面で使われています</h2>
@@ -413,7 +413,7 @@
   <p>宅建・簿記・看護師国家試験のように、PDFの過去問やテキストを持っている勉強と相性がいい構成です。
   範囲が広くても、覚えていない所だけ隠し足していけます。</p>
   <h3>授業の資料</h3>
-  <p>配布されたPDFに直接、答えを隠す黒塗りと補足のメモを両方入れられます。
+  <p>配布されたPDFに直接、答えを隠すマーカーと補足のメモを両方入れられます。
   資料を作り直さずに、そのまま暗記用に変えられます。</p>
 
   <h2>よくある質問</h2>
@@ -434,12 +434,12 @@
   </details>
   <details>
     <summary>隠した答えはどうやって見ますか</summary>
-    <p>黒塗りの上にカーソルを合わせると、その部分だけ一時的に見えます。
-    すべての黒塗りをまとめて外して答え合わせをすることもできます。</p>
+    <p>マーカーの上にカーソルを合わせると、その部分だけ一時的に見えます。
+    すべてのマーカーをまとめて外して答え合わせをすることもできます。</p>
   </details>
   <details>
     <summary>作ったものを書き出せますか</summary>
-    <p>できます。黒塗りや書き込みを載せた状態で、PDFや画像として書き出せます。
+    <p>できます。マーカーや書き込みを載せた状態で、PDFや画像として書き出せます。
     元がPDFの場合は画質を落とさずに書き出します。</p>
   </details>
   <details>
@@ -449,24 +449,24 @@
   </details>
   <details>
     <summary>複数ページのPDFにも使えますか</summary>
-    <p>使えます。ページ一覧から好きなページへ移動でき、ページごとに黒塗りや書き込みを入れられます。
+    <p>使えます。ページ一覧から好きなページへ移動でき、ページごとにマーカーや書き込みを入れられます。
     書き出しのときも全ページがまとまって出ます。</p>
   </details>
   <details>
     <summary>手書きの文字や図にも使えますか</summary>
     <p>使えます。手書きのノートを写真に撮って読み込めば、印刷物と同じように隠せます。
-    四角で囲いにくい形は、手書きのマスクで自由になぞってください。</p>
+    四角で囲いにくい形は、手書きのマーカーで自由になぞってください。</p>
   </details>
 
   <div class="cta">
-    <a href="/">暗記マスキングを開く</a>
+    <a href="/">暗記マーカーを開く</a>
     <small>登録不要・インストール不要・無料</small>
   </div>
 
 </div>
 
 <footer>
-  <p><a href="/">暗記マスキング</a>｜赤シートの代わりにPDF・画像を隠せる無料アプリ</p>
+  <p><a href="/">暗記マーカー</a>｜赤シートの代わりにPDF・画像を隠せる無料アプリ</p>
 </footer>
 
 <script type="application/ld+json">
@@ -475,7 +475,7 @@
   "@graph": [
     {
       "@type": "SoftwareApplication",
-      "name": "暗記マスキング",
+      "name": "暗記マーカー",
       "url": "https://ankimasking.com/",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "ウェブブラウザ（Windows, macOS）",
@@ -489,8 +489,8 @@
       "inLanguage": "ja",
       "step": [
         { "@type": "HowToStep", "name": "教材を読み込む", "text": "「新規作成」からPDFか写真を選びます。複数ページのPDFにも対応しています。" },
-        { "@type": "HowToStep", "name": "覚えたい部分をなぞる", "text": "マスクの道具で隠したい語句をドラッグします。四角のほか手書きで自由な形にも隠せます。" },
-        { "@type": "HowToStep", "name": "カーソルを合わせて確かめる", "text": "黒塗りにカーソルを合わせると答えが見えます。学習モードでは編集の道具が隠れます。" }
+        { "@type": "HowToStep", "name": "覚えたい部分をなぞる", "text": "暗記マーカーで隠したい語句をドラッグします。四角のほか手書きで自由な形にも隠せます。" },
+        { "@type": "HowToStep", "name": "カーソルを合わせて確かめる", "text": "マーカーの上にカーソルを合わせると答えが見えます。学習モードでは編集の道具が隠れます。" }
       ]
     },
     {
@@ -504,13 +504,13 @@
         { "@type": "Question", "name": "読み込んだファイルはどこかに送られますか",
           "acceptedAnswer": { "@type": "Answer", "text": "送られません。PDFや写真の処理はすべて自分のブラウザの中で行われ、ファイルがサーバーに上がることはありません。" } },
         { "@type": "Question", "name": "隠した答えはどうやって見ますか",
-          "acceptedAnswer": { "@type": "Answer", "text": "黒塗りの上にカーソルを合わせると、その部分だけ一時的に見えます。すべての黒塗りをまとめて外すこともできます。" } },
+          "acceptedAnswer": { "@type": "Answer", "text": "マーカーの上にカーソルを合わせると、その部分だけ一時的に見えます。すべてのマーカーをまとめて外すこともできます。" } },
         { "@type": "Question", "name": "作ったものを書き出せますか",
-          "acceptedAnswer": { "@type": "Answer", "text": "できます。黒塗りや書き込みを載せた状態で、PDFや画像として書き出せます。元がPDFの場合は画質を落とさずに書き出します。" } },
+          "acceptedAnswer": { "@type": "Answer", "text": "できます。マーカーや書き込みを載せた状態で、PDFや画像として書き出せます。元がPDFの場合は画質を落とさずに書き出します。" } },
         { "@type": "Question", "name": "途中で保存して、続きから再開できますか",
           "acceptedAnswer": { "@type": "Answer", "text": "できます。作業データを .amk という形式で保存し、「データ読込」から呼び戻せます。自動保存も入っています。" } },
         { "@type": "Question", "name": "複数ページのPDFにも使えますか",
-          "acceptedAnswer": { "@type": "Answer", "text": "使えます。ページ一覧から好きなページへ移動でき、ページごとに黒塗りや書き込みを入れられます。" } },
+          "acceptedAnswer": { "@type": "Answer", "text": "使えます。ページ一覧から好きなページへ移動でき、ページごとにマーカーや書き込みを入れられます。" } },
         { "@type": "Question", "name": "手書きの文字や図にも使えますか",
           "acceptedAnswer": { "@type": "Answer", "text": "使えます。手書きのノートを写真に撮って読み込めば、印刷物と同じように隠せます。" } }
       ]
@@ -518,7 +518,7 @@
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "暗記マスキング", "item": "https://ankimasking.com/" },
+        { "@type": "ListItem", "position": 1, "name": "暗記マーカー", "item": "https://ankimasking.com/" },
         { "@type": "ListItem", "position": 2, "name": "使い方", "item": "https://ankimasking.com/guide/" }
       ]
     }

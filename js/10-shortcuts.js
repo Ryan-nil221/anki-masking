@@ -389,7 +389,7 @@
             }
         });
 
-        // マスキングは黒塗り専用なので色の対象外
+        // マスキングは暗記マーカー専用なので色の対象外
         function colorEditableElements() {
             return selectedElements.filter(el =>
                 !el.classList.contains('mask-rect') && !el.classList.contains('mask-freehand-wrapper'));
@@ -428,7 +428,7 @@
                     const shapeNode = selectedElement.querySelector('svg > *');
                     if (shapeNode) { shapeNode.setAttribute('stroke', color); saved = true; }
                 }
-                // マスキング（黒塗り）は色を変えない
+                // マスキング（暗記マーカー）は色を変えない
             });
             if (saved) window.saveState();
         }
@@ -778,7 +778,7 @@
             if (currentTool === 'mask') return '.mask';
             if (currentTool === 'highlight') return '.highlight-box';
             if (currentTool === 'text') return '.text-wrapper';
-            // 図形ツールは図形だけ。ここに .mask を混ぜると黒塗りまで掴めてしまう
+            // 図形ツールは図形だけ。ここに .mask を混ぜると暗記マーカーまで掴めてしまう
             if (currentTool === 'shape') return '.shape-element';
             return '.mask, .text-wrapper, .highlight-box, .shape-element, .image-element';
         }

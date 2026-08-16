@@ -6,21 +6,21 @@
     <!-- SEO：狙う言葉は「赤シートの代わり」。実物の赤シート（赤字＋緑シート）とは仕組みが違うので
          「赤シートです」とは名乗らない。名乗ると検索意図とズレて離脱され、かえって順位が落ちる。
          マスクの色は選べない（常に黒）ので、「赤で隠せる」とも書かない。 -->
-    <title>暗記マスキング｜赤シートの代わりにPDF・画像を隠せる無料アプリ</title>
-    <meta name="description" content="赤シートの代わりになる暗記シートが数秒で。教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。カーソルを合わせると答えが見え、テキスト入力・手書き・蛍光ペンも使えるのでノート代わりにも。テスト勉強や資格の学習に。登録不要・無料。">
+    <title>暗記マーカー｜赤シートの代わりにPDF・画像を隠せる無料アプリ</title>
+    <meta name="description" content="赤シートの代わりになる暗記シートが数秒で。教科書や授業の資料のPDF・写真を取り込み、覚えたい部分を暗記マーカーでなぞって隠すだけ。カーソルを合わせると答えが見え、テキスト入力・手書き・蛍光ペンも使えるのでノート代わりにも。テスト勉強や資格の学習に。登録不要・無料。">
 
     <link rel="canonical" href="https://ankimasking.com/">
 
     <meta property="og:url" content="https://ankimasking.com/">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="暗記マスキング｜赤シートの代わりにPDF・画像を隠せる無料アプリ">
-    <meta property="og:description" content="教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。カーソルを合わせると答えが見えます。テキスト入力・手書き・蛍光ペンも使えるのでノート代わりにも。テスト勉強や資格の学習に。登録不要・無料。">
-    <meta property="og:site_name" content="暗記マスキング">
+    <meta property="og:title" content="暗記マーカー｜赤シートの代わりにPDF・画像を隠せる無料アプリ">
+    <meta property="og:description" content="教科書や授業の資料のPDF・写真を取り込み、覚えたい部分を暗記マーカーでなぞって隠すだけ。カーソルを合わせると答えが見えます。テキスト入力・手書き・蛍光ペンも使えるのでノート代わりにも。テスト勉強や資格の学習に。登録不要・無料。">
+    <meta property="og:site_name" content="暗記マーカー">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:image" content="https://ankimasking.com/ogp.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="暗記マスキング｜赤シートの代わりにPDF・画像を隠せる無料アプリ">
+    <meta property="og:image:alt" content="暗記マーカー｜赤シートの代わりにPDF・画像を隠せる無料アプリ">
     <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" type="image/png" href="favicon.png">
@@ -52,7 +52,7 @@
     </div>
 
     <!-- 初めて来た人にだけ出す「使い方」の箱。
-         中の動きは説明ページ(/guide/)の冒頭と同じもの。写真1枚に黒塗りとカーソルを
+         中の動きは説明ページ(/guide/)の冒頭と同じもの。写真1枚に暗記マーカーとカーソルを
          CSSで重ねているだけで、動画でもGIFでもない。座標は写真に対する％なので、
          箱の中に入れても位置はずれない。閉じ方は3通り：ばつ印・枠の外・今後は表示しない。 -->
     <div id="welcome-overlay" class="overlay">
@@ -60,23 +60,59 @@
             <button id="welcome-close" class="btn btn-icon btn-ghost" title="閉じる" aria-label="閉じる">
                 <span class="material-symbols-outlined">close</span>
             </button>
-            <h2 id="welcome-title">なぞって隠して、覚える</h2>
+            <!-- 文言は title/description と同じ狙い（「赤シートの代わり」）に揃える。
+                 「赤シートです」とは名乗らない。マスクは常に黒なので「赤で隠せる」とも書かない。 -->
+            <h2 id="welcome-title">なぞるだけで、暗記シートができます</h2>
             <p id="welcome-lead">
-                覚えたい所をなぞると黒く隠れます。隠した所はカーソルを合わせると答えが見えます。
+                教科書やプリントのPDF・写真を取り込み、覚えたい部分を黒く隠すだけ。
+                赤シートの代わりに、テスト勉強や資格の勉強へ。
+                隠した所はカーソルを合わせると答えが見えます。登録不要・インストール不要・無料。
             </p>
+            <div class="stage">
             <div class="demo">
                 <img src="guide/screenshot-anim.jpg" width="1564" height="784" loading="lazy" decoding="async"
-                     alt="暗記マスキングの画面。取り込んだ確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
+                     alt="暗記マーカーの画面。取り込んだ確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
                 <span class="m m1" style="left:30.3102%;top:41.6655%;width:12.2227%;height:4.5848%"></span>
                 <span class="m m2" style="left:30.3102%;top:49.3763%;width:11.2825%;height:4.5848%"></span>
                 <span class="m m3" style="left:33.6531%;top:57.0872%;width:7.3127%;height:4.5848%"></span>
                 <span class="m m4" style="left:36.9961%;top:64.7981%;width:3.9698%;height:4.5848%"></span>
                 <span class="m m5" style="left:43.682%;top:72.5089%;width:4.91%;height:4.5848%"></span>
                 <span class="m m6" style="left:40.339%;top:80.2198%;width:5.8502%;height:4.5848%"></span>
+                <!-- 道具の名前。写真の外側に置いて細い線で結ぶ（説明ページと同じ作り）。
+                     狭い画面では場所が無いので、CSS 側でまとめて畳む。 -->
+                <span class="cal" style="left:12.79%;top:-7.9%;transform:translateX(-50%)">新規作成</span>
+                <span class="cal" style="left:27.49%;top:-7.9%;transform:translateX(-50%)">データ読み込み</span>
+                <span class="cal" style="left:85.04%;top:-7.9%;transform:translateX(-50%)">元に戻す・やり直し</span>
+                <span class="cal cal-t" style="left:-4.8%;top:18.458%;transform:translate(-100%,-50%)">選択</span>
+                <span class="cal cal-t" style="left:-4.8%;top:28.152%;transform:translate(-100%,-50%)">暗記マーカー</span>
+                <span class="cal cal-t" style="left:-4.8%;top:37.846%;transform:translate(-100%,-50%)">蛍光ペン</span>
+                <span class="cal cal-t" style="left:-4.8%;top:47.540%;transform:translate(-100%,-50%)">テキスト</span>
+                <span class="cal cal-t" style="left:-4.8%;top:57.234%;transform:translate(-100%,-50%)">図形・直線</span>
+                <span class="cal cal-t" style="left:-4.8%;top:66.928%;transform:translate(-100%,-50%)">ペン・消しゴム</span>
+                <span class="cal cal-t" style="left:-4.8%;top:76.622%;transform:translate(-100%,-50%)">画像を追加</span>
+                <span class="cal" style="left:101.6%;top:3.3%;transform:translateY(-50%)">保存</span>
+                <span class="cal" style="left:101.6%;top:95.7%;transform:translateY(-50%)">拡大・縮小</span>
+                <svg class="cal-lines" viewBox="-391 -110 2346 1019" aria-hidden="true">
+                    <g fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+                        <path d="M212 -22 L226 4"/>
+                        <path d="M392 -22 L344 4"/>
+                        <path d="M1344 -22 L1360 4"/>
+                        <path d="M-70 145 L20 271"/>
+                        <path d="M-70 221 L20 305"/>
+                        <path d="M-70 297 L20 339"/>
+                        <path d="M-70 373 L20 373"/>
+                        <path d="M-70 449 L20 407"/>
+                        <path d="M-70 525 L20 441"/>
+                        <path d="M-70 601 L20 473"/>
+                        <path d="M1608 26 L1516 26"/>
+                        <path d="M1608 750 L1536 748"/>
+                    </g>
+                </svg>
                 <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M5 2.5 L5 19 L9.2 15.1 L11.9 21.2 L14.8 19.9 L12.1 13.9 L18 13.6 Z"
                           fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
                 </svg>
+            </div>
             </div>
             <div id="welcome-foot">
                 <button id="welcome-never" class="btn btn-ghost">今後は表示しない</button>
@@ -89,7 +125,7 @@
             
             <div class="header-title-group">
                 <div class="header-brand">
-                    <h1>暗記マスキング</h1>
+                    <h1>暗記マーカー</h1>
                     <img src="favicon.png" alt="ロゴ" class="header-logo">
                 </div>
                 <div class="v-divider"></div>
@@ -128,10 +164,10 @@
                         <li id="btn-save-project-menu">
                             <span class="material-symbols-outlined">data_object</span> 作業データごと保存 (.amk)
                         </li>
-                        <li id="btn-save-editable-pdf-menu" title="黒塗りを焼き込まず、作業データをPDFの中に入れて保存します。「データを開く」で開き直せば続きから編集できます">
+                        <li id="btn-save-editable-pdf-menu" title="マーカーを焼き込まず、作業データをPDFの中に入れて保存します。「データを開く」で開き直せば続きから編集できます">
                             <span class="material-symbols-outlined">picture_as_pdf</span> 編集できるPDFで保存
                         </li>
-                        <li id="btn-download-menu" title="今の画面のとおりに書き出します（黒塗りツールの「マスクを外す」で外していれば、その状態で出ます）。こちらは焼き込みなので、開き直しても編集は再開できません">
+                        <li id="btn-download-menu" title="今の画面のとおりに書き出します（暗記マーカーの「マーカーを外す」で外していれば、その状態で出ます）。こちらは焼き込みなので、開き直しても編集は再開できません">
                             <span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し
                         </li>
                     </ul>
@@ -229,11 +265,11 @@
                         </div>
                     </span>
 
-                    <!-- 黒塗りをまとめて外す／戻す。黒塗りツールの設定の中に置く（08-07 Rayan様の指示） -->
+                    <!-- 暗記マーカーをまとめて外す／戻す。暗記マーカーツールの設定の中に置く（08-07 Rayan様の指示） -->
                     <span class="prop-group" id="prop-mask-reveal">
                         <!-- 左に何の設定かを示すアイコン、右に入り切りのスイッチ。
                              色・太さの行と同じ「アイコン＋操作」の並びに揃える（08-07 Rayan様の指示）。
-                             入＝黒塗りが掛かっている／切＝外れている。説明の吹き出しは付けない -->
+                             入＝暗記マーカーが掛かっている／切＝外れている。説明の吹き出しは付けない -->
                         <label class="toggle" id="mask-reveal-switch">
                             <input type="checkbox" id="mask-reveal-toggle" checked>
                             <span class="material-symbols-outlined toggle-icon" id="mask-reveal-icon">toggle_on</span>
@@ -328,7 +364,7 @@
                     <label for="tool-select" title="選択 (V)"><span class="material-symbols-outlined">highlight_alt</span></label>
 
                     <input type="radio" id="tool-mask" name="currentTool" value="mask" checked>
-                    <label for="tool-mask" title="黒塗りマスク (M)"><span class="material-symbols-outlined icon-filled">square</span></label>
+                    <label for="tool-mask" title="暗記マーカー (M)"><span class="material-symbols-outlined icon-filled">square</span></label>
 
                     <input type="radio" id="tool-highlight" name="currentTool" value="highlight">
                     <label for="tool-highlight" title="蛍光ペン (H)"><span class="material-symbols-outlined">format_ink_highlighter</span></label>
