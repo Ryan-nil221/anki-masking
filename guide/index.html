@@ -151,21 +151,51 @@
   .note p:last-child { margin-bottom: 0; }
 
   /* 実際の画面。写真は1枚で、黒塗りとカーソルはCSSで重ねて動かしている */
-  .shot { margin: 6px 0 30px; }
+  /* 注釈を写真の外に出すため、この図だけ本文の幅からはみ出させる */
+  .shot {
+    margin: 6px 0 30px; margin-left: 50%; transform: translateX(-50%);
+    width: min(calc(100vw - 32px), 1220px);
+  }
+  .stage { padding: 8% 14% 5%; }
   .shot figcaption {
     margin: 10px 0 0; text-align: center;
     font-size: 13.5px; color: var(--c-text-muted); line-height: 1.6;
   }
   .demo {
-    position: relative; line-height: 0;
-    border: 1px solid var(--c-border); border-radius: var(--r-lg);
-    overflow: hidden; background: var(--c-surface);
+    position: relative; line-height: 0; container-type: inline-size;
+    background: var(--c-surface);
   }
-  .demo img { display: block; width: 100%; height: auto; }
+  .demo img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+  }
   .demo .m {
     position: absolute; background: #111; border-radius: 2px;
     transition: opacity .28s ease;
   }
+  /* 写真の外側に置く注釈。文字は写真の幅に合わせて伸び縮みさせる */
+  .demo .cal {
+    position: absolute; z-index: 2; white-space: nowrap;
+    font-size: 11px; font-size: 1.9cqw; line-height: 1.3; font-weight: 700;
+    color: #1d4ed8; background: var(--c-surface);
+    border: 1px solid #93c5fd; border-radius: 5px; padding: .3em .6em;
+  }
+  /* 左の道具の名前。段が細かいので、字を小さくして各段の高さに収める */
+  .demo .cal-t {
+    font-size: 11px; font-size: 1.75cqw; line-height: 1.25;
+    padding: .22em .5em; font-weight: 700;
+  }
+  .demo .cal-lines {
+    position: absolute; left: -25%; top: -14%; width: 150%; height: 130%;
+    z-index: 1; pointer-events: none;
+  }
+  /* 幅が足りない画面では注釈をたたみ、写真だけを本文幅で見せる */
+  @media (max-width: 760px) {
+    .shot { margin-left: 0; transform: none; width: auto; }
+    .stage { padding: 0; }
+    .demo .cal, .demo .cal-lines { display: none; }
+  }
+
   .demo .cursor {
     position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -2px;
     pointer-events: none;
@@ -247,6 +277,7 @@
   </p>
 
   <figure class="shot">
+   <div class="stage">
     <div class="demo">
       <img src="screenshot-anim.jpg" width="1564" height="784" fetchpriority="high"
            alt="暗記マスキングの画面。取り込んだ「日本国憲法のまとめ」の確認プリントで、括弧の中の重要語句が黒く塗りつぶされ、カーソルを合わせた所だけ赤い答えが見えている。">
@@ -256,11 +287,40 @@
       <span class="m m4" style="left:36.9961%;top:64.7981%;width:3.9698%;height:4.5848%"></span>
       <span class="m m5" style="left:43.682%;top:72.5089%;width:4.91%;height:4.5848%"></span>
       <span class="m m6" style="left:40.339%;top:80.2198%;width:5.8502%;height:4.5848%"></span>
+      <span class="cal" style="left:12.79%;top:-7.9%;transform:translateX(-50%)">新規作成</span>
+      <span class="cal" style="left:27.49%;top:-7.9%;transform:translateX(-50%)">データ読み込み</span>
+      <span class="cal" style="left:85.04%;top:-7.9%;transform:translateX(-50%)">元に戻す・やり直し</span>
+      <span class="cal cal-t" style="left:-4.8%;top:18.458%;transform:translate(-100%,-50%)">選択</span>
+      <span class="cal cal-t" style="left:-4.8%;top:28.152%;transform:translate(-100%,-50%)">黒塗りマスク</span>
+      <span class="cal cal-t" style="left:-4.8%;top:37.846%;transform:translate(-100%,-50%)">蛍光ペン</span>
+      <span class="cal cal-t" style="left:-4.8%;top:47.540%;transform:translate(-100%,-50%)">テキスト</span>
+      <span class="cal cal-t" style="left:-4.8%;top:57.234%;transform:translate(-100%,-50%)">図形・直線</span>
+      <span class="cal cal-t" style="left:-4.8%;top:66.928%;transform:translate(-100%,-50%)">ペン・消しゴム</span>
+      <span class="cal cal-t" style="left:-4.8%;top:76.622%;transform:translate(-100%,-50%)">画像を追加</span>
+      <span class="cal" style="left:101.6%;top:3.3%;transform:translateY(-50%)">保存</span>
+      <span class="cal" style="left:101.6%;top:95.7%;transform:translateY(-50%)">拡大・縮小</span>
+      <svg class="cal-lines" viewBox="-391 -110 2346 1019" aria-hidden="true">
+        <g fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+          <path d="M212 -22 L226 4"/>
+          <path d="M392 -22 L344 4"/>
+          <path d="M1344 -22 L1360 4"/>
+          <path d="M-70 145 L20 271"/>
+          <path d="M-70 221 L20 305"/>
+          <path d="M-70 297 L20 339"/>
+          <path d="M-70 373 L20 373"/>
+          <path d="M-70 449 L20 407"/>
+          <path d="M-70 525 L20 441"/>
+          <path d="M-70 601 L20 473"/>
+          <path d="M1608 26 L1516 26"/>
+          <path d="M1608 750 L1536 748"/>
+        </g>
+      </svg>
       <svg class="cursor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M5 2.5 L5 19 L9.2 15.1 L11.9 21.2 L14.8 19.9 L12.1 13.9 L18 13.6 Z"
               fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
       </svg>
     </div>
+   </div>
     <figcaption>実際の画面です。括弧の中の答えを黒く隠し、カーソルを合わせた所だけ見えます。</figcaption>
   </figure>
 
