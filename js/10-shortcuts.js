@@ -215,12 +215,26 @@
             updateToolbar();
             window.saveState();
         }
-        // テキスト箱を1つだけ置いた時は、テキストツールでの新規作成と同じく
+        // テキスト箱が含まれていれば、テキストツールでの新規作成と同じく
         // 「文字の左下（キャレット）」をカーソルに合わせる。DOM に入れてからでないと測れない。
+        // 複数の時は、一番左上にあるテキスト箱を基準にし、他は相対のまま一緒に動かす
+        // （Rayan様の指示・08-15）。テキストが1つも無い時は、まとまりの左上のままにする。
         function alignPastedToCursor(els) {
-            if (!lastMouseWs || els.length !== 1) return;
-            if (!els[0].classList.contains('text-wrapper')) return;
-            moveTextBottomLeftTo(els[0], lastMouseWs.x, lastMouseWs.y);
+            if (!lastMouseWs || !els.length) return;
+            const texts = els.filter(e => e.classList.contains('text-wrapper'));
+            if (!texts.length) return;
+            // 上にあるものを優先し、同じくらいの高さなら左のものを選ぶ
+            const anchor = texts.reduce((a, b) => {
+                const ay = parseFloat(a.style.top || 0), by = parseFloat(b.style.top || 0);
+                if (Math.abs(ay - by) > 1) return ay < by ? a : b;
+                return parseFloat(a.style.left || 0) <= parseFloat(b.style.left || 0) ? a : b;
+            });
+            const cur = measureTextBottomLeftWs(anchor);
+            const dx = lastMouseWs.x - cur.x, dy = lastMouseWs.y - cur.y;
+            els.forEach(el => {
+                el.style.left = (parseFloat(el.style.left || 0) + dx) + 'px';
+                el.style.top = (parseFloat(el.style.top || 0) + dy) + 'px';
+            });
         }
 
         // アプリ内でコピーした印。OS クリップボードにこの型を書き込んでおき、
