@@ -6,7 +6,7 @@
         const btnSaveMenu = document.getElementById('btn-save-menu');
         const saveDropdownMenu = document.getElementById('save-dropdown-menu');
         
-        window.currentFileName = "暗記マーカー";
+        window.currentFileName = "暗記マスキング";
         window.isMasksHidden = false; 
 
         // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
