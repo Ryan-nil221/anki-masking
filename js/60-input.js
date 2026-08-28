@@ -104,10 +104,10 @@
                 return;
             }
             if (e.button !== 0) return;
-            // マウスツール＋Shift は、要素を触らず背景（PDF）の文字選択をブラウザに任せる。
-            // `.text-select-on` で canvas 要素は pointer-events:none になっているので、
-            // ここは選択を外して素通りさせるだけでよい。
-            if (currentTool === 'select' && shiftHeld) { window.deselectCurrent(); return; }
+            // マウスツール／テキストツール＋Shift は、要素を触らず背景（PDF）の文字選択を
+            // ブラウザに任せる。`.text-select-on` で canvas 要素は pointer-events:none に
+            // なっているので、ここは選択を外して素通りさせるだけでよい。
+            if ((currentTool === 'select' || currentTool === 'text') && shiftHeld) { window.deselectCurrent(); return; }
             // 背景PDFの文字選択は、Shift を離した後も残す作りにしてある。
             // 次に何かを触った時点で外す（範囲選択が preventDefault するので自動では消えない）
             if (pdfTextSelected) {
@@ -483,7 +483,8 @@
             } else { brushCursor.style.display = 'none'; }
 
             // テキストツールは「I」のカーソル。高さは文字サイズ×拡大率に追従する
-            const showTextCursor = currentTool === 'text' && action !== 'pan' && !spaceHeld
+            // Shift 中は背景の文字選択に譲るので、自前の「I」は出さない
+            const showTextCursor = currentTool === 'text' && action !== 'pan' && !spaceHeld && !shiftHeld
                 && !isPickableAt(e.target) && e.target.closest('#workspace-container');
             if (showTextCursor) {
                 const fs = parseFloat(textSizeInput.value) || 20;

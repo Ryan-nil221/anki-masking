@@ -417,11 +417,15 @@
            戻すとブラウザが選択そのものを捨てるため（Shift を離した途端に消える不具合） */
         #workspace-container.tool-select:not(.pdf-text-selected) .textLayer span { user-select: none !important; -webkit-user-select: none !important; }
         #workspace-container.tool-select .textLayer span { pointer-events: none !important; }
-        /* マウスツールでシフトを押している間だけ、背景（PDF）の文字を選択できる */
-        #workspace-container.tool-select.text-select-on .textLayer span { pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
+        /* マウスツール・テキストツールでシフトを押している間だけ、背景（PDF）の文字を選択できる */
+        #workspace-container.tool-select.text-select-on .textLayer span,
+        #workspace-container.tool-text.text-select-on .textLayer span { pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
         #workspace-container.tool-select.text-select-on .textLayer,
-        #workspace-container.tool-select.pdf-text-selected .textLayer { opacity: 0.35; }
-        #workspace-container.tool-select.text-select-on .canvas-element { pointer-events: none !important; }
+        #workspace-container.tool-text.text-select-on .textLayer,
+        #workspace-container.tool-select.pdf-text-selected .textLayer,
+        #workspace-container.tool-text.pdf-text-selected .textLayer { opacity: 0.35; }
+        #workspace-container.tool-select.text-select-on .canvas-element,
+        #workspace-container.tool-text.text-select-on .canvas-element { pointer-events: none !important; }
         
         #workspace-container.tool-mask .textLayer span, 
         #workspace-container.tool-text .textLayer span, 
