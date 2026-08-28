@@ -49,6 +49,81 @@
             workspaceContainer.classList.toggle('pdf-text-selected', live);
         }
         document.addEventListener('selectionchange', updatePdfTextSelected);
+
+        // --- 文字の外から押し始めた時の文字選択 ---
+        // ブラウザは押した点に文字が無いと選択を始めない。そのため行の左右の余白や
+        // 行と行の間から押し始めると、押下が下の紙（canvas）に落ちて何も選べなかった。
+        // その場合だけ、一番近い文字の位置を自分で求めて選択を始め、引いた先まで伸ばす。
+        let bgTextDrag = null;   // { spans, node, offset }
+
+        // その span の中で、指定の x に一番近い文字の境目を返す
+        function caretOffsetInSpan(span, x) {
+            const node = span.firstChild;
+            const len = node.length;
+            const probe = document.createRange();
+            let best = 0, bestD = Infinity;
+            for (let i = 0; i <= len; i++) {
+                probe.setStart(node, i); probe.setEnd(node, i);
+                const r = probe.getBoundingClientRect();
+                const d = Math.abs(r.left - x);
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            return { node, offset: best };
+        }
+        // 画面座標に一番近い文字の位置。縦のずれは重く見る（隣の行へ飛ばないように）
+        function nearestCaret(spans, x, y) {
+            let best = null, bestD = Infinity;
+            for (const s of spans) {
+                const r = s.getBoundingClientRect();
+                if (!r.width || !r.height) continue;
+                const dx = x < r.left ? r.left - x : (x > r.right ? x - r.right : 0);
+                const dy = y < r.top ? r.top - y : (y > r.bottom ? y - r.bottom : 0);
+                const d = dx + dy * 4;
+                if (d < bestD) { bestD = d; best = s; }
+            }
+            return best ? caretOffsetInSpan(best, x) : null;
+        }
+        // 文字の上から押した時は今まで通りブラウザに任せる。外から押した時だけ引き受ける
+        function beginBgTextSelect(e) {
+            // 押すたびに選び直す。畳んでおかないと、シフトを押しながらの押下が
+            // 前の選択の「拡張」と受け取られ、離れた所を押した時に間が全部選ばれてしまう。
+            const prev = window.getSelection();
+            if (prev && prev.rangeCount) prev.removeAllRanges();
+            if (e.target.closest && e.target.closest('.textLayer')) return false;
+            const page = e.target.closest && e.target.closest('.pdf-page');
+            const layer = page && page.querySelector('.textLayer');
+            if (!layer) return false;
+            const spans = Array.from(layer.querySelectorAll('span'))
+                .filter(s => s.firstChild && s.firstChild.nodeType === 3 && s.firstChild.length);
+            if (!spans.length) return false;
+            const c = nearestCaret(spans, e.clientX, e.clientY);
+            if (!c) return false;
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            const r = document.createRange();
+            r.setStart(c.node, c.offset); r.setEnd(c.node, c.offset);
+            sel.addRange(r);
+            bgTextDrag = { spans, node: c.node, offset: c.offset };
+            e.preventDefault();   // ブラウザ既定の選択に任せず、こちらで伸ばす
+            return true;
+        }
+        function moveBgTextSelect(e) {
+            if (!bgTextDrag) return false;
+            const c = nearestCaret(bgTextDrag.spans, e.clientX, e.clientY);
+            if (c) {
+                const sel = window.getSelection();
+                sel.setBaseAndExtent(bgTextDrag.node, bgTextDrag.offset, c.node, c.offset);
+            }
+            e.preventDefault();
+            return true;
+        }
+        function endBgTextSelect() {
+            if (!bgTextDrag) return false;
+            bgTextDrag = null;
+            updatePdfTextSelected();
+            return true;
+        }
+
         document.addEventListener('keydown', (e) => { if (e.key === 'Shift') setShiftHeld(true); });
         document.addEventListener('keyup', (e) => { if (e.key === 'Shift') setShiftHeld(false); });
         window.addEventListener('blur', () => setShiftHeld(false));

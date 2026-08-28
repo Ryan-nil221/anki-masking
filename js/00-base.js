@@ -353,9 +353,13 @@
         window.updateHistoryButtons = updateHistoryButtons;
 
         document.addEventListener('contextmenu', function(e) {
-            if (e.target.closest('#workspace-container')) {
-                if (e.target.tagName.toLowerCase() !== 'span' && !e.target.closest('.textLayer')) { e.preventDefault(); }
-            }
+            if (!e.target.closest('#workspace-container')) return;
+            if (e.target.tagName.toLowerCase() === 'span' || e.target.closest('.textLayer')) return;
+            // 背景の文字を選んでいる間は、コピーなどの既定のメニューを出す。
+            // シフトを離すと文字の層が当たり判定を失い、押した先が紙になるため、
+            // 選んだ状態そのもので判断する。
+            if (pdfTextSelected) return;
+            e.preventDefault();
         });
 
         // 進行中の操作(action)を安全に畳む。pointercancel と、ウィンドウの
