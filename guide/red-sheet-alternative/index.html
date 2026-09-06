@@ -62,14 +62,14 @@
   }
   .btn-app:hover { background: var(--c-accent-hover); }
 
-  .crumb { font-size: 13.5px; color: var(--c-text-muted); margin: 22px 0 0; }
+  .crumb { font-size: 13.5px; color: var(--c-text-muted); margin: 16px 0 0; }
   .crumb a { text-decoration: none; }
 
   h1 {
     font-size: 30px; line-height: 1.45; letter-spacing: -0.5px; font-weight: 900;
-    color: var(--c-text-strong); margin: 12px 0 8px;
+    color: var(--c-text-strong); margin: 10px 0 8px;
   }
-  .lead { font-size: 17px; color: var(--c-text-muted); margin: 0 0 28px; }
+  .lead { font-size: 17px; color: var(--c-text-muted); margin: 0 0 8px; }
   h2 {
     font-size: 23px; font-weight: 800; color: var(--c-text-strong);
     margin: 56px 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border);
@@ -86,7 +86,7 @@
     margin: 6px 0 30px; margin-left: 50%; transform: translateX(-50%);
     width: min(calc(100vw - 32px), 1220px);
   }
-  .stage { padding: 8% 14% 5%; }
+  .stage { padding: 6% 14% 4%; }
   .shot figcaption {
     margin: 10px 0 0; text-align: center;
     font-size: 13.5px; color: var(--c-text-muted); line-height: 1.6;
@@ -178,11 +178,15 @@
 
   .intro {
     background: var(--c-accent-tint); border: 1px solid var(--c-border);
-    border-radius: var(--r-lg); padding: 18px 22px; margin: 0 0 4px;
+    border-radius: var(--r-lg); padding: 16px 22px 14px; margin: 0 0 4px;
     font-size: 15.5px;
   }
+  .intro p { margin: 0 0 8px; font-weight: 700; color: var(--c-text-strong); }
+  .intro ul { margin: 0; padding-left: 1.3em; }
+  .intro li { margin-bottom: 5px; }
+  .intro li:last-child { margin-bottom: 0; }
 
-  .cta { text-align: center; margin: 36px 0; }
+  .cta { text-align: center; margin: 22px 0 36px; }
   .cta a {
     display: inline-block; background: var(--c-accent); color: var(--c-on-accent);
     text-decoration: none; font-weight: 800; font-size: 17px;
@@ -286,11 +290,9 @@
 
   <h1>赤シートの代わりになるもの</h1>
   <p class="lead">
-    赤シートを忘れた、無くした、そもそも持っていない。手元のもので代用する方法をまとめます。
-    先に正直に書くと、代わりになるものは思ったより限られます。しかもどれも、
-    赤いペンで書いた文字にしか効きません。教科書に印刷された黒い文字を隠したいときは、
-    別のやり方が要ります。そのやり方として、ここでは<strong>暗記マスキング</strong>という
-    無料のアプリも紹介します。
+    赤シートを忘れた、無くした、持っていない。手元のもので代用する方法をまとめます。
+    ただし、どの代わりも<strong>赤いペンで書いた文字にしか効きません</strong>。
+    教科書に印刷された黒い文字を隠す方法まで書きます。
   </p>
 
   <figure class="shot">
@@ -341,12 +343,15 @@
     <figcaption>画面の上で隠したところです。赤シートと違い、印刷された黒い文字でもそのまま隠せます。カーソルを合わせた所だけ答えが見えます。</figcaption>
   </figure>
 
-  <p class="intro">
-    上の画面が<strong>暗記マスキング</strong>です。教科書やプリントを取り込んで、
-    覚えたい所をなぞるだけで隠せます。<strong>赤シートでは消せない、印刷された黒い文字も隠せます</strong>。
-    答えを見たいときはカーソルを合わせるだけです。
-    登録もインストールも要らず、ブラウザで開いてすぐ使えます。
-  </p>
+  <div class="intro">
+    <p>上の画面が<strong>暗記マスキング</strong>です。</p>
+    <ul>
+      <li>教科書やプリントを取り込んで、覚えたい所をなぞるだけ</li>
+      <li><strong>赤シートでは消せない、印刷された黒い文字も隠せる</strong></li>
+      <li>答えはカーソルを合わせるだけで見える</li>
+      <li>登録もインストールも不要。ブラウザで開いてすぐ使える</li>
+    </ul>
+  </div>
 
   <div class="cta">
     <a href="/">暗記マスキングを開く</a>
@@ -355,8 +360,8 @@
 
   <h2>赤い半透明のものなら、たいてい代わりになります</h2>
   <p>
-    赤シートの正体は、向こうが透けて見える赤い板です。同じ性質のものであれば、
-    名前が違っても同じように使えます。手元を探すなら、こういうものです。
+    赤シートの正体は、向こうが透けて見える赤い板です。
+    同じ性質のものなら、名前が違っても同じように使えます。
   </p>
   <ul>
     <li>赤や赤茶のクリアファイル</li>
@@ -375,11 +380,11 @@
     市販の暗記シートにも、赤いものと緑のものの両方があります。
     赤いクリアファイルが無くても、濃い緑のものがあれば試す価値があります。
   </p>
-  <p>
-    仕組みはこうです。赤い文字と赤いシートは同じ色なので、重ねると文字が背景に溶けて見えなくなります。
-    緑のシートの場合は逆で、赤い光をさえぎるので文字が黒くつぶれて読めなくなります。
-    行き着く先は同じです。
-  </p>
+  <p>仕組みは少し違いますが、行き着く先は同じです。</p>
+  <ul>
+    <li><strong>赤いシート</strong>…赤い文字と同じ色なので、文字が背景に溶けて消える</li>
+    <li><strong>緑のシート</strong>…赤い光をさえぎるので、文字が黒くつぶれて読めなくなる</li>
+  </ul>
 
   <h2>やりがちな失敗</h2>
   <p>
@@ -395,30 +400,34 @@
   <h2>ここまでの方法が効くのは、赤い文字だけです</h2>
   <p>
     ここが一番大事なところです。赤シートも、その代わりになるものも、
-    <strong>色の重なりを使って文字を消しています</strong>。
-    つまり、消えるのは自分が赤いペンで書いた文字だけです。
+    <strong>色の重なりで文字を消しています</strong>。
+    だから消えるのは、自分が赤いペンで書いた文字だけです。
   </p>
   <p>
-    教科書やプリントに最初から印刷されている<strong>黒い文字は、何を重ねても消えません</strong>。
-    赤い下敷きを何枚重ねても同じです。赤シートを買い直しても解決しません。
-    覚えたいのが印刷された語句のときは、そもそも道具の選び方が違います。
+    教科書に最初から印刷されている<strong>黒い文字は、何を重ねても消えません</strong>。
+    赤い下敷きを何枚重ねても、赤シートを買い直しても同じです。
+  </p>
+  <p>
+    覚えたいのが印刷された語句なら、道具の選び方から変える必要があります。
   </p>
 
   <h2>印刷された黒い文字を隠すには</h2>
+  <p>やり方は2つあります。</p>
+  <h3>紙のまま隠す</h3>
   <p>
-    やり方は2つあります。
+    覚えたい語句の上に付箋を貼るか、修正テープを引きます。確実です。
+    ただし答えを確かめるたびに剥がすことになり、繰り返すと紙が傷みます。
+    修正テープは剥がせないので一度きりです。
+  </p>
+
+  <h3>画面の上で隠す</h3>
+  <p>
+    教科書やプリントを写真に撮るか、PDFを取り込んで、覚えたい所の上に黒い四角を重ねます。
+    色の重なりを使っていないので、<strong>黒い文字でも赤い文字でも関係なく隠せます</strong>。
   </p>
   <p>
-    1つは、紙のまま隠すことです。覚えたい語句の上に付箋を貼るか、修正テープを引きます。
-    確実ですが、答えを確かめるたびに剥がす必要があり、繰り返すと紙が傷みます。
-    修正テープは剥がせないので、一度きりです。
-  </p>
-  <p>
-    もう1つは、画面の上で隠すことです。教科書やプリントを写真に撮るか、PDFを取り込んで、
-    覚えたい所の上に黒い四角を重ねます。色の重なりを使っていないので、
-    <strong>黒い文字でも赤い文字でも関係なく隠せます</strong>。
-    答えを見たいときはカーソルを合わせるだけで、その所だけ見えます。
-    紙には何も書き込まないので、教科書もきれいなままです。上の動く画面がそれです。
+    答えはカーソルを合わせるだけで見えます。紙には何も書き込まないので、教科書もきれいなままです。
+    上の動く画面がそれです。
   </p>
 
   <h2>3つを比べる</h2>
