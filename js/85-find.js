@@ -10,12 +10,76 @@
     const countEl = document.getElementById('find-count');
     if (!bar || !btnFind || !input) return;
 
-    let index = null;      // ページごとの文字（小文字化済み）。索引ができるまでは null
+    let index = null;      // ページごとの文字（ならし済み）。索引ができるまでは null
     let generation = 0;    // 索引を作っている途中に別の資料が読まれたら捨てるための世代
     let hits = [];         // [{page, nth}] nth＝そのページの中で何番目の一致か
     let current = -1;
     let query = '';
     let typeTimer = 0;
+
+    // --- 文字をならす -------------------------------------------------------
+
+    // 日本語のPDFは、同じ字が別のコード（康熙部首・全角英数など）で入っていることがある。
+    // 例：「日本語」の「日」が U+2F47（⽇）になっていると、そのままでは見つからない。
+    // NFKC でならせば揃うが、**1文字が2文字に化けるもの（㍿・①・合字）があると
+    // 印を置く位置がずれる**ので、長さが変わらない置き換えだけを使う。
+    // NFKC でも直らない字（部首の形をした別コード。⻑→長 など）の対応表。
+    // 上下の並びが1文字ずつ対応している。Unicode の EquivalentUnifiedIdeograph から作った。
+    const RADICALS_FROM = '⺁⺂⺃⺄⺅⺆⺈⺉⺊⺋⺌⺍⺎⺏⺐⺒⺓⺔⺖⺗⺘⺙⺛⺜⺝⺞⺠⺡⺢⺣⺤⺥⺦⺧⺨⺩⺫⺬⺭⺯⺰⺱⺲⺳⺴⺶⺹⺺⺻⺼⺾⺿⻀⻁⻂⻃⻄⻅⻆⻈⻉⻋⻌⻍⻎⻏⻐⻑⻒⻓⻔⻖⻗⻘⻙⻚⻛⻜⻝⻟⻠⻢⻣⻤⻥⻦⻧⻨⻩⻪⻫⻬⻭⻮⻯⻰⻱⻲㇏㇐㇑㇒㇓㇔㇖㇚㇝㇟㇠';
+    const RADICALS_TO   = '厂乛乚乙亻冂刀刂卜㔾小小兀尣尢巳幺彑忄心扌攵旡日月歺民氵氺灬爫爫丬牛犭王目示礻糹纟罓罒㓁冗羊耂肀聿肉艹艹艹虎衤覀西见角讠贝车辶辶辶邑钅長镸长门阝雨青韦页风飞食飠饣马骨鬼鱼鸟卤麦黄黾斉齐歯齿竜龙龜亀乀一丨丿丿丶乛亅乀乚乙';
+
+    const normCache = new Map();
+    function normChar(ch) {
+        let v = normCache.get(ch);
+        if (v === undefined) {
+            const at = RADICALS_FROM.indexOf(ch);
+            if (at >= 0) {
+                v = RADICALS_TO[at];
+            } else {
+                const n = ch.normalize('NFKC').toLowerCase();
+                v = (n.length === ch.length) ? n : ch;
+            }
+            normCache.set(ch, v);
+        }
+        return v;
+    }
+    function normalizeText(s) {
+        let out = '';
+        for (const ch of s) out += normChar(ch);
+        return out;
+    }
+
+    const SPACE_RE = /\s/;   // 全角スペースと NBSP も \s に含まれる
+    const isSpace = ch => SPACE_RE.test(ch);
+
+    // 本文の空白は読み飛ばして照合する。PDFは行の折り返しや字送りの都合で
+    // 語の途中に空白が入る（「分 散 学 習」「学習の効率、 くりかえし」）。
+    // 一致したら終わりの位置を返す。合わなければ -1。
+    function matchAt(text, q, start) {
+        let i = start, j = 0;
+        while (j < q.length) {
+            if (isSpace(q[j])) { while (i < text.length && isSpace(text[i])) i++; j++; continue; }
+            while (i < text.length && isSpace(text[i])) i++;
+            if (i >= text.length || text[i] !== q[j]) return -1;
+            i++; j++;
+        }
+        return i;
+    }
+
+    // 1ページ分の一致をすべて拾う。索引でも画面でも同じ数え方をするので、
+    // 「そのページの n 番目」で両者が突き合う。
+    function eachMatch(text, q, fn) {
+        if (!q) return;
+        let n = 0;
+        for (let at = 0; at < text.length; at++) {
+            if (isSpace(text[at])) continue;
+            const end = matchAt(text, q, at);
+            if (end <= at) continue;
+            fn(at, end, n);
+            n++;
+            at = end - 1;   // 重なりは数えない（Chrome と同じ）
+        }
+    }
 
     // --- 索引 ---------------------------------------------------------------
 
@@ -28,7 +92,7 @@
             try {
                 const page = await pdf.getPage(i);
                 const tc = await page.getTextContent();
-                pages.push(tc.items.map(it => it.str).join('').toLowerCase());
+                pages.push(normalizeText(tc.items.map(it => it.str).join('')));
             } catch (_) {
                 pages.push('');
             }
@@ -57,14 +121,7 @@
         const out = [];
         if (!index || !q) return out;
         index.forEach((text, i) => {
-            let from = 0, n = 0;
-            for (;;) {
-                const at = text.indexOf(q, from);
-                if (at < 0) break;
-                out.push({ page: i + 1, nth: n });
-                n++;
-                from = at + q.length;   // 重なりは数えない（Chrome と同じ）
-            }
+            eachMatch(text, q, (at, end, n) => out.push({ page: i + 1, nth: n }));
         });
         return out;
     }
@@ -75,7 +132,7 @@
     }
 
     async function runSearch(keepPosition) {
-        const q = input.value.toLowerCase();
+        const q = normalizeText(input.value);
         const same = q === query;
         query = q;
         hits = searchAll(q);
@@ -124,43 +181,60 @@
         return null;
     }
 
+    // 日本語のPDFは1文字ずつ区切られていることが多く、そのままだと文字の数だけ
+    // 小さい四角が並んで見苦しい。**同じ行に並んでいるものは1つにつなぐ**。
+    // 縦書きは上下がずれるのでまとまらず、これまでどおり文字ごとになる。
+    function mergeRects(rects) {
+        const rows = [];
+        for (const r of rects) {
+            if (r.width <= 0 || r.height <= 0) continue;
+            const near = rows.find(x =>
+                Math.abs(x.top - r.top) < r.height * 0.5 &&
+                Math.abs(x.bottom - r.bottom) < r.height * 0.5);
+            if (near) {
+                near.left = Math.min(near.left, r.left);
+                near.right = Math.max(near.right, r.right);
+                near.top = Math.min(near.top, r.top);
+                near.bottom = Math.max(near.bottom, r.bottom);
+            } else {
+                rows.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+            }
+        }
+        return rows;
+    }
+
     // ページの中に印を置く。座標はページを基準にした拡大前の値なので、
     // 拡大・縮小しても紙と一緒に動く（描き直しは要らない）。
     function paintPage(pageDiv, currentNth) {
         const layer = pageDiv.querySelector('.textLayer');
         if (!layer || !query) return null;
         const { nodes, text } = textNodesOf(layer);
-        const low = text.toLowerCase();
+        const low = normalizeText(text);
         const base = pageDiv.getBoundingClientRect();
         const z = (typeof zoomLevel === 'number' && zoomLevel > 0) ? zoomLevel : 1;
-        let from = 0, n = 0, currentTop = null;
+        let currentTop = null;
 
-        for (;;) {
-            const at = low.indexOf(query, from);
-            if (at < 0) break;
-            const a = locate(nodes, at), b = locate(nodes, at + query.length);
+        eachMatch(low, query, (at, end, n) => {
+            const a = locate(nodes, at), b = locate(nodes, end);
             if (a && b) {
                 const range = document.createRange();
                 try {
                     range.setStart(a.node, a.offset);
                     range.setEnd(b.node, b.offset);
                     const isCurrent = (n === currentNth);
-                    for (const r of range.getClientRects()) {
-                        if (r.width <= 0 || r.height <= 0) continue;
+                    for (const r of mergeRects(range.getClientRects())) {
                         const mark = document.createElement('div');
                         mark.className = 'find-hit' + (isCurrent ? ' current' : '');
                         mark.style.left = ((r.left - base.left) / z) + 'px';
                         mark.style.top = ((r.top - base.top) / z) + 'px';
-                        mark.style.width = (r.width / z) + 'px';
-                        mark.style.height = (r.height / z) + 'px';
+                        mark.style.width = ((r.right - r.left) / z) + 'px';
+                        mark.style.height = ((r.bottom - r.top) / z) + 'px';
                         pageDiv.appendChild(mark);
                         if (isCurrent && currentTop === null) currentTop = (r.top - base.top) / z;
                     }
                 } catch (_) { /* 文字の並びが変わっている時は飛ばす */ }
             }
-            n++;
-            from = at + query.length;
-        }
+        });
         return currentTop;
     }
 
