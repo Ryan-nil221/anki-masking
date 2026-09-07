@@ -508,7 +508,13 @@
         #workspace-container.tool-shape { cursor: crosshair; }
 
         /* 丸いブラシカーソルを出している間は、OSのカーソルを消す */
-        #workspace-container.hide-cursor, #workspace-container.hide-cursor * { cursor: none !important; }
+        /* 自前のカーソル（丸・Iの形）を出している間、本物のカーソルを隠す。
+           ここで `*` を使って子孫まで一度に指定すると、乗る・外れるのたびに紙の上の
+           全要素を測り直すことになり、置いた物が増えるほど重くなる（08-28 実測）。
+           テキストや選択の道具では、乗っている物が自前のカーソルを持たないので継承で足りる。 */
+        #workspace-container.hide-cursor { cursor: none !important; }
+        /* 描く道具は要素の上でも隠す。この間クラスは付いたままなので測り直しは起きない */
+        #workspace-container.hide-cursor-all, #workspace-container.hide-cursor-all * { cursor: none !important; }
         
         /* 選択中ツール以外の要素の当たり判定を消す（★ただし .mask は常に判定を残す） */
 #workspace-container.tool-mask .canvas-element:not(.mask),

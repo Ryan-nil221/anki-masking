@@ -513,7 +513,9 @@
                 textCursor.style.left = e.clientX + 'px'; textCursor.style.top = e.clientY + 'px';
             } else { textCursor.style.display = 'none'; }
 
-            workspaceContainer.classList.toggle('hide-cursor', !!showBrush || !!showTextCursor);
+            // 隠す範囲を2つに分ける。要素の上でも隠すのは描く道具の時だけ（上の style.css を参照）
+            workspaceContainer.classList.toggle('hide-cursor', !!showTextCursor);
+            workspaceContainer.classList.toggle('hide-cursor-all', !!showBrush);
 
             if (!action) return;
             if (action === 'pan') {
@@ -895,7 +897,7 @@
             updateToolbar(); // 選択状態に応じてプロパティ表示を更新
         });
         
-        workspaceContainer.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; textCursor.style.display = 'none'; workspaceContainer.classList.remove('hide-cursor'); });
+        workspaceContainer.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; textCursor.style.display = 'none'; workspaceContainer.classList.remove('hide-cursor'); workspaceContainer.classList.remove('hide-cursor-all'); });
         
         document.addEventListener('pointerdown', function(e) {
             if (!e.target.closest('#workspace') && !e.target.closest('#app-header') && !e.target.closest('#floating-tools-container') && !e.target.closest('.floating-ui') && !e.target.closest('#btn-focus-mode') && (selectedElements.length > 0 || selectedStroke)) {
