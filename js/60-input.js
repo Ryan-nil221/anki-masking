@@ -477,13 +477,26 @@
             }
         });
 
+        // スクロールバーの上に来たか。
+        // バーの上はブラウザが受け持つ場所で、こちらにマウスの動きが届かない。
+        // 届かないと自前のカーソル（丸や「I」）を出したままの状態で止まり、
+        // 本来の矢印に戻らなくなる（テキストツールで縦バーに乗せた時・Rayan様の報告）。
+        // バーに入る手前で見切りを付けるため、2pxの余裕を持たせる。
+        function isOverScrollbar(e) {
+            const r = workspaceContainer.getBoundingClientRect();
+            const barW = workspaceContainer.offsetWidth - workspaceContainer.clientWidth;
+            const barH = workspaceContainer.offsetHeight - workspaceContainer.clientHeight;
+            return (e.clientX >= r.right - barW - 2) || (e.clientY >= r.bottom - barH - 2);
+        }
+
         // 【改修】ポインター移動（ドラッグなど）の制御
         document.addEventListener('pointermove', function(e) {
             // 背景の文字を余白から選んでいる最中は、そちらだけを見る
             if (moveBgTextSelect(e)) return;
             // 選択できるものの上ではカーソルの変化を見せたいので、丸は出さない
             const showBrush = action !== 'pan' && !spaceHeld && isFreehandDrawing()
-                && !isPickableAt(e.target) && e.target.closest('#workspace-container');
+                && !isPickableAt(e.target) && e.target.closest('#workspace-container')
+                && !isOverScrollbar(e);
             if (showBrush) {
                 brushCursor.style.display = 'block'; brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px';
             } else { brushCursor.style.display = 'none'; }
@@ -491,7 +504,8 @@
             // テキストツールは「I」のカーソル。高さは文字サイズ×拡大率に追従する
             // Shift 中は背景の文字選択に譲るので、自前の「I」は出さない
             const showTextCursor = currentTool === 'text' && action !== 'pan' && !spaceHeld && !shiftHeld
-                && !isPickableAt(e.target) && e.target.closest('#workspace-container');
+                && !isPickableAt(e.target) && e.target.closest('#workspace-container')
+                && !isOverScrollbar(e);
             if (showTextCursor) {
                 const fs = parseFloat(textSizeInput.value) || 20;
                 textCursor.style.height = Math.max(8, fs * zoomLevel) + 'px';

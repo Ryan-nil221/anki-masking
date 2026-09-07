@@ -117,6 +117,23 @@
                 const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
                 if (!f) return;
                 const isProject = f.name.toLowerCase().endsWith('.amk');
+
+                // 何かを開いている最中に写真を落としたら、紙を差し替えずに貼り付ける
+                // （道具列の「画像を追加」と同じ扱い・08-15 Rayan様の指示）。
+                // 落とした場所に置く。紙からはみ出す位置なら紙の中へ寄せる。
+                const isImage = /^image\/(png|jpeg|webp)$/.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name);
+                if (!isProject && isImage && currentBackground) {
+                    const rect = workspace.getBoundingClientRect();
+                    const at = {
+                        x: Math.max(0, (e.clientX - rect.left) / zoomLevel),
+                        y: Math.max(0, (e.clientY - rect.top) / zoomLevel)
+                    };
+                    const reader = new FileReader();
+                    reader.onload = (ev) => insertImageToWorkspace(ev.target.result, at);
+                    reader.readAsDataURL(f);
+                    return;
+                }
+
                 const input = document.getElementById(isProject ? 'projectInput' : 'imageInput');
                 if (!input) return;
                 const dt = new DataTransfer();

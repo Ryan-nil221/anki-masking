@@ -897,6 +897,39 @@
             }
         }
 
+        // スクロールの器（紙の周りの余白を含めた大きさ）を、今の紙の大きさから測り直す。
+        // 拡大・縮小の時だけでなく**紙の高さが変わった時にも呼ぶ**。
+        // PDFはページの大きさが確定するのが描画の時で、それまでは1ページ目の高さで仮に置いている。
+        // 大きさの揃っていない資料だと、描画が進むにつれ紙が縮み、器だけが読み込み時の大きさで
+        // residual として残る＝一番下まで送っても紙が終わっていて余白だけ、という状態になっていた
+        // （136ページの資料・Rayan様の報告）。
+        function refreshWorkspaceBounds() {
+            const containerW = workspaceContainer.clientWidth;
+            const containerH = workspaceContainer.clientHeight;
+            const newScaledW = workspace.offsetWidth * zoomLevel;
+            const newScaledH = workspace.offsetHeight * zoomLevel;
+
+            const BOTTOM_SLACK = 200; // 最下部がツールバーに隠れないよう下へスクロールできる余地
+            // コンテンツが大きくても四方にパンの余地を残す。
+            // 固定値のままだとスマホでは余白だけで画面が埋まり、紙が画面外へ出るので幅に応じて縮める。
+            const PAD_X = Math.min(250, containerW * 0.25);
+            const PAD_Y = Math.min(140, containerH * 0.25);
+
+            // 余白は**左右・上下の両方**に置く。以前は marginLeft/marginTop だけで、
+            // 右と上に余地が無かった＝紙を左（や上）へ動かせなかった（Rayan様の報告・08-03）。
+            // 紙が画面より小さい時は、はみ出す分の半分を両側に足して中央に置けるようにする。
+            const slackX = PAD_X + Math.max(0, (containerW - newScaledW) / 2);
+            const slackY = PAD_Y + Math.max(0, (containerH - newScaledH) / 2);
+
+            workspaceWrapper.style.width = (newScaledW + slackX) + 'px';
+            workspaceWrapper.style.height = (newScaledH + slackY + BOTTOM_SLACK) + 'px';
+            workspaceWrapper.style.marginLeft = slackX + 'px';
+            workspaceWrapper.style.marginTop = slackY + 'px';
+
+            return { slackX, slackY, newMarginLeft: slackX, newMarginTop: slackY };
+        }
+        window.refreshWorkspaceBounds = refreshWorkspaceBounds;
+
         function setZoom(newZoom, focalX, focalY) {
             if (newZoom < 0.2) newZoom = 0.2; if (newZoom > 5.0) newZoom = 5.0;
 
@@ -918,28 +951,7 @@
             workspace.style.transform = `scale(${zoomLevel})`; 
             zoomText.innerText = Math.round(zoomLevel * 100) + '%';
             
-            const newScaledW = workspace.offsetWidth * zoomLevel; 
-            const newScaledH = workspace.offsetHeight * zoomLevel;
-            
-            const BOTTOM_SLACK = 200; // 最下部がツールバーに隠れないよう下へスクロールできる余地
-            // コンテンツが大きくても四方にパンの余地を残す。
-            // 固定値のままだとスマホでは余白だけで画面が埋まり、紙が画面外へ出るので幅に応じて縮める。
-            const PAD_X = Math.min(250, containerW * 0.25);
-            const PAD_Y = Math.min(140, containerH * 0.25);
-
-            // 余白は**左右・上下の両方**に置く。以前は marginLeft/marginTop だけで、
-            // 右と上に余地が無かった＝紙を左（や上）へ動かせなかった（Rayan様の報告・08-03）。
-            // 紙が画面より小さい時は、はみ出す分の半分を両側に足して中央に置けるようにする。
-            const slackX = PAD_X + Math.max(0, (containerW - newScaledW) / 2);
-            const slackY = PAD_Y + Math.max(0, (containerH - newScaledH) / 2);
-
-            const newMarginLeft = slackX;
-            const newMarginTop = slackY;
-
-            workspaceWrapper.style.width = (newScaledW + slackX) + 'px';
-            workspaceWrapper.style.height = (newScaledH + slackY + BOTTOM_SLACK) + 'px';
-            workspaceWrapper.style.marginLeft = newMarginLeft + 'px';
-            workspaceWrapper.style.marginTop = newMarginTop + 'px';
+            const { newMarginLeft, newMarginTop } = refreshWorkspaceBounds();
 
             workspaceContainer.scrollLeft = (centerX * zoomLevel) + newMarginLeft - fx;
             workspaceContainer.scrollTop = (centerY * zoomLevel) + newMarginTop - fy;

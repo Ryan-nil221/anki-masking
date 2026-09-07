@@ -354,7 +354,16 @@
         #workspace-outer { flex-grow: 1; position: relative; display: flex; overflow: hidden; background-color: var(--c-canvas); }
         #workspace-outer.drag-over::after { content: ''; position: absolute; inset: 8px; border: 2px dashed var(--c-accent); border-radius: var(--r-lg); pointer-events: none; z-index: 4000; }
         #workspace-container { flex-grow: 1; overflow: auto; position: relative; touch-action: none; user-select: none; }
-        #workspace-wrapper { position: relative; }
+        /* 紙は拡大縮小を transform でかけている。transform はレイアウト上の大きさを変えないので、
+           入れ物がはみ出しを抱えると、縮めてもスクロールの範囲が元の大きさのまま残る。
+           そのぶん紙の下に空白が増え、70%では一番下まで送ると紙が画面から消えていた
+           （Rayan様の報告）。入れ物の側で切って、範囲は入れ物の大きさだけで決める。 */
+        #workspace-wrapper { position: relative; overflow: hidden; }
+        /* 紙は拡大縮小を transform でかけている。transform はレイアウト上の大きさを変えないので、
+           流れの中に置いたままだと**縮めても元の大きさの場所を取り続ける**。
+           そのぶんスクロールの範囲が余り、縮小するほど紙の下に空白が増えていた
+           （70%で一番下まで送ると紙が画面から消える・Rayan様の報告）。
+           絶対配置にして流れから外し、スクロールの範囲は入れ物の大きさだけで決める。 */
         #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
 
         .floating-ui {
@@ -363,6 +372,65 @@
         }
         #floating-top-left { top: 20px; left: 20px; }
         #floating-bottom-right { bottom: 25px; right: 25px; }
+
+        /* --- 何も読み込んでいない時の案内（中央・3行） --- */
+        #empty-hint {
+            position: absolute; inset: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; text-align: center; color: var(--c-text-muted);
+        }
+        /* 「ここに落とせる」と一目で分かるよう破線で囲う。
+           枠は画面いっぱいには広げず、紙が置かれるあたりの大きさに留める */
+        #empty-hint-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: min(560px, 72%); min-height: min(340px, 46vh);
+            padding: 32px 24px; box-sizing: border-box;
+            border: 2px dashed var(--c-border-strong); border-radius: var(--r-xl);
+            background: var(--c-surface-2);
+        }
+        /* ファイルを持ってきている間は枠を青くする（作業領域の枠と揃える） */
+        #workspace-outer.drag-over #empty-hint-box {
+            border-color: var(--c-accent); background: var(--c-accent-tint);
+        }
+        /* 資料を読み込んだら引っ込める */
+        body.has-doc #empty-hint { display: none; }
+        #empty-hint-icon { font-size: 46px; opacity: 0.55; margin-bottom: 10px; }
+        #empty-hint p { margin: 0; }
+        #empty-hint-line { font-size: 17px; font-weight: 700; color: var(--c-text-sub); }
+        #empty-hint-pick { font-size: 15px; margin-top: 4px; }
+        #empty-hint-open { font-size: 13px; margin-top: 14px; }
+        /* 文の中の押せる所。押せるものだけ当たり判定を戻す */
+        .link-btn, .link-quiet { pointer-events: auto; cursor: pointer; }
+        .link-btn {
+            color: var(--c-accent); font-weight: 700; text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .link-btn:hover { color: var(--c-accent-hover); }
+        .link-quiet { color: var(--c-text-muted); text-decoration: underline; text-underline-offset: 3px; }
+        .link-quiet:hover { color: var(--c-text-sub); }
+
+        /* --- 探す窓（ヘッダー直下・右端揃え。中身の並びは Chrome の Ctrl+F と同じ） --- */
+        #find-bar { top: 20px; right: 25px; gap: 4px; padding: 5px 7px; }
+        #find-input {
+            width: 190px; border: none; outline: none; background: transparent;
+            font-size: 14px; color: var(--c-text); padding: 4px 6px;
+        }
+        #find-input::placeholder { color: var(--c-text-muted); }
+        /* 件数は桁が増えても矢印が動かないよう幅を固定する */
+        #find-count {
+            min-width: 46px; text-align: right; font-size: 13px; font-weight: 600;
+            color: var(--c-text-muted); white-space: nowrap;
+        }
+        #find-bar.no-hit #find-input { color: var(--c-danger); }
+        #find-bar.no-hit #find-count { color: var(--c-danger); }
+
+        /* 一致した所の印。ページの上に重ねるだけなので、紙にも書き出しにも残らない。
+           今いる一致だけ濃く、他は薄く光らせる（Chrome と同じ考え方）。 */
+        .find-hit {
+            position: absolute; pointer-events: none; z-index: 3;
+            background: rgba(255, 213, 0, 0.42); border-radius: 2px;
+        }
+        .find-hit.current { background: rgba(255, 140, 0, 0.72); }
 
         #page-navigation { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--c-text); }
         /* 標準の上下矢印は隠し、同じ場所・同じ見え方の自前の矢印を置く。
@@ -926,8 +994,8 @@
                 bottom: calc(var(--tools-h, 170px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
             }
             #app-header { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
-            /* 学習モードのヘッダーは visibility:hidden で場所だけ残る。狭い画面では
-               画面の2割強を空白に取られるので、たたんで閲覧に使えるようにする */
+            /* 広い画面では学習モードでもヘッダーを残す（08-15 Rayan様の指示）。
+               狭い画面は画面の2割強を取られるので、ここだけはたたんで閲覧に使う */
             body.focus-mode #app-header { display: none; }
             h1 { font-size: 17px; }
             #current-file-name { max-width: 130px; }

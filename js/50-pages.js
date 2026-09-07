@@ -3,6 +3,10 @@
 // index.html の読み込み順を変えると壊れる。
 
         function initWorkspace(isPdf = false) {
+            // 探す機能の索引を作り直す（文字の情報が無ければ虫眼鏡ごと消える）
+            if (typeof window.resetFind === 'function') window.resetFind(isPdf);
+            // 資料が入ったので、空の時の案内を引っ込める
+            document.body.classList.add('has-doc');
             workspace.querySelectorAll('.canvas-element').forEach(e => e.remove());
             window.deselectCurrent(); window.historyArray = []; window.historyIndex = -1; window.canvasDrawings = [];
             
@@ -150,9 +154,16 @@
             try {
                 const page = await window.currentPdfDoc.getPage(pageNum);
                 const viewport = page.getViewport({ scale: window.pdfBaseScale });
-                
+
+                // ページの大きさが確定するのはここ。それまでは1ページ目の大きさで仮に置いてあるので、
+                // 大きさの揃っていない資料では紙全体の高さがここで変わる。
+                // 変わったらスクロールの器も測り直す（放っておくと余白だけが残る）。
+                const heightChanged = pageDiv.style.height !== viewport.height + 'px';
                 pageDiv.style.width = viewport.width + 'px'; 
                 pageDiv.style.height = viewport.height + 'px';
+                if (heightChanged && typeof window.refreshWorkspaceBounds === 'function') {
+                    window.refreshWorkspaceBounds();
+                }
                 
                 const dynamicScale = Math.min(RENDER_SCALE * targetZoom, 4.0);
                 
@@ -259,6 +270,25 @@
                             });
                         }, { root: workspaceContainer, rootMargin: '800px 0px' });
 
+                        // 遠ざかったページは絵と文字を捨てて、次に近づいた時に描き直す。
+                        // ページ数の多い資料で、見ていないページの絵を抱えたままにしないため。
+                        // 描くのは 800px 圏内、捨てるのは 2400px 圏外。間に幅を持たせて、
+                        // 少し戻しただけで「捨てる→描く」を繰り返さないようにする。
+                        if (window.pageReleaseObserver) window.pageReleaseObserver.disconnect();
+                        window.pageReleaseObserver = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) return;
+                                const div = entry.target;
+                                if (div.dataset.rendered !== "true" || div.dataset.rendering === "true") return;
+                                const canvas = div.querySelector('canvas:not(.drawing-canvas)');
+                                if (canvas) { canvas.width = 0; canvas.height = 0; }
+                                const layer = div.querySelector('.textLayer');
+                                if (layer) layer.textContent = '';
+                                // 手描き（SVG）は軽いので残す。消すと描き直しの手間だけ増える
+                                div.dataset.rendered = "false";
+                            });
+                        }, { root: workspaceContainer, rootMargin: '2400px 0px' });
+
                         window.thumbObserver = new IntersectionObserver((entries) => {
                             entries.forEach(entry => {
                                 if (entry.isIntersecting && entry.target.dataset.rendered !== "true" && entry.target.dataset.rendering !== "true") {
@@ -293,6 +323,7 @@
                             
                             pdfContainer.appendChild(pageDiv);
                             window.pageObserver.observe(pageDiv);
+                            window.pageReleaseObserver.observe(pageDiv);
 
                             const thumbDiv = document.createElement('div'); 
                             thumbDiv.className = 'pdf-thumb'; 

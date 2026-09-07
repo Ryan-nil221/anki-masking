@@ -120,7 +120,7 @@
         </div>
     </div>
 
-    <header id="app-header" class="hideable-ui">
+    <header id="app-header">
         <div class="header-top">
             
             <div class="header-title-group">
@@ -153,6 +153,11 @@
                 </button>
                 <button class="btn btn-icon" id="btn-redo" title="やり直し (Ctrl+Shift+Z または Ctrl+Y)">
                     <span class="material-symbols-outlined">redo</span>
+                </button>
+                <!-- 探す。文字の情報があるPDFの時だけ出す（写真・未読み込みでは消す）。
+                     消すと隣がずれるが、使えない物を見せない方を採った（08-15 Rayan様の指示） -->
+                <button class="btn btn-icon wide-only" id="btn-find" title="探す (Ctrl+F)" style="display: none;">
+                    <span class="material-symbols-outlined">search</span>
                 </button>
                 <div class="v-divider"></div>
                 
@@ -220,7 +225,24 @@
                 <span class="material-symbols-outlined">visibility</span>
             </button>
 
-            <div id="floating-top-left" class="floating-ui hideable-ui" style="display: none;">
+            <!-- 探す窓。ヘッダーのすぐ下に右端を揃えて浮かせる。中身の並びは Chrome の Ctrl+F と同じ。
+                 Ctrl+F はこちらが受け取り、ブラウザの窓は出さない。 -->
+            <div id="find-bar" class="floating-ui" style="display: none;">
+                <input type="text" id="find-input" placeholder="ページ内を検索" autocomplete="off" spellcheck="false">
+                <span id="find-count">0/0</span>
+                <div class="v-divider-sm"></div>
+                <button class="btn btn-icon" id="btn-find-prev" title="前へ (Shift+Enter)">
+                    <span class="material-symbols-outlined">keyboard_arrow_up</span>
+                </button>
+                <button class="btn btn-icon" id="btn-find-next" title="次へ (Enter)">
+                    <span class="material-symbols-outlined">keyboard_arrow_down</span>
+                </button>
+                <button class="btn btn-icon" id="btn-find-close" title="閉じる (Esc)">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div id="floating-top-left" class="floating-ui" style="display: none;">
                 <button class="btn btn-icon" id="btn-toggle-sidebar" title="ページ一覧">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
@@ -239,7 +261,7 @@
                 </div>
             </div>
 
-            <div id="floating-bottom-right" class="floating-ui hideable-ui">
+            <div id="floating-bottom-right" class="floating-ui">
                 <button class="btn btn-icon" id="btn-zoom-out" title="縮小">
                     <span class="material-symbols-outlined">remove</span>
                 </button>
@@ -413,6 +435,17 @@
                 </div>
             </div>
 
+            <!-- 何も読み込んでいない時の案内。中央に3行で置く。
+                 ファイルはどこにも送らずブラウザの中だけで扱うので「アップロード」とは書かない。 -->
+            <div id="empty-hint">
+                <div id="empty-hint-box">
+                    <span class="material-symbols-outlined" id="empty-hint-icon">upload_file</span>
+                    <p id="empty-hint-line">ここにPDF・画像をドラッグ</p>
+                    <p id="empty-hint-pick">または <label for="imageInput" class="link-btn">ファイルを選ぶ</label></p>
+                    <p id="empty-hint-open"><label for="projectInput" class="link-quiet">保存したデータを開く</label></p>
+                </div>
+            </div>
+
             <div id="workspace-container" class="tool-mask"> 
                 <div id="workspace-wrapper">
                     <div id="workspace">
@@ -437,3 +470,4 @@
     <script src="js/70-export.js"></script>
     <script src="js/75-welcome.js"></script>
     <script src="js/80-images.js"></script>
+    <script src="js/85-find.js"></script>
