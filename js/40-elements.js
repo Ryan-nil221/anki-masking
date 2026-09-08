@@ -126,7 +126,9 @@
             textContent.style.letterSpacing = letterSpacing || 'normal';
             
             wrapper.appendChild(textContent);
-            if (parseFloat(lineSpacing)) setLineSpacing(wrapper, parseFloat(lineSpacing));
+            // すき間が 0 でも入れる。入れないと normal のままになり、
+            // 触ったことのある箱と無い箱で1行の高さが少し食い違う（09-08 Rayan様）。
+            setLineSpacing(wrapper, parseFloat(lineSpacing) || 0);
             addResizeHandles(wrapper); addTextHandles(wrapper); 
             window.bringToFront(wrapper);
             workspace.appendChild(wrapper);
@@ -232,7 +234,11 @@
         // 変更前の位置を測り、変更後にそこへ戻す（現在位置基準なので移動後も正しい）。
         function applyFontSizeKeepBottomLeft(el, size) {
             const before = measureTextTopLeftWs(el);
+            // 行間は文字の大きさに対する割合で持つので、大きさを変えたら作り直す（09-09 Rayan様）
+            const shownLine = Math.round(
+                window.lineToShown(parseFloat(el.dataset.lineSpacing) || 0, window.fontSizeOf(el)));
             el.style.fontSize = size + 'px';
+            setLineSpacing(el, window.shownToLine(shownLine, size));
             moveTextTopLeftTo(el, before.x, before.y);
         }
         function changeGlobalTextSize(delta) {
@@ -271,6 +277,22 @@
         window.SPACING_OFFSET = 5;
         window.spacingToShown = (px) => px + window.SPACING_OFFSET;
         window.shownToSpacing = (n) => n - window.SPACING_OFFSET;
+        // 行間の1段は「文字の大きさに対する割合」で決める（09-09 Rayan様）。
+        // 固定のピクセルにすると、大きい字では 0 まで下げても行が離れたままだった。
+        // 素の状態が欄「5」、欄「0」でちょうど行がくっつく（1行の高さ＝文字の大きさ）ように、
+        // 5段で「素の行の高さ → 文字の大きさぴったり」まで下がる割合を1段ぶんとする。
+        window.LINE_SHOWN_MAX = 20;
+        window.lineStepPx = (fontSize) =>
+            (normalLineHeightRatio() - 1) / window.SPACING_OFFSET * (fontSize || 20);
+        window.lineToShown = (px, fontSize) => {
+            const step = window.lineStepPx(fontSize);
+            return step ? (px / step + window.SPACING_OFFSET) : window.SPACING_OFFSET;
+        };
+        // 保存する数字が長くならないよう小数2桁に丸める
+        window.shownToLine = (n, fontSize) =>
+            Math.round((n - window.SPACING_OFFSET) * window.lineStepPx(fontSize) * 100) / 100;
+        // 箱の文字の大きさ
+        window.fontSizeOf = (el) => parseFloat(el && el.style.fontSize) || 20;
         function currentLetterSpacing() {
             const v = parseFloat(textSpacingInput.value);
             return isNaN(v) ? 0 : window.shownToSpacing(v);
@@ -303,18 +325,24 @@
             if (__normalLhRatio == null) __normalLhRatio = measuredLineHeightPx(100) / 100;
             return __normalLhRatio;
         }
+        // すき間 0（欄の「5」）でも計算式を入れる（09-08 Rayan様）。ブラウザ任せの normal と
+        // 「1行の高さ × 文字サイズ」は数字がぴったり同じにならず、0 の所だけ行の間隔が
+        // 跳ねていた（5 より 5.5 の方が狭い、など）。0 も同じ式で書けば端から端まで滑らかになる。
+        // 保存する値は今までどおりで、0 の時は書かない。
         function setLineSpacing(el, px) {
             const tc = el.querySelector('.text-content');
-            const v = px ? `calc(${normalLineHeightRatio().toFixed(4)}em + ${px}px)` : '';
+            const v = `calc(${normalLineHeightRatio().toFixed(4)}em + ${px || 0}px)`;
             el.style.lineHeight = v;
             if (tc) tc.style.lineHeight = v;
             if (px) el.dataset.lineSpacing = px; else delete el.dataset.lineSpacing;
         }
         window.setLineSpacing = setLineSpacing;
         // 欄に出す数字は字間と同じ下駄をはく（素の状態＝欄の「5」＝すき間 0px）
+        // 新しく置く箱に渡す行間（px）。欄の数字を、そのとき使う文字の大きさで px に直す。
         function currentLineSpacing() {
             const v = parseFloat(lineSpacingInput.value);
-            return isNaN(v) ? 0 : window.shownToSpacing(v);
+            if (isNaN(v)) return 0;
+            return window.shownToLine(v, parseFloat(textSizeInput.value) || 20);
         }
         window.currentLineSpacing = currentLineSpacing;
         // 行のすき間は「箱の上端」を保つ（＝動かさない）。
@@ -323,24 +351,37 @@
         function applyLineSpacingKeepBottomLeft(el, px) {
             setLineSpacing(el, px);
         }
-        function applyLineSpacingToSelection(px) {
+        // 受け取るのは欄の数字。箱ごとに、その箱の文字の大きさで px に直して当てる。
+        function applyLineSpacingToSelection(shown) {
             let saved = false;
             selectedElements.forEach(el => {
-                if (el.classList.contains('text-wrapper')) { applyLineSpacingKeepBottomLeft(el, px); saved = true; }
+                if (el.classList.contains('text-wrapper')) {
+                    applyLineSpacingKeepBottomLeft(el, window.shownToLine(shown, window.fontSizeOf(el)));
+                    saved = true;
+                }
             });
             if (saved) window.saveState();
         }
-        function changeGlobalLineSpacing(delta) {
-            let next = Math.round((currentLineSpacing() + delta) * 2) / 2;
-            if (next < -window.SPACING_OFFSET) next = -window.SPACING_OFFSET;
-            if (next > 30) next = 30;
-            lineSpacingInput.value = window.spacingToShown(next);
-            applyLineSpacingToSelection(next);
+        // 行間は欄の 1 ずつ動かす（＝実際は LINE_STEP_PX ずつ・09-08 Rayan様）
+        function changeGlobalLineSpacing(deltaShown) {
+            let shown = Math.round((parseFloat(lineSpacingInput.value) || 0) + deltaShown);
+            if (shown < 0) shown = 0;
+            if (shown > window.LINE_SHOWN_MAX) shown = window.LINE_SHOWN_MAX;
+            lineSpacingInput.value = shown;
+            applyLineSpacingToSelection(shown);
         }
         window.changeGlobalLineSpacing = changeGlobalLineSpacing;
-        document.getElementById('btn-line-spacing-up').addEventListener('click', () => changeGlobalLineSpacing(0.5));
-        document.getElementById('btn-line-spacing-down').addEventListener('click', () => changeGlobalLineSpacing(-0.5));
-        lineSpacingInput.addEventListener('input', () => applyLineSpacingToSelection(currentLineSpacing()));
+        document.getElementById('btn-line-spacing-up').addEventListener('click', () => changeGlobalLineSpacing(1));
+        document.getElementById('btn-line-spacing-down').addEventListener('click', () => changeGlobalLineSpacing(-1));
+        lineSpacingInput.addEventListener('input', () => {
+            // 打ち込みでも範囲から出さない（矢印と同じ 0〜LINE_SHOWN_MAX）
+            const v = parseFloat(lineSpacingInput.value);
+            if (!isNaN(v)) {
+                if (v < 0) lineSpacingInput.value = 0;
+                else if (v > window.LINE_SHOWN_MAX) lineSpacingInput.value = window.LINE_SHOWN_MAX;
+            }
+            applyLineSpacingToSelection(parseFloat(lineSpacingInput.value) || 0);
+        });
 
         document.getElementById('btn-undo').addEventListener('click', () => { 
             if (window.historyIndex > 0) { window.historyIndex--; restoreState(window.historyIndex); }

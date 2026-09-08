@@ -716,7 +716,8 @@
                 if (sz) textSizeInput.value = sz;
                 const ls = parseFloat(selText.style.letterSpacing);   // 'normal' なら NaN → 0
                 textSpacingInput.value = window.spacingToShown(isNaN(ls) ? 0 : ls);
-                lineSpacingInput.value = window.spacingToShown(parseFloat(selText.dataset.lineSpacing) || 0);
+                lineSpacingInput.value = Math.round(
+                    window.lineToShown(parseFloat(selText.dataset.lineSpacing) || 0, window.fontSizeOf(selText)));
             }
 
             document.getElementById('prop-pen-mode').style.display = (currentTool === 'pen') ? 'flex' : 'none';

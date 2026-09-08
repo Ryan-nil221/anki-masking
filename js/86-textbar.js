@@ -214,7 +214,7 @@
     // 作りは字間と同じ。実際の値は箱の data-line-spacing に入っている。
     function lineOf(el) {
         const v = parseFloat(el.dataset.lineSpacing);
-        return window.spacingToShown(isNaN(v) ? 0 : v);
+        return Math.round(window.lineToShown(isNaN(v) ? 0 : v, window.fontSizeOf(el)));
     }
 
     function reflectLine(el) {
@@ -225,13 +225,13 @@
 
     function setLine(shown) {
         const el = target();
-        let v = Math.round((parseFloat(shown) || 0) * 2) / 2;
+        let v = Math.round(parseFloat(shown) || 0);   // 行間は 1 刻み（09-08 Rayan様）
         if (v < 0) v = 0;
-        if (v > 35) v = 35;
+        if (v > window.LINE_SHOWN_MAX) v = window.LINE_SHOWN_MAX;
         lineInput.value = v;
         if (!el) return;
         lineSpacingInput.value = v;          // 左のパネルの数字も合わせる
-        applyLineSpacingKeepBottomLeft(el, window.shownToSpacing(v));
+        applyLineSpacingKeepBottomLeft(el, window.shownToLine(v, window.fontSizeOf(el)));
         if (!holding) window.saveState();
         place();
     }
@@ -454,8 +454,8 @@
 
     holdToRepeat(document.getElementById('tb-spacing-up'), () => stepSpacing(0.5));
     holdToRepeat(document.getElementById('tb-spacing-down'), () => stepSpacing(-0.5));
-    holdToRepeat(document.getElementById('tb-line-up'), () => stepLine(0.5));
-    holdToRepeat(document.getElementById('tb-line-down'), () => stepLine(-0.5));
+    holdToRepeat(document.getElementById('tb-line-up'), () => stepLine(1));
+    holdToRepeat(document.getElementById('tb-line-down'), () => stepLine(-1));
     spacingInput.addEventListener('change', () => setSpacing(spacingInput.value));
     spacingInput.addEventListener('keydown', (e) => {
         e.stopPropagation();
