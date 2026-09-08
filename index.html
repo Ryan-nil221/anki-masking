@@ -362,11 +362,60 @@
 
                     <span class="prop-group" id="prop-text-size">
                         <span class="slider-label material-symbols-outlined" title="文字サイズ">format_size</span>
-                        <button class="btn btn-icon" id="btn-text-size-down"><span class="material-symbols-outlined">remove</span></button>
-                        <div class="combo-box" id="text-size-combo">
-                            <input type="number" id="text-size-input" class="combo-input" value="20" min="10">
-                        </div>
-                        <button class="btn btn-icon" id="btn-text-size-up"><span class="material-symbols-outlined">add</span></button>
+                        <span class="tb-num-wrap panel-num">
+                            <input type="number" id="text-size-input" class="tb-num" value="20" min="10">
+                            <span class="tb-stepper">
+                                <button type="button" id="btn-text-size-up" title="増やす" aria-label="増やす"></button>
+                                <button type="button" id="btn-text-size-down" title="減らす" aria-label="減らす"></button>
+                            </span>
+                        </span>
+                    </span>
+
+                    <span class="prop-group" id="prop-text-spacing">
+                        <!-- 字間の印。既製のアイコンに合うものが無いので自前で描く（09-08 Rayan様が選んだ形）。
+                             A と B の下に左右の矢印。色は文字色を継ぐので、周りの印と同じ濃さになる。 -->
+                        <span class="slider-label icon-svg" title="文字間隔">
+                            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                                <text x="7.5" y="14" text-anchor="middle" fill="currentColor"
+                                      style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:13px">A</text>
+                                <text x="16.5" y="14" text-anchor="middle" fill="currentColor"
+                                      style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:13px">B</text>
+                                <path d="M2.8 19.5 H21.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+                                <path d="M5.4 17.2 L2.8 19.5 L5.4 21.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                <path d="M18.6 17.2 L21.2 19.5 L18.6 21.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            </svg>
+                        </span>
+                        <span class="tb-num-wrap panel-num">
+                            <input type="number" id="text-spacing-input" class="tb-num" value="5" min="0" max="35" step="0.5">
+                            <span class="tb-stepper">
+                                <button type="button" id="btn-text-spacing-up" title="増やす" aria-label="増やす"></button>
+                                <button type="button" id="btn-text-spacing-down" title="減らす" aria-label="減らす"></button>
+                            </span>
+                        </span>
+                    </span>
+
+                    <span class="prop-group" id="prop-line-spacing">
+                        <!-- 行間の印。字間と対になる形を自前で描く（09-08 Rayan様が選んだ形）。
+                             A と B を縦に積み、その左に上下の矢印。中身は 24 のマス目の内側 3.2〜20.8 に収め、
+                             矢印の上下端と文字の上下端が同じ高さになるよう、描いた画を測って合わせてある。 -->
+                        <span class="slider-label icon-svg" title="行間">
+                            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                                <path d="M6.35 4.05 V19.95" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+                                <path d="M4.055 6.345 L6.35 4.05 L8.645 6.345" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                <path d="M4.055 17.655 L6.35 19.95 L8.645 17.655" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                <text x="16.9" y="11.615" text-anchor="middle" fill="currentColor"
+                                      style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:12px">A</text>
+                                <text x="16.9" y="20.8" text-anchor="middle" fill="currentColor"
+                                      style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:12px">B</text>
+                            </svg>
+                        </span>
+                        <span class="tb-num-wrap panel-num">
+                            <input type="number" id="line-spacing-input" class="tb-num" value="5" min="0" max="35" step="0.5">
+                            <span class="tb-stepper">
+                                <button type="button" id="btn-line-spacing-up" title="増やす" aria-label="増やす"></button>
+                                <button type="button" id="btn-line-spacing-down" title="減らす" aria-label="減らす"></button>
+                            </span>
+                        </span>
                     </span>
 
                     <span class="prop-group" id="prop-pen-width">
@@ -447,6 +496,87 @@
             </div>
 
             <div id="workspace-container" class="tool-mask"> 
+                <!-- 選んだテキストの上に出る道具の帯（08-16 Rayan様の案）。
+                     左端のつまみで箱を動かし、その右に文字の設定を並べる。
+                     まだ見た目だけで、押しても何も起きない。 -->
+                <div id="text-toolbar" class="floating-ui" style="display: none;">
+                    <div id="text-toolbar-grip" title="ドラッグで移動"></div>
+                    <span class="tb-sep"></span>
+                    <span class="tb-icon material-symbols-outlined" title="文字サイズ">format_size</span>
+                    <span id="tb-size-wrap" class="tb-num-wrap">
+                        <input type="number" id="tb-size" class="tb-num" value="20" min="10">
+                        <span id="tb-size-stepper" class="tb-stepper">
+                            <button type="button" id="tb-size-up" title="大きく" aria-label="大きく"></button>
+                            <button type="button" id="tb-size-down" title="小さく" aria-label="小さく"></button>
+                        </span>
+                    </span>
+                    <span class="tb-sep"></span>
+                    <button type="button" id="tb-color" title="色"></button>
+                    <span class="tb-sep"></span>
+                    <!-- 太字・下線・取り消し線は1つにまとめる（09-08 Rayan様）。
+                         押すと3つが並んで出て、好きなだけ重ねられる。 -->
+                    <button class="btn btn-icon" id="tb-decor" title="太字・下線・取り消し線"><span class="material-symbols-outlined">text_format</span></button>
+                    <span class="tb-sep"></span>
+                    <button class="btn btn-icon" id="tb-align" title="揃え"><span class="material-symbols-outlined">format_align_left</span></button>
+                    <button class="btn btn-icon" id="tb-dir" title="縦書き・横書き"><span class="material-symbols-outlined">notes</span></button>
+                    <span class="tb-sep"></span>
+                    <!-- 字間は印だけを置き、押すと数字の欄が上に出る（09-08 Rayan様。あまり使わないため）。
+                         印は設定パネルと同じ形（A B の下に左右の矢印）。 -->
+                    <button class="btn btn-icon" id="tb-spacing-btn" title="文字間隔">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <text x="7.5" y="14" text-anchor="middle" fill="currentColor"
+                                  style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:13px">A</text>
+                            <text x="16.5" y="14" text-anchor="middle" fill="currentColor"
+                                  style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:13px">B</text>
+                            <path d="M2.8 19.5 H21.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+                            <path d="M5.4 17.2 L2.8 19.5 L5.4 21.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <path d="M18.6 17.2 L21.2 19.5 L18.6 21.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg>
+                    </button>
+                    <!-- 行間も同じ作り。印を押すと数字の欄が上に出る。 -->
+                    <button class="btn btn-icon" id="tb-line-btn" title="行間">
+                        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                            <path d="M6.35 4.05 V19.95" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+                            <path d="M4.055 6.345 L6.35 4.05 L8.645 6.345" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <path d="M4.055 17.655 L6.35 19.95 L8.645 17.655" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <text x="16.9" y="11.615" text-anchor="middle" fill="currentColor"
+                                  style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:12px">A</text>
+                            <text x="16.9" y="20.8" text-anchor="middle" fill="currentColor"
+                                  style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:600;font-size:12px">B</text>
+                        </svg>
+                    </button>
+                </div>
+                <!-- 帯の色ボタンを押すと出る色の一覧。中身は 86-textbar.js が作る。 -->
+                <div id="tb-palette" class="floating-ui" style="display: none;"></div>
+                <!-- 数字の欄を押すと出る、よく使う値の一覧。中身は 86-textbar.js が作る。
+                     欄には数字を打つこともできる（09-08 Rayan様）。 -->
+                <div id="tb-num-list" class="floating-ui" style="display: none;"></div>
+                <!-- 字間の印を押すと出る、数字の欄。 -->
+                <div id="tb-spacing-pop" class="floating-ui" style="display: none;">
+                    <span id="tb-spacing-wrap" class="tb-num-wrap">
+                        <input type="number" id="tb-spacing" class="tb-num" value="5" min="0" max="35" step="0.5">
+                        <span id="tb-spacing-stepper" class="tb-stepper">
+                            <button type="button" id="tb-spacing-up" title="広げる" aria-label="広げる"></button>
+                            <button type="button" id="tb-spacing-down" title="詰める" aria-label="詰める"></button>
+                        </span>
+                    </span>
+                </div>
+                <!-- 行間の印を押すと出る、数字の欄。 -->
+                <div id="tb-line-pop" class="floating-ui" style="display: none;">
+                    <span id="tb-line-wrap" class="tb-num-wrap">
+                        <input type="number" id="tb-line" class="tb-num" value="5" min="0" max="35" step="0.5">
+                        <span id="tb-line-stepper" class="tb-stepper">
+                            <button type="button" id="tb-line-up" title="広げる" aria-label="広げる"></button>
+                            <button type="button" id="tb-line-down" title="詰める" aria-label="詰める"></button>
+                        </span>
+                    </span>
+                </div>
+                <!-- 帯の飾りボタンを押すと出る、太字・下線・取り消し線の3つ。 -->
+                <div id="tb-decor-menu" class="floating-ui" style="display: none;">
+                    <button class="btn btn-icon" id="tb-bold" title="太字"><span class="material-symbols-outlined">format_bold</span></button>
+                    <button class="btn btn-icon" id="tb-underline" title="下線"><span class="material-symbols-outlined">format_underlined</span></button>
+                    <button class="btn btn-icon" id="tb-strike" title="取り消し線"><span class="material-symbols-outlined">strikethrough_s</span></button>
+                </div>
                 <div id="workspace-wrapper">
                     <div id="workspace">
                         <img id="uploaded-image" src="" style="display: none;" draggable="false">
@@ -471,3 +601,5 @@
     <script src="js/75-welcome.js"></script>
     <script src="js/80-images.js"></script>
     <script src="js/85-find.js"></script>
+    <script src="js/86-textbar.js"></script>
+    <script src="js/87-multisel.js"></script>

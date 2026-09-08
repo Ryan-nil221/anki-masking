@@ -295,6 +295,9 @@
 
         .slider-label { color: var(--c-text-muted); position: relative; cursor: help; }
         .slider-label:hover { color: var(--c-text); }
+        /* 自前で描いた印。周りのアイコン（フォント）と縦位置と大きさを揃える */
+        .icon-svg { display: inline-flex; align-items: center; }
+        .icon-svg svg { display: block; }
         .slider-label:hover::after { opacity: 1; transform: translateY(0); }
 
         .mini-switch { display: inline-flex; background: var(--c-surface-3); border-radius: var(--r-lg); padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--c-border); }
@@ -448,11 +451,13 @@
         #page-input-wrap:hover #page-stepper, #page-input-wrap:focus-within #page-stepper {
             opacity: 1; pointer-events: auto;
         }
+        /* 下地は敷かない（09-08 Rayan様）。三角だけを置き、乗せた時は色を濃くする */
         #page-stepper button {
-            flex: 1; padding: 0; border: none; background: var(--c-surface-3);
+            flex: 1; padding: 0; border: none; background: none;
             border-radius: 2px; cursor: pointer; position: relative;
         }
-        #page-stepper button:hover { background: var(--c-border); }
+        #btn-page-prev:hover::before { border-bottom-color: var(--c-text); }
+        #btn-page-next:hover::before { border-top-color: var(--c-text); }
         /* 三角は擬似要素で描く（アイコン用フォントの読み込みに左右されないように） */
         #page-stepper button::before {
             content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -516,12 +521,21 @@
         /* 描く道具は要素の上でも隠す。この間クラスは付いたままなので測り直しは起きない */
         #workspace-container.hide-cursor-all, #workspace-container.hide-cursor-all * { cursor: none !important; }
         
-        /* 選択中ツール以外の要素の当たり判定を消す（★ただし .mask は常に判定を残す） */
+        /* 選択中ツール以外の要素の当たり判定を消す（★ただし .mask は常に判定を残す）
+           中身まで消す（09-08 Rayan様）。図形の線（.shape-hit）のように、子が自分で
+           pointer-events を持っていると親を消しても子だけが復活し、テキストの道具中でも
+           線の上で指のカーソルが出ていた。判定はツールを切り替えた時にしか変わらないので、
+           カーソルの `*` と違って測り直しの負担にはならない。 */
 #workspace-container.tool-mask .canvas-element:not(.mask),
+#workspace-container.tool-mask .canvas-element:not(.mask) *,
 #workspace-container.tool-highlight .canvas-element:not(.highlight-box):not(.mask),
+#workspace-container.tool-highlight .canvas-element:not(.highlight-box):not(.mask) *,
 #workspace-container.tool-text .canvas-element:not(.text-wrapper):not(.mask),
+#workspace-container.tool-text .canvas-element:not(.text-wrapper):not(.mask) *,
 #workspace-container.tool-shape .canvas-element:not(.shape-element):not(.mask),
-#workspace-container.tool-pen .canvas-element:not(.mask) { 
+#workspace-container.tool-shape .canvas-element:not(.shape-element):not(.mask) *,
+#workspace-container.tool-pen .canvas-element:not(.mask),
+#workspace-container.tool-pen .canvas-element:not(.mask) * { 
     pointer-events: none !important; 
 }
 
@@ -617,12 +631,167 @@
             outline: 1px dashed var(--c-accent);
             outline-offset: 0;
         }
-        /* テキストは箱にぴったり沿わせる（余白を挟まない） */
+        /* --- テキストの選択表示（08-16 Rayan様の指示で作り直し） ---
+           四角い箱に四隅のつまみ、という形をやめた。文字の高さは中身で決まるので、
+           変えたいのは横幅だけ。左に掴む取っ手、右に幅を変える丸を置く。
+           枠とつまみの見た目は**他の道具と同じ**（1pxの破線・5pxの白丸・角丸なし）。 */
         .text-wrapper.selected {
             outline: 1px dashed var(--c-accent);
             outline-offset: 0;
+            border-radius: 0;
         }
-        
+        /* テキストでは四隅のつまみを出さない（右の丸だけ残す） */
+        .text-wrapper .resize-handle:not(.text-edge-handle) { display: none !important; }
+
+        .text-grip, .text-edge-handle { display: none; position: absolute; z-index: 50; }
+        .text-wrapper.selected > .text-edge-handle { display: block; }
+        /* 掴む所は上に出る帯の左端へ移した（08-16 Rayan様の案）。
+           箱の左の点は出さない。作りは残してあるので、戻すなら display を block に。 */
+
+        /* 左の取っ手。ここを掴んで動かす。
+           帯は敷かず点だけ置く（08-16 Rayan様。青い帯は重すぎる）。
+           帯が無くても掴めるよう、当たり域は透明のまま幅を持たせてある。 */
+        .text-grip {
+            left: -13px; top: 0; bottom: 0; width: 13px;
+            background: transparent;
+            cursor: move; pointer-events: auto;
+        }
+        /* 点2列3行。1つの丸に影を5つ足して6点にする。 */
+        .text-grip::before {
+            content: ''; position: absolute; left: 50%; top: 50%;
+            width: 2px; height: 2px; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--c-accent);
+            box-shadow:
+                 0   -5px 0 var(--c-accent),  4px -5px 0 var(--c-accent),
+                                              4px  0   0 var(--c-accent),
+                 0    5px 0 var(--c-accent),  4px  5px 0 var(--c-accent);
+            margin-left: -2px;
+        }
+        /* 右の丸。横幅を変える所。四隅のつまみと同じ見た目で、点線の上に重ねる。 */
+        .text-edge-handle {
+            left: 100%; top: 50%; width: 5px; height: 5px;
+            margin: -2.5px 0 0 -2.5px;
+            background: white; border: 1px solid var(--c-accent);
+            border-radius: 50%; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            cursor: ew-resize; pointer-events: auto;
+        }
+
+        /* --- 選んだテキストの上に出る道具の帯（08-16 Rayan様の案） ---
+           浮かぶ箱の見た目は他（探す窓・左上の帯）と同じものを使う。 */
+        /* 位置は画面を基準にして置く（紙を入れている箱は position が static なので、
+           absolute のままだと基準がずれる） */
+        /* 帯の上は押せる所なので指のかたち。紙の上の自前カーソルには渡さない。 */
+        #text-toolbar, #tb-palette { position: fixed; cursor: pointer; }
+        #text-toolbar { padding: 4px 6px; gap: 3px; }
+        #text-toolbar *, #tb-palette * { cursor: pointer; }
+        #text-toolbar .tb-num { cursor: text; }
+        #text-toolbar-grip, #text-toolbar-grip::before {
+            cursor: move;
+        }
+        #text-toolbar-grip {
+            width: 14px; align-self: stretch; position: relative;
+            flex: 0 0 auto;
+        }
+        #text-toolbar-grip::before {
+            content: ''; position: absolute; left: 50%; top: 50%;
+            width: 2px; height: 2px; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--c-text-muted);
+            box-shadow:
+                 0   -5px 0 var(--c-text-muted),  4px -5px 0 var(--c-text-muted),
+                                                  4px  0   0 var(--c-text-muted),
+                 0    5px 0 var(--c-text-muted),  4px  5px 0 var(--c-text-muted);
+            margin-left: -2px;
+        }
+        .tb-sep { width: 1px; align-self: stretch; margin: 2px 3px; background: var(--c-glass-border); flex: 0 0 auto; }
+        /* 文字の大きさ。上下の矢印はページ番号の所と同じ作り（08-16 Rayan様）。
+           あちらはホバーで出るが、ここは常に出す。 */
+        .tb-num-wrap { position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; }
+        /* 数字の欄は小さめに（09-08 Rayan様「サイズがでかい」）。
+           左右の余白は同じにして、上下の矢印を含めた箱の真ん中に数字が来るようにする。
+           右の 11px は矢印の幅（9px）＋右端のすき間（2px）にぴったり合わせてある。 */
+        .tb-num {
+            width: 28px; padding: 5px 11px; text-align: center;
+            border: 1px solid var(--c-border-input); border-radius: var(--r-md);
+            background: var(--c-surface); font-size: 14px; font-weight: 500; color: var(--c-text);
+            outline: none; -moz-appearance: textfield;
+        }
+        .tb-num::-webkit-outer-spin-button, .tb-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .tb-stepper {
+            position: absolute; right: 2px; top: 2px; bottom: 2px; width: 9px;
+            display: flex; flex-direction: column; gap: 1px;
+        }
+        /* 矢印の下敷きは置かない（08-16 Rayan様）。指した時だけ薄く出す。 */
+        .tb-stepper button {
+            flex: 1; padding: 0; border: none; background: transparent;
+            border-radius: 2px; cursor: pointer; position: relative;
+        }
+        .tb-stepper button:hover { background: var(--c-surface-3); }
+        .tb-stepper button::before {
+            content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            border-left: 3px solid transparent; border-right: 3px solid transparent;
+        }
+        .tb-stepper button:first-child::before { border-bottom: 4px solid var(--c-text-sub); margin-top: -1px; }
+        .tb-stepper button:last-child::before { border-top: 4px solid var(--c-text-sub); margin-top: 1px; }
+
+        /* 数値の欄の左に置く印。何の数字かが分かるようにする（09-08 Rayan様）。 */
+        .tb-icon {
+            flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+            color: var(--c-text-sub); font-size: 18px; margin-left: 1px;
+        }
+        .tb-icon svg { display: block; }
+
+        /* 数字の欄を押すと出る、よく使う値の一覧（09-08 Rayan様）。
+           縦に並べて、長い時はこの中だけを転がす。 */
+        #tb-num-list {
+            position: fixed; flex-direction: column; padding: 4px; gap: 1px;
+            /* 左の設定パネルの欄からも開く。欄の真下＝パネルの途中に出るので、
+               パネルより上に重ねる（09-08 Rayan様）。 */
+            z-index: 2500;
+            max-height: 240px; overflow-y: auto; cursor: pointer;
+            /* 転がすバーは出さない（09-08 Rayan様）。ホイールと指では今までどおり動く。 */
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        #tb-num-list::-webkit-scrollbar { width: 0; height: 0; display: none; }
+        .tb-num-item {
+            min-width: 46px; padding: 6px 8px; border: none; background: transparent;
+            border-radius: var(--r-sm); cursor: pointer; text-align: center;
+            font-size: 13px; font-weight: 600; font-family: inherit; color: var(--c-text);
+        }
+        .tb-num-item:hover { background: var(--c-accent-tint); color: var(--c-accent); }
+        .tb-num-item.is-now { color: var(--c-accent); background: var(--c-accent-tint); }
+
+        /* 太字・下線・取り消し線の3つ。飾りのボタンを押すと出る。 */
+        #tb-decor-menu { position: fixed; padding: 4px; gap: 3px; cursor: pointer; }
+        #tb-decor-menu * { cursor: pointer; }
+
+        /* 飾りの印は、字間の印と同じ大きさに見えるよう少し大きく（09-08 Rayan様）。 */
+        #tb-decor .material-symbols-outlined { font-size: 24px; }
+
+        /* 字間の数字。帯の印を押すと出る（09-08 Rayan様）。 */
+        #tb-spacing-pop, #tb-line-pop { position: fixed; padding: 4px 6px; cursor: pointer; }
+        #tb-spacing-pop *, #tb-line-pop * { cursor: pointer; }
+        #tb-spacing-pop .tb-num, #tb-line-pop .tb-num { cursor: text; }
+
+        /* 帯の色ボタンを押すと出る色の一覧。 */
+        #tb-palette { padding: 6px; gap: 6px; }
+        .tb-swatch {
+            width: 22px; height: 22px; padding: 0; border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.15); cursor: pointer;
+        }
+        .tb-swatch:hover { transform: scale(1.12); }
+        .tb-swatch-more {
+            background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+        }
+
+        /* 色は四角ごとその色で塗る（08-16 Rayan様）。 */
+        #tb-color {
+            width: 30px; height: 27px; padding: 0; flex: 0 0 auto;
+            background: #ef4444; border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: var(--r-md); cursor: pointer;
+        }
+
         /* 暗記マーカーを一斉に隠す */
         #workspace-container.masks-hidden .mask { opacity: 0 !important; pointer-events: none !important; }
 
@@ -700,6 +869,12 @@
 
         /* 範囲選択で選んだペン線の囲み */
         .stroke-multi-sel { position: absolute; border: 1px dashed var(--c-accent); border-radius: 4px; pointer-events: none; z-index: 60; }
+        /* 複数選んだ時に全部を包む枠（09-08 Rayan様）。中の空いた所を掴むとまとめて動く。
+           要素より下に敷くので、中の物を直接掴む今までの操作は変わらない。 */
+        #multi-sel-box {
+            position: absolute; border: 1px dashed var(--c-accent); border-radius: 4px;
+            background: transparent; display: none; z-index: 5; cursor: move;
+        }
 
         /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置。他ツールと見た目・当たりを揃える */
         .shape-element[data-shape-type="line"] .resize-handle {
@@ -1089,13 +1264,22 @@
             flex-wrap: wrap; justify-content: flex-start; gap: 4px; row-gap: 5px;
         }
         body:not(.compact-ui) #floating-properties #prop-mask-reveal { justify-content: center; }
-        /* 「− 20 ＋」が2段に折れないように、数値欄も詰める */
-        body:not(.compact-ui) #floating-properties .combo-input { width: 32px; }
+        /* 数字の欄は帯と同じ形（右端に小さな上下の三角）にした（09-08 Rayan様）。
+           細い列なので、印のぶんを除いた残り全部に広げる。 */
+        body:not(.compact-ui) #floating-properties .panel-num { flex: 1 1 0; min-width: 0; }
+        /* 左の印は幅を揃えて折り返しを防ぐ。文字サイズの印だけ横に広く、行が2段に折れていた */
+        body:not(.compact-ui) #floating-properties .slider-label {
+            flex: 0 0 24px; width: 24px; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 21px;
+        }
+        body:not(.compact-ui) #floating-properties .panel-num .tb-num { width: 100%; }
         /* 色は4個×2段。パレットの幅＝4*22+3*6＝106px で1列に収まる */
         body:not(.compact-ui) #floating-properties .color-palette { flex-wrap: wrap; row-gap: 6px; max-width: 106px; }
         /* 細い列に収めるため、スライダーとアイコンボタンを詰める */
         body:not(.compact-ui) #floating-properties input[type="range"] { width: 62px !important; }
-        body:not(.compact-ui) #floating-properties .btn-icon { padding: 6px; }
+        /* ボタンの大きさと印の大きさを帯に揃える（09-08 Rayan様） */
+        body:not(.compact-ui) #floating-properties .btn-icon { padding: 4px 8px; }
+        body:not(.compact-ui) #floating-properties .btn-icon .material-symbols-outlined { font-size: 21px; }
         body:not(.compact-ui) #floating-properties .number-input { width: 34px; }
         body:not(.compact-ui) #floating-properties .prop-group:first-child,
         body:not(.compact-ui) #floating-properties .prop-group.is-first {

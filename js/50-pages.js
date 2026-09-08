@@ -99,8 +99,29 @@
 
         // 矢印は紙の動く向きに合わせる：↑＝前のページ、↓＝次のページ。
         // 入力欄でのキーボードの上下も同じ向きに揃える（ボタンと食い違わないように）。
-        document.getElementById('btn-page-prev').addEventListener('click', () => goToPage((jumpTarget ?? shownPage) - 1));
-        document.getElementById('btn-page-next').addEventListener('click', () => goToPage((jumpTarget ?? shownPage) + 1));
+        // 押しっぱなしにすると続けて進む（09-08 Rayan様）。goToPage は連打を
+        // まとめて最後に1回だけ飛ぶ作りなので、押している間は番号だけが進み、
+        // 指を離した所へ紙が飛ぶ。
+        function holdToRepeat(btn, run) {
+            let waitId = 0, repeatId = 0;
+            const stop = (e) => {
+                if (!waitId && !repeatId) return;
+                clearTimeout(waitId); clearInterval(repeatId);
+                waitId = repeatId = 0;
+                if (e) { try { btn.releasePointerCapture(e.pointerId); } catch (_) {} }
+            };
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                run();
+                try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+                waitId = setTimeout(() => { repeatId = setInterval(run, 90); }, 400);
+            });
+            ['pointerup', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
+            // 押している間に窓の外へ出ても止める
+            window.addEventListener('blur', () => stop());
+        }
+        holdToRepeat(document.getElementById('btn-page-prev'), () => goToPage((jumpTarget ?? shownPage) - 1));
+        holdToRepeat(document.getElementById('btn-page-next'), () => goToPage((jumpTarget ?? shownPage) + 1));
 
         let pageInputDirty = false;
         pageInput.addEventListener('keydown', (e) => {
@@ -458,7 +479,7 @@
                     else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                     else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                     else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
-                    else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode); 
+                    else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                     
                     if (data.zIndex) {
                         el.style.zIndex = data.zIndex;

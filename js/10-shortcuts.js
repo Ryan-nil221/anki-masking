@@ -427,9 +427,13 @@
             const tc = e.target.closest && e.target.closest('.text-content');
             if (!tc) return;
             const wrapper = tc.closest('.text-wrapper');
+            // 帯や設定の小窓へ移った時も消さない（09-08 Rayan様の報告）。
+            // 置いてすぐ大きさを決めようとすると、空のまま箱が消えていた。
+            const toFloating = !!(e.relatedTarget && e.relatedTarget.closest
+                && e.relatedTarget.closest('.floating-ui'));
             if (tc.innerText.trim() === '') {
                 // 外枠を掴んだ時は消さない。それ以外（空きクリック等）の空箱は消す。
-                if (wrapper && wrapper !== preserveEmptyWrapper) wrapper.remove();
+                if (wrapper && wrapper !== preserveEmptyWrapper && !toFloating) wrapper.remove();
             }
             else window.saveState();
             // 編集を抜けた後の後始末は、選択の付け替えが済んでから見る。
@@ -583,14 +587,31 @@
             let saved = false;
             selectedElements.forEach(selectedElement => {
                 if (selectedElement.classList.contains('text-wrapper')) {
-                    if (savedSelectionRange && selectedElement.contains(savedSelectionRange.commonAncestorContainer)) {
+                    const textContent = selectedElement.querySelector('.text-content');
+                    const hasRange = savedSelectionRange && !savedSelectionRange.collapsed
+                        && selectedElement.contains(savedSelectionRange.commonAncestorContainer);
+                    let wholeBox = false;
+                    if (hasRange) {
                         // ★修正2: 太字や下線も確実に保存させる
-                        const textContent = selectedElement.querySelector('.text-content');
                         if (textContent) textContent.focus(); 
 
                         const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedSelectionRange);
+                    } else if (textContent) {
+                        // 文字を選んでいない（箱を選んだだけ・カーソルを置いただけ）時は、
+                        // 箱の中身すべてにかける（09-08 Rayan様）。
+                        // 以前はここで何も起きず、太字・下線・取り消し線が使えなかった。
+                        wholeBox = true;
+                        textContent.focus();
+                        const r = document.createRange();
+                        r.selectNodeContents(textContent);
+                        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
                     }
                     document.execCommand(command, false, null); 
+                    if (wholeBox) {
+                        // 選び直したのはかけるためだけ。元の「箱を選んだだけ」に戻す。
+                        const sel = window.getSelection(); sel.removeAllRanges();
+                        savedSelectionRange = null;
+                    }
                     saved = true;
                 }
             });
@@ -686,11 +707,16 @@
             document.getElementById('prop-text-align').style.display = showTextProps ? 'flex' : 'none';
             document.getElementById('prop-text-direction').style.display = showTextProps ? 'flex' : 'none';
             document.getElementById('prop-text-size').style.display = showTextProps ? 'flex' : 'none';
-            // 選択中のテキストの文字サイズを入力欄に映す
+            document.getElementById('prop-text-spacing').style.display = showTextProps ? 'flex' : 'none';
+            document.getElementById('prop-line-spacing').style.display = showTextProps ? 'flex' : 'none';
+            // 選択中のテキストの文字サイズと字間を入力欄に映す
             const selText = textEditableElements()[0];
             if (selText) {
                 const sz = parseInt(selText.style.fontSize);
                 if (sz) textSizeInput.value = sz;
+                const ls = parseFloat(selText.style.letterSpacing);   // 'normal' なら NaN → 0
+                textSpacingInput.value = window.spacingToShown(isNaN(ls) ? 0 : ls);
+                lineSpacingInput.value = window.spacingToShown(parseFloat(selText.dataset.lineSpacing) || 0);
             }
 
             document.getElementById('prop-pen-mode').style.display = (currentTool === 'pen') ? 'flex' : 'none';
@@ -753,6 +779,8 @@
             });
 
             updatePaletteUI(); updateBrushCursor();
+            // 複数選んだ時に出る枠を、選んだ中身に合わせる（09-08 Rayan様）
+            if (window.updateMultiSelBox) window.updateMultiSelBox();
         }
 
         toolRadios.forEach(radio => {
@@ -1017,6 +1045,14 @@
             selectedElements.forEach(el => el.classList.remove('selected'));
             selectedElements = [];
             savedSelectionRange = null;
+            // 箱の選択を外す時は、箱の中で選んでいた文字も一緒に外す（08-16 Rayan様）。
+            // 紙そのものの文字（PDF側）を選んでいる時は触らない。
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount) {
+                const node = sel.getRangeAt(0).commonAncestorContainer;
+                const host = (node.nodeType === 1 ? node : node.parentElement);
+                if (host && host.closest && host.closest('.text-content')) sel.removeAllRanges();
+            }
             if (typeof deselectStroke === 'function') deselectStroke();
             if (typeof clearMultiStrokeSelection === 'function') clearMultiStrokeSelection();
             if (window.__toolbarReady) updateToolbar();

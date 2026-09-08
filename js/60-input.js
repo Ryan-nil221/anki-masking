@@ -286,6 +286,9 @@
                     && draggableTarget.classList.contains('selected')
                     && selectedElements.length === 1 && selectedElements[0] === draggableTarget;
 
+                // 選ばれていない箱を掴んだかどうか。動かして離した時、選び直さずに済ませる。
+                pressWasUnselected = !additive && !draggableTarget.classList.contains('selected');
+
                 action = 'move';
                 movePressTarget = draggableTarget;
                 if (!draggableTarget.classList.contains('selected')) {
@@ -308,6 +311,23 @@
                 strokesDrag = beginStrokesDrag();
                 startX = mouseX; startY = mouseY;
                 updateToolbar();
+                e.preventDefault(); e.stopPropagation();
+                return;
+            }
+
+            // 複数選んだ時に出る枠を掴んだら、選んだぶんをまとめて動かす（09-08 Rayan様）。
+            // 枠は要素より下に敷いてあるので、ここへ来るのは中の空いた所を押した時だけ。
+            if (window.isMultiSelBox && window.isMultiSelBox(e.target)) {
+                action = 'move';
+                movePressTarget = null;
+                pressWasSelectedText = false;
+                pressWasUnselected = false;
+                selectedElements.forEach(el => window.bringToFront(el));
+                startRects = selectedElements.map(el => ({
+                    el: el, left: parseFloat(el.style.left), top: parseFloat(el.style.top)
+                }));
+                strokesDrag = beginStrokesDrag();
+                startX = mouseX; startY = mouseY;
                 e.preventDefault(); e.stopPropagation();
                 return;
             }
@@ -415,7 +435,9 @@
                 action = 'draw_text'; startX = mouseX; startY = mouseY;
                 drawingBox.style.left = startX + 'px'; drawingBox.style.top = startY + 'px';
                 drawingBox.style.width = '0px'; drawingBox.style.height = '0px';
-                drawingBox.style.display = 'block';
+                // 引き始めるまで枠は出さない（09-08 Rayan様）。この枠は枠線が 2px あるので、
+                // 大きさ 0 でも 4x4 の赤い点として見えていた。クリックだけで置く時は一度も出ない。
+                drawingBox.style.display = 'none';
             } else if (currentTool === 'pen') {
                 action = 'draw_pen';
                 const page = e.target.closest('.pdf-page');
@@ -496,6 +518,7 @@
             // 選択できるものの上ではカーソルの変化を見せたいので、丸は出さない
             const showBrush = action !== 'pan' && !spaceHeld && isFreehandDrawing()
                 && !isPickableAt(e.target) && e.target.closest('#workspace-container')
+                && !e.target.closest('.floating-ui')
                 && !isOverScrollbar(e);
             if (showBrush) {
                 brushCursor.style.display = 'block'; brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px';
@@ -503,8 +526,10 @@
 
             // テキストツールは「I」のカーソル。高さは文字サイズ×拡大率に追従する
             // Shift 中は背景の文字選択に譲るので、自前の「I」は出さない
+            // 浮かぶ帯や窓の上は、押せる所なので普通のカーソルを見せる（08-16 Rayan様）
             const showTextCursor = currentTool === 'text' && action !== 'pan' && !spaceHeld && !shiftHeld
                 && !isPickableAt(e.target) && e.target.closest('#workspace-container')
+                && !e.target.closest('.floating-ui')
                 && !isOverScrollbar(e);
             if (showTextCursor) {
                 const fs = parseFloat(textSizeInput.value) || 20;
@@ -529,6 +554,11 @@
             if (action === 'draw' || action === 'draw_text') {
                 drawingBox.style.width = Math.abs(currentX - startX) + 'px'; drawingBox.style.height = Math.abs(currentY - startY) + 'px';
                 drawingBox.style.left = Math.min(currentX, startX) + 'px'; drawingBox.style.top = Math.min(currentY, startY) + 'px';
+                // テキストの枠は、クリックと言える範囲を出てから見せる
+                if (action === 'draw_text' && drawingBox.style.display === 'none'
+                    && Math.hypot(currentX - startX, currentY - startY) >= TAP_SLOP) {
+                    drawingBox.style.display = 'block';
+                }
             } else if (action === 'box_select') {
                 selectionBox.style.width = Math.abs(currentX - startX) + 'px'; selectionBox.style.height = Math.abs(currentY - startY) + 'px';
                 selectionBox.style.left = Math.min(currentX, startX) + 'px'; selectionBox.style.top = Math.min(currentY, startY) + 'px';
@@ -602,6 +632,7 @@
                     item.el.style.top = (item.top + dy) + 'px';
                 });
                 if (strokesDrag) applyStrokesDrag(strokesDrag, dx, dy);
+                if (window.updateMultiSelBox) window.updateMultiSelBox();
             } else if (action === 'resize' && selectedElements.length > 0) {
                 const target = selectedElements[0];
                 
@@ -653,8 +684,11 @@
                         if (currentHandle.includes('n')) newTop = startRect.top + startRect.height - newHeight;
                     }
 
+                    // テキストは高さを触らない。幅だけ決めて、行数は中身に任せる
+                    // （高さを固定すると、文字を足した時に箱からはみ出す）。
+                    const isTextBox = target.classList.contains('text-wrapper');
                     if (newWidth > 4) { target.style.width = newWidth + 'px'; target.style.left = newLeft + 'px'; }
-                    if (newHeight > 4) { target.style.height = newHeight + 'px'; target.style.top = newTop + 'px'; }
+                    if (!isTextBox && newHeight > 4) { target.style.height = newHeight + 'px'; target.style.top = newTop + 'px'; }
                 }
             }
         });
@@ -680,17 +714,28 @@
                 }
                 const boxLeft = isDrag ? parseFloat(drawingBox.style.left) : startX;
                 const boxTop = isDrag ? parseFloat(drawingBox.style.top) : startY;
-                // ドラッグしたときだけ幅を固定して折り返す
-                const boxW = isDrag ? Math.max(dragW, 30) + 'px' : 'max-content';
+                // ドラッグしたときだけ幅を固定して折り返す。
+                // ただし細く引きすぎた時は幅を決めない（09-08 Rayan様）。数文字ぶんしか
+                // 無い箱にアルファベットを打つと、単語の途中で折れず1文字ずつ縦に並んで
+                // 縦書きのように見えていた。日本語は1文字ずつ折れるので目立たない。
+                const minBoxW = (parseFloat(textSizeInput.value) || 20) * 3;
+                const boxW = (isDrag && dragW >= minBoxW) ? dragW + 'px' : 'max-content';
                 const newText = window.createTextElement(
                     boxLeft + 'px', boxTop + 'px', boxW, 'max-content', '',
-                    textSizeInput.value + 'px', toolColors['text'], 'left', currentTextDirection);
+                    textSizeInput.value + 'px', toolColors['text'], 'left', currentTextDirection,
+                    window.currentLetterSpacing() ? window.currentLetterSpacing() + 'px' : 'normal',
+                    window.currentLineSpacing());
                 // クリック作成は「カーソルの先端＝入力文字（キャレット）の左下」に合わせる
                 if (!isDrag) moveTextBottomLeftTo(newText, startX, startY);
                 window.deselectCurrent();
                 selectedElements = [newText]; newText.classList.add('selected');
                 updateToolbar();
                 setTimeout(() => { newText.querySelector('.text-content').focus(); }, 10);
+                // 自前の「I」のカーソルを消す（09-08 Rayan様）。ここで箱の中に本物の
+                // 文字カーソルが立つので、重ねたままだと点滅のたび赤い線がちらついて見える
+                // （文字カーソルの色は文字色を継ぐ）。次に指を動かした時にまた出る。
+                textCursor.style.display = 'none';
+                workspaceContainer.classList.remove('hide-cursor');
                 action = null;
                 return;
             }
@@ -864,7 +909,15 @@
                 // 実際に動いた/リサイズされた時だけ履歴に積む（単なる選択クリックで履歴を汚さない）
                 const dx = currentX - startX; const dy = currentY - startY;
                 const dragged = Math.hypot(dx, dy) >= (TAP_SLOP > 5 ? 6 : 1);
-                if (dragged) { stateChanged = true; }
+                if (dragged) {
+                    stateChanged = true;
+                    // 選んでいないテキスト箱を掴んで運んだだけの時は、置いたあと選んだ状態にしない
+                    // （08-16 Rayan様）。運びたいだけなのに帯と枠が出るのは邪魔なため。
+                    if (action === 'move' && pressWasUnselected && movePressTarget
+                        && movePressTarget.classList.contains('text-wrapper')) {
+                        window.deselectCurrent();
+                    }
+                }
                 // 動かさずに離した時：
                 else if (action === 'move' && movePressTarget && movePressTarget.isConnected) {
                     // 選択済みテキスト箱の再クリックは編集に入る（クリックした場所にカーソル）
@@ -892,7 +945,7 @@
                 strokeMoveStart = null;
             }
             
-            action = null; movePressTarget = null; pressWasSelectedText = false; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
+            action = null; movePressTarget = null; pressWasSelectedText = false; pressWasUnselected = false; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
             if (stateChanged) window.saveState();
             updateToolbar(); // 選択状態に応じてプロパティ表示を更新
         });

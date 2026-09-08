@@ -93,6 +93,20 @@
         window.openProps = () => setPropsOpen(true);
         window.toggleProps = () => setPropsOpen(!propsOpen);
 
+        // 紙の上を触ったら設定行を閉じる（Rayan様の指示・09-08）。
+        // 浮かぶUI（テキストの帯・色の一覧・探す窓・ページ送り・拡大縮小）の中は対象外。
+        // capture で拾うのは、途中で stopPropagation する処理が幾つかあるため。
+        // **押した時点で閉じる**（09-08 Rayan様）。元は離した時に見ていたが、線を引くような
+        // 長押しの間ずっと開いたままで、手を離してから閉じるのが遅く見えた。
+        // 置いてある物を掴んだ時だけは、その物の設定行を出したままにする。押した先で分かる。
+        document.addEventListener('pointerdown', (e) => {
+            const t = e.target;
+            if (!propsOpen || !(t instanceof Element)) return;
+            if (!t.closest('#workspace-container') || t.closest('.floating-ui')) return;
+            if (t.closest('.canvas-element') || t.closest('.drawing-svg') || t.id === 'multi-sel-box') return;
+            setPropsOpen(false);
+        }, true);
+
         // CDN(pdf.js)が読み込めなくても他機能（画像モード等）は動くようガード
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -141,6 +155,8 @@
         const penModeRadios = document.querySelectorAll('input[name="penMode"]'); 
 
         const textSizeInput = document.getElementById('text-size-input'); 
+        const textSpacingInput = document.getElementById('text-spacing-input');   // 文字と文字のすき間（px）
+        const lineSpacingInput = document.getElementById('line-spacing-input');   // 行と行のすき間（px・縦書きでは列と列）
         const penWidthSlider = document.getElementById('pen-width-slider'); 
         const penWidthInput = document.getElementById('pen-width-input'); 
         const penOpacityInput = document.getElementById('pen-opacity');
@@ -148,6 +164,7 @@
         // 直前のポインターダウンが「選択解除」を伴ったか（マスキングの空きクリック判定に使う）
         let clearedSelectionOnDown = false;
         let pressWasSelectedText = false; // 選択済みテキストの再クリック（離した時に編集へ入る）
+        let pressWasUnselected = false;   // 選ばれていない箱を掴んだ（動かして離したら選び直さない）
         // 移動のために掴んだ要素（動かさず離した時に、その1つだけの選択へ絞るのに使う）
         let movePressTarget = null;
         // 手書き線の端をドラッグして拡大・縮小するときの情報
@@ -388,7 +405,7 @@
             drawingBox.style.display = 'none'; drawingBox.style.backgroundColor = '';
             if (typeof selectionBox !== 'undefined' && selectionBox) selectionBox.style.display = 'none';
             action = null; penPoints = []; rawPenPoints = []; startRects = []; strokesDrag = null;
-            movePressTarget = null; pressWasSelectedText = false;
+            movePressTarget = null; pressWasSelectedText = false; pressWasUnselected = false;
             freehandScale = null; strokeScale = null; strokeMoveStart = null;
             activeCanvasIndex = null; activeDrawSvg = null;
             liveStrokePath = null; tempMaskSvg = null; tempMaskPath = null; currentDrawingShape = null;

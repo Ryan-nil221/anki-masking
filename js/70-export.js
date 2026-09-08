@@ -82,7 +82,8 @@
                 ctx.translate(8, 2);
 
                 // 行の高さは画面の line-height:normal を実測して合わせる（端末で 1.15〜1.5 と変わる）。
-                const lineHeight = measuredLineHeightPx(baseFontSize);
+                // 行と行のすき間。画面と同じく normal からのずらし幅を足す（縦書きでは列の間隔になる）
+                const lineHeight = measuredLineHeightPx(baseFontSize) + (parseFloat(data.lineSpacing) || 0);
                 // 縦位置は「文字の基準線(ベースライン)」で合わせる。textBaseline='top' は canvas と
                 // CSS で基準がずれる（フォントごとに数px）ため、実測のフォント上下幅(fontBoundingBox)から
                 // 行ボックス内のベースライン位置を計算して alphabetic で描く（画面と一致）。
@@ -95,6 +96,10 @@
                 ctx.textBaseline = 'alphabetic';
                 // 旧コード互換の名残（縦書き分岐で使用）
                 const halfLeading = (lineHeight - baseFontSize) / 2;
+
+                // 文字と文字のすき間。横書きは canvas に持たせれば測る時も描く時も効く。
+                // 縦書きは1文字ずつ積んでいるので、進める量に足す。
+                const letterSpacingPx = parseFloat(data.letterSpacing) || 0;
 
                 const isVertical = data.writingMode === 'vertical-rl' || data.writingMode === 'vertical-lr';
 
@@ -172,12 +177,13 @@
                             for (let j = 0; j < seg.text.length; j++) {
                                 const char = seg.text[j];
                                 ctx.fillText(char, lx, ly);
-                                ly += baseFontSize;
+                                ly += baseFontSize + letterSpacingPx;
                             }
                         });
                     });
                 } else {
                     ctx.textAlign = 'left';
+                    if ('letterSpacing' in ctx) ctx.letterSpacing = letterSpacingPx + 'px';
                     lines.forEach((line, i) => {
                         let lx = 0;
                         let ly = firstBaseline + i * lineHeight; // 各行のベースライン（画面と一致）

@@ -111,24 +111,41 @@
             return tpl.innerHTML;
         }
 
-        window.createTextElement = function(left, top, width, height, content = '', fontSize = '20px', color = '#ef4444', textAlign = 'left', writingMode = 'horizontal-tb') {
+        window.createTextElement = function(left, top, width, height, content = '', fontSize = '20px', color = '#ef4444', textAlign = 'left', writingMode = 'horizontal-tb', letterSpacing = 'normal', lineSpacing = 0) {
             const wrapper = document.createElement('div'); wrapper.className = 'canvas-element text-wrapper';
             wrapper.style.left = left; wrapper.style.top = top;
             if (width) wrapper.style.width = width; if (height) wrapper.style.height = height;
             wrapper.style.fontSize = fontSize; wrapper.style.color = color; 
             wrapper.style.textAlign = textAlign;
             wrapper.style.writingMode = writingMode;
+            wrapper.style.letterSpacing = letterSpacing || 'normal';
             
             const textContent = document.createElement('div'); textContent.className = 'text-content'; textContent.contentEditable = "true"; textContent.innerHTML = sanitizeTextHTML(content);
             textContent.style.textAlign = textAlign;
             textContent.style.writingMode = writingMode;
+            textContent.style.letterSpacing = letterSpacing || 'normal';
             
-            wrapper.appendChild(textContent); addResizeHandles(wrapper); 
+            wrapper.appendChild(textContent);
+            if (parseFloat(lineSpacing)) setLineSpacing(wrapper, parseFloat(lineSpacing));
+            addResizeHandles(wrapper); addTextHandles(wrapper); 
             window.bringToFront(wrapper);
             workspace.appendChild(wrapper);
             // 編集終了時の処理（保存・空箱削除・ツール復帰）は workspace への委譲リスナーで
             // 一括処理する。cloneNode で作った複製・貼り付けの箱にも確実に効かせるため。
             return wrapper;
+        }
+
+        // テキストだけの取っ手（08-16 Rayan様の指示）。左が掴む所、右が幅を変える所。
+        // 見た目を先に用意した段階で、動きはまだ繋いでいない。
+        function addTextHandles(element) {
+            const grip = document.createElement('div');
+            grip.className = 'text-grip';
+            // `resize-handle` を兼ねる。大きさを変える処理は既存のものにそのまま乗る。
+            const edge = document.createElement('div');
+            edge.className = 'resize-handle text-edge-handle';
+            edge.dataset.pos = 'e';
+            element.appendChild(grip);
+            element.appendChild(edge);
         }
 
         // 【改修】直線(Line)用の専用2点ハンドル（p1, p2）を動的追加
@@ -178,18 +195,45 @@
             }
             return { x: (cr.left - wsRect.left) / z, y: (cr.bottom - wsRect.top) / z };
         }
+        // 「文字の左上」＝1行目の上端。文字を大きくしても、ここを動かさない（09-08 Rayan様）。
+        // 上端が動くと、箱の上に浮かべている道具の帯まで一緒にずれて、矢印が押しにくかった。
+        function measureTextTopLeftWs(el) {
+            const tc = el.querySelector('.text-content');
+            const wsRect = workspace.getBoundingClientRect();
+            const z = zoomLevel || 1;
+            let cr;
+            const range = document.createRange();
+            range.selectNodeContents(tc);
+            const rects = range.getClientRects();
+            if (rects.length) {
+                cr = rects[0];
+            } else {
+                const probe = document.createElement('span');
+                probe.textContent = ' ';
+                tc.appendChild(probe);
+                cr = probe.getBoundingClientRect();
+                tc.removeChild(probe);
+            }
+            return { x: (cr.left - wsRect.left) / z, y: (cr.top - wsRect.top) / z };
+        }
+        function moveTextTopLeftTo(el, x, y) {
+            const cur = measureTextTopLeftWs(el);
+            el.style.left = (parseFloat(el.style.left || 0) + (x - cur.x)) + 'px';
+            el.style.top = (parseFloat(el.style.top || 0) + (y - cur.y)) + 'px';
+        }
+
         // 箱の「文字の左下」が指定の ws 座標に来るよう平行移動する
         function moveTextBottomLeftTo(el, x, y) {
             const cur = measureTextBottomLeftWs(el);
             el.style.left = (parseFloat(el.style.left || 0) + (x - cur.x)) + 'px';
             el.style.top = (parseFloat(el.style.top || 0) + (y - cur.y)) + 'px';
         }
-        // 文字サイズを変えても「文字の左下」が動かないようにする。
-        // 変更前の文字左下を測り、変更後にその位置へ戻す（現在位置基準なので移動後も正しい）。
+        // 文字サイズを変えても「文字の左上」が動かないようにする。
+        // 変更前の位置を測り、変更後にそこへ戻す（現在位置基準なので移動後も正しい）。
         function applyFontSizeKeepBottomLeft(el, size) {
-            const before = measureTextBottomLeftWs(el);
+            const before = measureTextTopLeftWs(el);
             el.style.fontSize = size + 'px';
-            moveTextBottomLeftTo(el, before.x, before.y);
+            moveTextTopLeftTo(el, before.x, before.y);
         }
         function changeGlobalTextSize(delta) {
             let currentSize = parseInt(textSizeInput.value) || 20; let newSize = currentSize + delta; if (newSize < 10) newSize = 10;
@@ -205,6 +249,98 @@
         }
         document.getElementById('btn-text-size-up').addEventListener('click', () => changeGlobalTextSize(1));
         document.getElementById('btn-text-size-down').addEventListener('click', () => changeGlobalTextSize(-1));
+
+        // --- 文字と文字のすき間（字間） ---
+        // 文字サイズと同じく、変えても「文字の左上」が動かないようにする。
+        function applyLetterSpacingKeepBottomLeft(el, px) {
+            const before = measureTextTopLeftWs(el);
+            setLetterSpacing(el, px);
+            moveTextTopLeftTo(el, before.x, before.y);
+        }
+        // 箱と中身の両方に入れる。中身にも入れないと、貼り付けた文字が箱の指定を継がないため。
+        function setLetterSpacing(el, px) {
+            const v = (px ? px + 'px' : 'normal');
+            el.style.letterSpacing = v;
+            const tc = el.querySelector('.text-content');
+            if (tc) tc.style.letterSpacing = v;
+        }
+        window.setLetterSpacing = setLetterSpacing;
+        // 欄に出す数字は、実際のすき間より 5 大きい（09-08 Rayan様）。
+        // マイナスの数字を見せないための下駄で、素の状態＝欄の「5」＝すき間 0px。
+        // 保存するのは今までどおり実際の値なので、前に作ったデータもそのまま開ける。
+        window.SPACING_OFFSET = 5;
+        window.spacingToShown = (px) => px + window.SPACING_OFFSET;
+        window.shownToSpacing = (n) => n - window.SPACING_OFFSET;
+        function currentLetterSpacing() {
+            const v = parseFloat(textSpacingInput.value);
+            return isNaN(v) ? 0 : window.shownToSpacing(v);
+        }
+        window.currentLetterSpacing = currentLetterSpacing;
+        function applySpacingToSelection(px) {
+            let saved = false;
+            selectedElements.forEach(el => {
+                if (el.classList.contains('text-wrapper')) { applyLetterSpacingKeepBottomLeft(el, px); saved = true; }
+            });
+            if (saved) window.saveState();
+        }
+        function changeGlobalLetterSpacing(delta) {
+            let next = Math.round((currentLetterSpacing() + delta) * 2) / 2;   // 0.5px 刻み
+            if (next < -window.SPACING_OFFSET) next = -window.SPACING_OFFSET;
+            if (next > 30) next = 30;
+            textSpacingInput.value = window.spacingToShown(next);
+            applySpacingToSelection(next);
+        }
+        window.changeGlobalLetterSpacing = changeGlobalLetterSpacing;
+        document.getElementById('btn-text-spacing-up').addEventListener('click', () => changeGlobalLetterSpacing(0.5));
+        document.getElementById('btn-text-spacing-down').addEventListener('click', () => changeGlobalLetterSpacing(-0.5));
+        textSpacingInput.addEventListener('input', () => applySpacingToSelection(currentLetterSpacing()));
+
+        // --- 行と行のすき間（縦書きでは列と列） ---
+        // 0 のときは指定なし（ブラウザ任せの normal）。0 以外は「normal から何px ずらすか」。
+        // em で書くので、文字サイズを変えてもそのぶん一緒に伸び縮みする。
+        let __normalLhRatio = null;
+        function normalLineHeightRatio() {
+            if (__normalLhRatio == null) __normalLhRatio = measuredLineHeightPx(100) / 100;
+            return __normalLhRatio;
+        }
+        function setLineSpacing(el, px) {
+            const tc = el.querySelector('.text-content');
+            const v = px ? `calc(${normalLineHeightRatio().toFixed(4)}em + ${px}px)` : '';
+            el.style.lineHeight = v;
+            if (tc) tc.style.lineHeight = v;
+            if (px) el.dataset.lineSpacing = px; else delete el.dataset.lineSpacing;
+        }
+        window.setLineSpacing = setLineSpacing;
+        // 欄に出す数字は字間と同じ下駄をはく（素の状態＝欄の「5」＝すき間 0px）
+        function currentLineSpacing() {
+            const v = parseFloat(lineSpacingInput.value);
+            return isNaN(v) ? 0 : window.shownToSpacing(v);
+        }
+        window.currentLineSpacing = currentLineSpacing;
+        // 行のすき間は「箱の上端」を保つ（＝動かさない）。
+        // 行の高さを増やすと1行目の上にも余白が付くので、文字の上端で揃えると
+        // 箱そのものが上へずれ、上に浮かべている道具の帯も動いてしまう（09-08 Rayan様）。
+        function applyLineSpacingKeepBottomLeft(el, px) {
+            setLineSpacing(el, px);
+        }
+        function applyLineSpacingToSelection(px) {
+            let saved = false;
+            selectedElements.forEach(el => {
+                if (el.classList.contains('text-wrapper')) { applyLineSpacingKeepBottomLeft(el, px); saved = true; }
+            });
+            if (saved) window.saveState();
+        }
+        function changeGlobalLineSpacing(delta) {
+            let next = Math.round((currentLineSpacing() + delta) * 2) / 2;
+            if (next < -window.SPACING_OFFSET) next = -window.SPACING_OFFSET;
+            if (next > 30) next = 30;
+            lineSpacingInput.value = window.spacingToShown(next);
+            applyLineSpacingToSelection(next);
+        }
+        window.changeGlobalLineSpacing = changeGlobalLineSpacing;
+        document.getElementById('btn-line-spacing-up').addEventListener('click', () => changeGlobalLineSpacing(0.5));
+        document.getElementById('btn-line-spacing-down').addEventListener('click', () => changeGlobalLineSpacing(-0.5));
+        lineSpacingInput.addEventListener('input', () => applyLineSpacingToSelection(currentLineSpacing()));
 
         document.getElementById('btn-undo').addEventListener('click', () => { 
             if (window.historyIndex > 0) { window.historyIndex--; restoreState(window.historyIndex); }
@@ -246,6 +382,22 @@
                 }
             });
             if (saved) window.saveState();
+        });
+
+        // 欄を押すと、よく使う大きさの一覧を下に出す（09-08 Rayan様）。中身は帯と同じものを使う。
+        const openSizeList = () => {
+            if (!window.openTextNumList) return;
+            window.openTextNumList(textSizeInput, (v) => {
+                textSizeInput.value = v;
+                textSizeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        };
+        textSizeInput.addEventListener('focus', openSizeList);
+        textSizeInput.addEventListener('click', () => {
+            if (document.activeElement === textSizeInput) openSizeList();
+        });
+        textSizeInput.addEventListener('blur', () => {
+            if (window.isTextNumListFor && window.isTextNumListFor(textSizeInput)) window.closeTextNumList();
         });
 
         textSizeInput.addEventListener('input', (e) => {

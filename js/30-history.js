@@ -27,6 +27,8 @@
                     zIndex: el.style.zIndex,
                     textAlign: isText ? (el.style.textAlign || el.querySelector('.text-content').style.textAlign || 'left') : null,
                     writingMode: isText ? (el.style.writingMode || el.querySelector('.text-content').style.writingMode || 'horizontal-tb') : null,
+                    letterSpacing: isText ? (el.style.letterSpacing || el.querySelector('.text-content').style.letterSpacing || 'normal') : null,
+                    lineSpacing: isText ? (parseFloat(el.dataset.lineSpacing) || 0) : null,
                     pathD: (isFreehandMask || isFreehandHighlight) ? el.querySelector('path').getAttribute('d') : null,
                     strokeWidth: (isFreehandMask || isFreehandHighlight) ? el.querySelector('path').getAttribute('stroke-width') : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke-width') : null),
                     shapeType: isShape ? el.dataset.shapeType : null,
@@ -283,7 +285,7 @@
                     else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                 else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                 else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
-                else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode); 
+                else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                 
                 if (data.zIndex) {
                     el.style.zIndex = data.zIndex;
