@@ -242,6 +242,21 @@
             }
         }
 
+        // 紙の基準にする画面の幅。読み込んだ直後はまだ場所が決まっていないことがあり、
+        // そのまま測ると 0 や極端に小さい値が返る。基準はここで一度決めたら後から
+        // 測り直さないので、小さいまま決まると紙がずっと小さく描かれる
+        // （画面を開き直すまで直らない・09-11 Rayan様の報告）。
+        // 怪しい値なら、場所が決まるのを1コマ待ってから測り直す。
+        async function measureContainerWidth() {
+            let w = workspaceContainer.clientWidth;
+            if (!w || w < 240) {
+                await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+                w = workspaceContainer.clientWidth || Math.round(workspaceContainer.getBoundingClientRect().width);
+            }
+            if (!w || w < 240) w = Math.max(320, Math.round(window.innerWidth * 0.7));
+            return w;
+        }
+
         async function loadBackground(bgData) {
             pdfSidebar.innerHTML = ''; document.getElementById('floating-top-left').style.display = 'none';
             isSidebarOpen = false; pdfSidebar.style.display = 'none';
@@ -271,8 +286,13 @@
 
                         const page1 = await pdf.getPage(1); 
                         const viewport1 = page1.getViewport({ scale: 1.0 });
-                        const containerW = workspaceContainer.clientWidth; 
+                        const containerW = await measureContainerWidth();
                         const baseScale = (containerW * 0.9) / viewport1.width;
+                        // 紙の向きや大きさがおかしい時の手がかり。まれに逆さま・小さく出るという
+                        // 報告があり、起きた時にここの数字を見れば当たりが付く（09-11）。
+                        console.log('[PDF] 画面の幅', containerW, '/ 基準', baseScale.toFixed(4),
+                            '/ 1ページ目', Math.round(viewport1.width) + 'x' + Math.round(viewport1.height),
+                            '/ 回転', page1.rotate, '/ ページ数', pdf.numPages);
                         const defaultViewport = page1.getViewport({ scale: baseScale });
                         
                         window.currentPdfDoc = pdf;
@@ -379,8 +399,8 @@
                 } else {
                     pdfContainer.style.display = 'none';
                     const tempImg = new Image();
-                    tempImg.onload = function() {
-                        const containerW = workspaceContainer.clientWidth; 
+                    tempImg.onload = async function() {
+                        const containerW = await measureContainerWidth();
                         const finalScale = (containerW * 0.72) / tempImg.naturalWidth;
                         uploadedImage.style.width = (tempImg.naturalWidth * finalScale) + 'px'; uploadedImage.style.height = (tempImg.naturalHeight * finalScale) + 'px';
                         uploadedImage.src = tempImg.src; uploadedImage.style.display = 'block';
@@ -481,7 +501,8 @@
                     else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                     else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                     
-                    if (data.zIndex) {
+                    // 写真は保存された重なり順を使わない（いつも一番下・09-11 Rayan様）
+                    if (data.zIndex && data.type !== 'image') {
                         el.style.zIndex = data.zIndex;
                         if (parseInt(data.zIndex) > window.globalZIndex) window.globalZIndex = parseInt(data.zIndex);
                     }
