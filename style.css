@@ -626,8 +626,7 @@
            手書き線と直線だけは中心線・つまみで示すので枠線を出さない */
         div.mask-rect.selected,
         .highlight-box:not(.highlight-freehand-wrapper).selected,
-        .shape-element:not([data-shape-type="line"]).selected,
-        .image-element.selected {
+        .shape-element:not([data-shape-type="line"]).selected {
             outline: 1px dashed var(--c-accent);
             outline-offset: 0;
         }
@@ -811,7 +810,18 @@
         .shape-element[data-shape-type="line"].selected { outline: none; cursor: move; }
 
         /* --- 画像エレメント --- */
+        /* 写真はいつも一番下（紙より上・手描きより下）。上からペンでも文字でも書ける（09-11 Rayan様）。
+           下げるのは中の画だけにして、入れ物そのものには重なりを付けない。こうすると選択の枠と
+           四隅のつまみは上の層に残り、手描きの線に隠れずに見える（写真の上の線も消えない）。 */
         .image-element { background-color: transparent; border-radius: 4px; }
+        .image-element > img { position: relative; z-index: 1; }
+        /* つかみを広げる帯は、入れ物と同じ層に置く（-1 のままだと紙の下に潜って効かなくなる） */
+        .image-element.selected::before { z-index: 0; }
+        /* 選択の破線は、入れ物の outline ではなく上の層の擬似要素で描く（つまみと同じ高さ） */
+        .image-element.selected::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            border: 1px dashed var(--c-accent); border-radius: 4px; z-index: 50;
+        }
         .image-element img { display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; border-radius: 4px; overflow: hidden; }
         .image-element.selected { cursor: move; }
 

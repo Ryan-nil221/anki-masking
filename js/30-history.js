@@ -287,7 +287,8 @@
                 else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                 else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                 
-                if (data.zIndex) {
+                // 写真は保存された重なり順を使わない（いつも一番下・09-11 Rayan様）
+                if (data.zIndex && data.type !== 'image') {
                     el.style.zIndex = data.zIndex;
                     if (parseInt(data.zIndex) > window.globalZIndex) window.globalZIndex = parseInt(data.zIndex);
                 }

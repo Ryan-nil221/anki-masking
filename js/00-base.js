@@ -118,8 +118,15 @@
         const RENDER_SCALE = Math.min(window.devicePixelRatio || 2, 2.0); 
         
         window.globalZIndex = 10;
+        // 写真はいつも一番下に敷く（紙より上・手描きより下）。
+        // 上からペンでも文字でも書けるように（09-11 Rayan様）。
+        window.IMAGE_Z_INDEX = 1;
         window.bringToFront = function(element) {
             if (!element) return;
+            if (element.classList && element.classList.contains('image-element')) {
+                element.style.zIndex = '';   // 重なりは style.css の .image-element に任せる
+                return;
+            }
             window.globalZIndex++;
             element.style.zIndex = window.globalZIndex;
         };

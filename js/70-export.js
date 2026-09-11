@@ -15,6 +15,17 @@
             return lh;
         }
 
+        // 写真は手描きより先に描く（画面と同じ重なり＝写真がいちばん下・09-11 Rayan様）
+        async function drawImagesFirst(ctx, els, scale, pageTop) {
+            if (!els || !els.some(el => el.type === 'image')) return;
+            ctx.save();
+            ctx.scale(scale, scale);
+            if (pageTop) ctx.translate(0, -pageTop);
+            for (const el of els) {
+                if (el.type === 'image') await drawDOMElementToCanvas(ctx, el);
+            }
+            ctx.restore();
+        }
         async function drawDOMElementToCanvas(ctx, data) {
             if (window.isMasksHidden && (data.type === 'mask' || data.type === 'freehand-mask')) {
                 return;
@@ -265,6 +276,8 @@
                     
                     eCtx.drawImage(uploadedImage, 0, 0, natWidth, natHeight);
 
+                    await drawImagesFirst(eCtx, state.elements, scaleRatio, 0);
+
                     // 手描き（ペン/消しゴム）は独立レイヤーで合成し、消しゴムが背景画像を削らないようにする
                     const cmds = state.canvasCommandsArray[0] || [];
                     if (cmds.length > 0) {
@@ -279,6 +292,7 @@
 
                     eCtx.scale(scaleRatio, scaleRatio);
                     for (const el of state.elements) {
+                        if (el.type === 'image') continue;   // 写真は手描きより先に描き済み
                         await drawDOMElementToCanvas(eCtx, el);
                     }
                     
@@ -331,6 +345,10 @@
 
             const drawScale = OVERLAY_SCALE / window.pdfBaseScale;
 
+            const pageDivPre = document.getElementById(`pdf-page-${pageIndex}`);
+            const pageTopPre = pageDivPre ? pageDivPre.offsetTop : 0;
+            await drawImagesFirst(ctx, state.elements, drawScale, pageTopPre);
+
             // 手描き（ペン/消しゴム）は独立レイヤーで合成し、消しゴム(destination-out)が
             // 後続の描画へ残留しないようにする（従来のラスタ経路と同じ作法）。
             const cmds = state.canvasCommandsArray[pageIndex - 1] || [];
@@ -350,6 +368,7 @@
             const pageTop = pageDiv ? pageDiv.offsetTop : 0;
             ctx.translate(0, -pageTop);
             for (const el of state.elements) {
+                if (el.type === 'image') continue;   // 写真は手描きより先に描き済み
                 await drawDOMElementToCanvas(ctx, el);
             }
             ctx.restore();
@@ -605,8 +624,12 @@
 
                 await page.render({ canvasContext: eCtx, viewport: renderViewport }).promise;
 
-                eCtx.save();
                 const drawScale = EXPORT_RENDER_SCALE / window.pdfBaseScale;
+                const pageDivPre = document.getElementById(`pdf-page-${i}`);
+                const pageTopPre = pageDivPre ? pageDivPre.offsetTop : 0;
+                await drawImagesFirst(eCtx, state.elements, drawScale, pageTopPre);
+
+                eCtx.save();
                 const cmds = state.canvasCommandsArray[i-1] || [];
                 if (cmds.length > 0) {
                     const penLayer = document.createElement('canvas');
@@ -623,6 +646,7 @@
                 const pageTop = pageDiv ? pageDiv.offsetTop : 0;
                 eCtx.translate(0, -pageTop);
                 for (const el of state.elements) {
+                    if (el.type === 'image') continue;   // 写真は手描きより先に描き済み
                     await drawDOMElementToCanvas(eCtx, el);
                 }
                 eCtx.restore();
