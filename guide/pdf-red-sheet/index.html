@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <title>PDFを赤シートで隠す方法｜印刷せずに暗記する3つのやり方</title>
 <meta name="description" content="PDFの答えを赤シートのように隠して暗記する方法を3つ比べます。印刷して赤ペンでなぞる、PDF編集ソフトで塗りつぶす、ブラウザで開いて隠す。費用・手間・答えの見方の違いと、印刷せずに済ませる手順を解説します。">
 <link rel="canonical" href="https://ankimasking.com/guide/pdf-red-sheet/">
@@ -181,6 +182,7 @@
   }
   .cta a:hover { background: var(--c-accent-hover); }
   .cta small { display: block; margin-top: 10px; color: var(--c-text-muted); font-size: 13px; }
+  .cta-card { display:block; width:100%; max-width:280px; height:auto; margin:0 auto 18px; border-radius:16px; box-shadow:0 6px 20px rgba(17,24,60,.12); }
 
   ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
   ol.steps > li {
@@ -445,6 +447,8 @@
   </ol>
 
   <div class="cta">
+    <img class="cta-card" src="/card.png" width="1200" height="1200" loading="lazy"
+         alt="暗記マスキングの紹介。赤シートの代わりに、PDFも写真も黒くマスキングして暗記シートを作れる無料のウェブアプリ。">
     <a href="/">暗記マスキングを開く</a>
     <small>登録不要・インストール不要・無料</small>
   </div>
@@ -505,12 +509,19 @@
           "@type": "Article",
           "headline": "PDFを赤シートで隠す方法",
           "description": "PDFの答えを赤シートのように隠して暗記する方法を3つ比べます。印刷せずにブラウザだけで済ませる手順も解説。",
-          "image": {
+          "image": [
+          {
+                "@type": "ImageObject",
+                "url": "https://ankimasking.com/card.png",
+                "width": 1200,
+                "height": 1200
+          },
+          {
                 "@type": "ImageObject",
                 "url": "https://ankimasking.com/guide/screenshot-anim.jpg",
                 "width": 1564,
                 "height": 784
-          },
+          }],
           "mainEntityOfPage": {
                 "@type": "WebPage",
                 "@id": "https://ankimasking.com/guide/pdf-red-sheet/"

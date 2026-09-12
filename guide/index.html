@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <title>暗記マスキングの使い方｜赤シートの代わりにPDFや写真を隠して暗記できる無料アプリ</title>
 <meta name="description" content="赤シートの代わりに、パソコンのブラウザだけで暗記シートを作る方法。教科書や授業の資料のPDF・写真を取り込み、覚えたい部分をなぞって黒く隠すだけ。テキスト入力・手書き・蛍光ペンでの書き込みや、PDFでの書き出しまで解説します。登録・インストール不要、無料。">
 <link rel="canonical" href="https://ankimasking.com/guide/">
@@ -84,6 +85,7 @@
   }
   .cta a:hover { background: var(--c-accent-hover); }
   .cta small { display: block; margin-top: 10px; color: var(--c-text-muted); font-size: 13px; }
+  .cta-card { display:block; width:100%; max-width:280px; height:auto; margin:0 auto 18px; border-radius:16px; box-shadow:0 6px 20px rgba(17,24,60,.12); }
 
   /* 手順 */
   ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
@@ -488,6 +490,8 @@
   </ul>
 
   <div class="cta">
+    <img class="cta-card" src="/card.png" width="1200" height="1200" loading="lazy"
+         alt="暗記マスキングの紹介。赤シートの代わりに、PDFも写真も黒くマスキングして暗記シートを作れる無料のウェブアプリ。">
     <a href="/">暗記マスキングを開く</a>
     <small>登録不要・インストール不要・無料</small>
   </div>
@@ -505,7 +509,7 @@
     {
       "@type": "SoftwareApplication",
       "screenshot": { "@type": "ImageObject", "url": "https://ankimasking.com/guide/screenshot-anim.jpg", "width": 1564, "height": 784 },
-      "image": "https://ankimasking.com/guide/screenshot-anim.jpg",
+      "image": ["https://ankimasking.com/card.png", "https://ankimasking.com/guide/screenshot-anim.jpg"],
       "name": "暗記マスキング",
       "url": "https://ankimasking.com/",
       "applicationCategory": "EducationalApplication",
