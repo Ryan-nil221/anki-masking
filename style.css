@@ -911,6 +911,91 @@
         #selection-box { position: absolute; border: 1px solid var(--c-accent); background-color: var(--c-accent-weak); pointer-events: none; display: none; z-index: 10000; border-radius: var(--r-xs); }
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 10000; }
+
+        /* ===== 問い合わせ（09-16 Rayan様の見本どおり） ===== */
+        /* 印の下に出る青い吹き出し。**右合わせで置く**（中央合わせだと画面の右端で切れる）。 */
+        #feedback-balloon {
+            position: fixed; z-index: 10001; display: none;   /* 使い方の箱（10002）より下 */
+            background: var(--c-accent); color: #fff;
+            padding: 10px 14px; border-radius: var(--r-md);
+            font-size: 13px; line-height: 1.6; white-space: nowrap;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+        }
+        #feedback-balloon.is-on { display: block; }
+        #feedback-balloon b { font-weight: 700; display: block; }
+        #feedback-balloon .fb-sub { opacity: 0.9; }
+        /* 三角の先を印に向ける。中身と同じ色の四角を回して重ねる */
+        #feedback-balloon .fb-arrow {
+            position: absolute; top: -6px; right: 14px; width: 12px; height: 12px;
+            background: var(--c-accent); transform: rotate(45deg);
+        }
+
+        #feedback-card {
+            position: relative; box-sizing: border-box;
+            width: min(520px, calc(100% - 32px));
+            background: var(--c-surface); border-radius: var(--r-lg);
+            box-shadow: var(--sh-lg); padding: 24px 26px 20px;
+            max-height: calc(100% - 32px); overflow-y: auto;
+        }
+        #fb-close { position: absolute; top: 10px; right: 10px; }
+        #feedback-card h2 {
+            margin: 0 0 6px; font-size: 21px; font-weight: 700; color: var(--c-text-strong);
+        }
+        #feedback-card .fb-lead {
+            margin: 0 0 18px; font-size: 13.5px; line-height: 1.7; color: var(--c-text-sub);
+        }
+        #feedback-card .fb-label {
+            font-size: 12.5px; font-weight: 700; color: var(--c-text-sub); margin: 0 0 7px;
+        }
+        #feedback-card .fb-weak { font-weight: 400; color: var(--c-text-muted); }
+
+        .fb-kinds { display: flex; gap: 8px; margin: 0 0 16px; }
+        .fb-kind {
+            flex: 1; padding: 9px 0; border-radius: var(--r-md);
+            border: 1.5px solid var(--c-border); background: var(--c-surface);
+            color: var(--c-text-sub); font: inherit; font-size: 13.5px; cursor: pointer;
+        }
+        .fb-kind:hover { border-color: var(--c-text-muted); }
+        .fb-kind.is-on {
+            border-color: var(--c-accent); color: var(--c-accent); font-weight: 700;
+            background: color-mix(in srgb, var(--c-accent) 10%, transparent);
+        }
+
+        #fb-body, #fb-contact {
+            box-sizing: border-box; width: 100%; font: inherit;
+            border-radius: var(--r-md); border: 1.5px solid var(--c-border);
+            background: var(--c-surface); color: var(--c-text-strong);
+        }
+        #fb-body {
+            height: 130px; resize: none; padding: 10px 12px;
+            font-size: 14px; line-height: 1.7; margin: 0 0 16px;
+        }
+        #fb-contact { padding: 9px 12px; font-size: 14px; margin: 0 0 20px; }
+        #fb-body:focus, #fb-contact:focus { outline: none; border-color: var(--c-accent); }
+
+        .fb-foot { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
+        .fb-note { font-size: 12px; color: var(--c-text-muted); margin-right: auto; }
+        #fb-send {
+            padding: 10px 26px; border-radius: var(--r-md); border: 0;
+            background: var(--c-accent); color: #fff;
+            font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+        }
+        #fb-send:hover { filter: brightness(0.94); }
+
+        /* 送った後。窓の中身をこれ1枚に差し替える */
+        #fb-done { display: none; padding: 26px 0 18px; text-align: center;
+            font-size: 15px; font-weight: 700; color: var(--c-text-strong);
+            white-space: pre-line; line-height: 1.8; }
+        #feedback-card.is-done > *:not(#fb-done):not(#fb-close) { display: none; }
+        #feedback-card.is-done #fb-done { display: block; }
+        #fb-done-icon { display: block; font-size: 48px; color: var(--c-accent); margin: 0 auto 6px; }
+        #fb-done-icon.is-fail { color: var(--c-danger); }
+
+        /* 狭い画面では中の余白を詰める */
+        @media (max-width: 560px) {
+            #feedback-card { padding: 20px 18px 16px; }
+            #fb-body { height: 110px; }
+        }
         .overlay-loading { color: white; font-size: 20px; font-weight: bold; flex-direction: column; gap: 10px; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -1155,6 +1240,23 @@
             padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
         }
         .overlay { height: 100dvh; }
+
+        /* 画面が中くらいの幅になったら、まずファイル名を詰める（09-16）。
+           帯の中身が入りきらないと2段に折り返し、その下にある道具の列まで
+           押し下げられて画面からはみ出す。名前は省略記号で切れても困らない。 */
+        @media (max-width: 1000px) {
+            h1 { font-size: 17px; }
+            #current-file-name { max-width: 130px; }
+            #app-header .header-title-group { gap: 8px; }
+            #app-header .header-actions { gap: 4px; }
+        }
+        /* もう一段狭いところでは、飾りだけの物を落として幅を稼ぐ（09-16）。
+           帯の中身が入りきらないと2段に折り返し、その下の道具の列まで押し下げられる。
+           縦線とロゴの絵は無くても意味が変わらないので、ここから先に消す。 */
+        @media (max-width: 940px) {
+            #app-header .header-title-group .v-divider { display: none; }
+            #app-header .header-logo { display: none; }
+        }
 
         /* --- 狭い画面：UIが画面外に溢れて押せなくなるのを防ぐ --- */
         @media (max-width: 640px) {

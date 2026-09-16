@@ -58,7 +58,7 @@
          箱の中に入れても位置はずれない。閉じ方は3通り：ばつ印・枠の外・今後は表示しない。 -->
     <div id="welcome-overlay" class="overlay">
         <div id="welcome-box" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-            <button id="welcome-close" class="btn btn-icon btn-ghost" title="閉じる" aria-label="閉じる">
+            <button id="welcome-close" class="btn btn-icon btn-ghost" aria-label="閉じる">
                 <span class="material-symbols-outlined">close</span>
             </button>
             <!-- 文言は title/description と同じ狙い（「赤シートの代わり」）に揃える。
@@ -179,6 +179,11 @@
                     </ul>
                 </div>
 
+                <!-- 問い合わせの入口。印だけを置き、文字は添えない（帯が長くなるため）。 -->
+                <button class="btn btn-icon btn-ghost wide-only" id="btn-feedback" title="問い合わせ" aria-label="問い合わせ">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                </button>
+
                 <!-- 使い方ページへの導線。SEO上の内部リンクも兼ねるので button ではなく a で置く。
                      未保存の作業を飛ばさないよう別タブで開く。 -->
                 <a class="btn btn-icon btn-ghost wide-only" id="btn-guide" href="/guide/"
@@ -202,6 +207,7 @@
                         <li data-proxy="btn-save-editable-pdf-menu"><span class="material-symbols-outlined">picture_as_pdf</span> 編集できるPDFで保存</li>
                         <li data-proxy="btn-download-menu"><span class="material-symbols-outlined">image</span> 画像/PDFとして書き出し</li>
                         <li class="menu-sep"></li>
+                        <li data-proxy="btn-feedback"><span class="material-symbols-outlined">chat_bubble</span> 問い合わせ</li>
                         <li class="menu-link"><a href="/guide/" target="_blank" rel="noopener"><span class="material-symbols-outlined">help</span> 使い方</a></li>
                     </ul>
                 </div>
@@ -591,6 +597,43 @@
     </div>
     <!-- 元は app.js 1本（4,557行）。役割ごとに分割した。
          素のスクリプトなので変数は全ファイルで共有される。順番を変えると壊れる。 -->
+    <!-- 問い合わせ。印の下に出る吹き出しと、押すと開く窓。中身の送信はまだ繋いでいない。 -->
+    <div id="feedback-balloon" role="status">
+        <span class="fb-arrow"></span>
+        <b>お問い合わせはこちら</b>
+        <span class="fb-sub">直してほしい所やご要望をお寄せください</span>
+    </div>
+
+    <div id="feedback-overlay" class="overlay">
+        <div id="feedback-card">
+            <button class="btn btn-icon btn-ghost" id="fb-close" title="閉じる" aria-label="閉じる">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h2>問い合わせ</h2>
+            <p class="fb-lead">直してほしい所や、あったら嬉しい機能を教えてください。<br>いただいた声をもとに改良していきます。</p>
+
+            <div class="fb-label">種類</div>
+            <div class="fb-kinds" id="fb-kinds">
+                <button type="button" class="fb-kind" data-kind="bug">不具合</button>
+                <button type="button" class="fb-kind is-on" data-kind="request">こうしてほしい</button>
+                <button type="button" class="fb-kind" data-kind="other">その他</button>
+            </div>
+
+            <div class="fb-label">内容</div>
+            <textarea id="fb-body" placeholder="例：テキストの色をもっと増やしてほしい"></textarea>
+
+            <div class="fb-label">返事がほしい方だけ <span class="fb-weak">（空でも送れます）</span></div>
+            <input type="text" id="fb-contact" placeholder="メールアドレスなど">
+
+            <div class="fb-foot">
+                <span class="fb-note">資料の中身は送られません</span>
+                <button type="button" id="fb-send">送る</button>
+            </div>
+
+            <div id="fb-done"><span id="fb-done-icon" class="material-symbols-outlined">check_circle</span><span id="fb-done-text">送信しました。</span></div>
+        </div>
+    </div>
+
     <script src="js/00-base.js"></script>
     <script src="js/10-shortcuts.js"></script>
     <script src="js/20-strokes.js"></script>
@@ -604,3 +647,4 @@
     <script src="js/85-find.js"></script>
     <script src="js/86-textbar.js"></script>
     <script src="js/87-multisel.js"></script>
+    <script src="js/88-feedback.js"></script>
