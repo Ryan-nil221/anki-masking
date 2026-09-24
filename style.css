@@ -367,7 +367,7 @@
            そのぶんスクロールの範囲が余り、縮小するほど紙の下に空白が増えていた
            （70%で一番下まで送ると紙が画面から消える・Rayan様の報告）。
            絶対配置にして流れから外し、スクロールの範囲は入れ物の大きさだけで決める。 */
-        #workspace { position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
+        #workspace { --uz: 1; --ps: 1; --hs: 1; position: relative; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.1); user-select: none; transform-origin: top left; background-color: white; border-radius: var(--r-sm); }
 
         .floating-ui {
             position: absolute; z-index: 100; background: var(--c-glass); backdrop-filter: blur(8px);
@@ -560,7 +560,7 @@
             position: fixed; box-sizing: border-box; width: 7px;
             border-top: 1px solid #111; border-bottom: 1px solid #111;
             pointer-events: none; display: none; z-index: 9999;
-            transform: translate(-50%, -100%);
+            transform: translate(-50%, -50%);   /* 縦棒の真ん中が当たり（09-24 Rayan様） */
             filter: drop-shadow(0 0 1px rgba(255,255,255,0.95)) drop-shadow(0 0 1px rgba(255,255,255,0.8));
         }
         #text-cursor::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: #111; }
@@ -573,7 +573,7 @@
            z-index:-1 で本体の中身より下に敷くので、内側は本来のクリック（文字編集等）が通り、
            外側の帯（他に何も無い所）だけがこの擬似要素に当たって移動になる。角の丸(z50)は上。 */
         .canvas-element.selected::before {
-            content: ''; position: absolute; inset: -6px; z-index: -1;
+            content: ''; position: absolute; inset: calc(-6px * var(--hs, 1)); z-index: -1;
         }
         
         .mask { cursor: pointer; transition: opacity 0.3s; -webkit-touch-callout: none; border-radius: 2px; }
@@ -627,7 +627,7 @@
         div.mask-rect.selected,
         .highlight-box:not(.highlight-freehand-wrapper).selected,
         .shape-element:not([data-shape-type="line"]).selected {
-            outline: 1px dashed var(--c-accent);
+            outline: calc(1px * var(--hs, 1)) dashed var(--c-accent);
             outline-offset: 0;
         }
         /* --- テキストの選択表示（08-16 Rayan様の指示で作り直し） ---
@@ -635,7 +635,7 @@
            変えたいのは横幅だけ。左に掴む取っ手、右に幅を変える丸を置く。
            枠とつまみの見た目は**他の道具と同じ**（1pxの破線・5pxの白丸・角丸なし）。 */
         .text-wrapper.selected {
-            outline: 1px dashed var(--c-accent);
+            outline: calc(1px * var(--hs, 1)) dashed var(--c-accent);
             outline-offset: 0;
             border-radius: 0;
         }
@@ -651,7 +651,7 @@
            帯は敷かず点だけ置く（08-16 Rayan様。青い帯は重すぎる）。
            帯が無くても掴めるよう、当たり域は透明のまま幅を持たせてある。 */
         .text-grip {
-            left: -13px; top: 0; bottom: 0; width: 13px;
+            left: calc(-13px * var(--hs, 1)); top: 0; bottom: 0; width: calc(13px * var(--hs, 1));
             background: transparent;
             cursor: move; pointer-events: auto;
         }
@@ -669,11 +669,16 @@
         }
         /* 右の丸。横幅を変える所。四隅のつまみと同じ見た目で、点線の上に重ねる。 */
         .text-edge-handle {
-            left: 100%; top: 50%; width: 5px; height: 5px;
-            margin: -2.5px 0 0 -2.5px;
+            left: 100%; top: 50%;
+            width: calc(5px * var(--hs, 1)); height: calc(5px * var(--hs, 1));
+            margin: calc(-2.5px * var(--hs, 1)) 0 0 calc(-2.5px * var(--hs, 1));
             background: white; border: 1px solid var(--c-accent);
             border-radius: 50%; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             cursor: ew-resize; pointer-events: auto;
+        }
+        /* 丸は小さいので、掴める範囲だけ外へ4px広げる（画面上で一定・09-24） */
+        .text-edge-handle::after {
+            content: ''; position: absolute; inset: calc(-4px * var(--hs, 1));
         }
 
         /* --- 選んだテキストの上に出る道具の帯（08-16 Rayan様の案） ---
@@ -820,7 +825,7 @@
         /* 選択の破線は、入れ物の outline ではなく上の層の擬似要素で描く（つまみと同じ高さ） */
         .image-element.selected::after {
             content: ''; position: absolute; inset: 0; pointer-events: none;
-            border: 1px dashed var(--c-accent); border-radius: 4px; z-index: 50;
+            border: calc(1px * var(--hs, 1)) dashed var(--c-accent); border-radius: 4px; z-index: 50;
         }
         .image-element img { display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; border-radius: 4px; overflow: hidden; }
         .image-element.selected { cursor: move; }
@@ -843,33 +848,33 @@
         .canvas-element.selected > .fh-handle { display: block; }
 
         /* 通常の四隅のハンドル */
-        .resize-handle { position: absolute; width: 5px; height: 5px; background-color: white; border: 1px solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
+        .resize-handle { position: absolute; width: calc(5px * var(--hs, 1)); height: calc(5px * var(--hs, 1)); background-color: white; border: calc(1px * var(--hs, 1)) solid var(--c-accent); display: none; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 50; }
         .canvas-element.selected .resize-handle { display: block; }
         /* 四隅：当たり域を点線の角に対して内2px・外6px（計8px）に広げ、丸(見た目)は角の上に描く */
         .handle-nw, .handle-ne, .handle-sw, .handle-se {
-            width: 8px; height: 8px; background: transparent; border: none; box-shadow: none; border-radius: 0;
+            width: calc(8px * var(--hs, 1)); height: calc(8px * var(--hs, 1)); background: transparent; border: none; box-shadow: none; border-radius: 0;
         }
         .handle-nw::before, .handle-ne::before, .handle-sw::before, .handle-se::before {
-            content: ''; position: absolute; width: 5px; height: 5px;
+            content: ''; position: absolute; width: calc(5px * var(--hs, 1)); height: calc(5px * var(--hs, 1));
             background: white; border: 1px solid var(--c-accent); border-radius: 50%;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
-        .handle-nw::before { top: 6px; left: 6px; transform: translate(-50%, -50%); }
-        .handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
-        .handle-ne::before { top: 6px; right: 6px; transform: translate(50%, -50%); }
-        .handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
-        .handle-sw::before { bottom: 6px; left: 6px; transform: translate(-50%, 50%); }
-        .handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
-        .handle-se::before { bottom: 6px; right: 6px; transform: translate(50%, 50%); }
+        .handle-nw { top: calc(-6px * var(--hs, 1)); left: calc(-6px * var(--hs, 1)); cursor: nwse-resize; }
+        .handle-nw::before { top: calc(6px * var(--hs, 1)); left: calc(6px * var(--hs, 1)); transform: translate(-50%, -50%); }
+        .handle-ne { top: calc(-6px * var(--hs, 1)); right: calc(-6px * var(--hs, 1)); cursor: nesw-resize; }
+        .handle-ne::before { top: calc(6px * var(--hs, 1)); right: calc(6px * var(--hs, 1)); transform: translate(50%, -50%); }
+        .handle-sw { bottom: calc(-6px * var(--hs, 1)); left: calc(-6px * var(--hs, 1)); cursor: nesw-resize; }
+        .handle-sw::before { bottom: calc(6px * var(--hs, 1)); left: calc(6px * var(--hs, 1)); transform: translate(-50%, 50%); }
+        .handle-se { bottom: calc(-6px * var(--hs, 1)); right: calc(-6px * var(--hs, 1)); cursor: nwse-resize; }
+        .handle-se::before { bottom: calc(6px * var(--hs, 1)); right: calc(6px * var(--hs, 1)); transform: translate(50%, 50%); }
         /* 各辺の中央のハンドル（画像のみ）。四隅と同じ見た目・同じ当たり域(8px) */
         .handle-n, .handle-s, .handle-e, .handle-w {
-            width: 8px; height: 8px; background: transparent; border: none; box-shadow: none; border-radius: 0;
-            margin: -4px 0 0 -4px; /* 8pxの当たり域の中心を辺の中央に合わせる */
+            width: calc(8px * var(--hs, 1)); height: calc(8px * var(--hs, 1)); background: transparent; border: none; box-shadow: none; border-radius: 0;
+            margin: calc(-4px * var(--hs, 1)) 0 0 calc(-4px * var(--hs, 1)); /* 8pxの当たり域の中心を辺の中央に合わせる */
         }
         .handle-n::before, .handle-s::before, .handle-e::before, .handle-w::before {
             content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 5px; height: 5px; background: white; border: 1px solid var(--c-accent);
+            width: calc(5px * var(--hs, 1)); height: calc(5px * var(--hs, 1)); background: white; border: 1px solid var(--c-accent);
             border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .handle-n { top: 0; left: 50%; cursor: ns-resize; }
@@ -888,12 +893,12 @@
 
         /* 【改修】直線(Line)用の2点ハンドル（p1, p2）の配置。他ツールと見た目・当たりを揃える */
         .shape-element[data-shape-type="line"] .resize-handle {
-            width: 8px; height: 8px; margin: -4px 0 0 -4px; /* 8pxの当たり域の中心を端点に合わせる */
+            width: calc(8px * var(--hs, 1)); height: calc(8px * var(--hs, 1)); margin: calc(-4px * var(--hs, 1)) 0 0 calc(-4px * var(--hs, 1)); /* 8pxの当たり域の中心を端点に合わせる */
             background: transparent; border: none; box-shadow: none; border-radius: 0;
         }
         .shape-element[data-shape-type="line"] .resize-handle::before {
             content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 5px; height: 5px; background: white; border: 1px solid var(--c-accent);
+            width: calc(5px * var(--hs, 1)); height: calc(5px * var(--hs, 1)); background: white; border: 1px solid var(--c-accent);
             border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .shape-element[data-shape-type="line"][data-line-dir="\\"] .handle-p1 { top: 0; left: 0; cursor: crosshair; }

@@ -28,6 +28,7 @@
                 });
                 
                 setZoom(1.0);
+                window.applyDefaultTextSize();   // 紙の大きさに合わせた既定の文字サイズ（09-24）
                 window.centerWorkspace();   // 読み込み直後は紙を画面の中央に置く
                 // 空の初期状態を履歴の起点(index 0)として必ず積む（undoで全消去される不具合の防止）
                 window.historyArray = []; window.historyIndex = -1;
@@ -637,8 +638,15 @@
                             el.top = (oldTop * scaleRatio) + 'px';
                         }
                     }
-                    if (el.width) el.width = (parseFloat(el.width) * scaleRatio) + 'px';
-                    if (el.height) el.height = (parseFloat(el.height) * scaleRatio) + 'px';
+                    // 幅・高さは 'max-content'（中身なり）のこともある。数でない時は倍率を掛けず
+                    // そのまま残す（09-24 Rayan様。掛けると NaNpx になって指定が消え、1行の文が
+                    // 開き直すと3行に折り返して見えていた）。
+                    const scaleLen = (v) => {
+                        const n = parseFloat(v);
+                        return isNaN(n) ? v : (n * scaleRatio) + 'px';
+                    };
+                    if (el.width) el.width = scaleLen(el.width);
+                    if (el.height) el.height = scaleLen(el.height);
                     if (el.fontSize) el.fontSize = (parseFloat(el.fontSize) * scaleRatio) + 'px';
                     if (el.strokeWidth) el.strokeWidth = parseFloat(el.strokeWidth) * scaleRatio;
                     if (el.pathD) {

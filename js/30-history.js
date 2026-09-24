@@ -16,6 +16,9 @@
                 return {
                     type: isText ? 'text' : (isFreehandHighlight ? 'freehand-highlight' : (isHighlight ? 'highlight' : (isFreehandMask ? 'freehand-mask' : (isShape ? 'shape' : (isImage ? 'image' : 'mask'))))),
                     left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height,
+                    // 幅・高さが 'max-content'（中身なり）の時のために、実際の大きさも控える。
+                    // 書き出しはこの数字が無いと 300px で折り返してしまう（09-24 Rayan様）。
+                    boxWidth: el.offsetWidth, boxHeight: el.offsetHeight,
                     content: isText ? el.querySelector('.text-content').innerHTML : null,
                     fontSize: isText ? el.style.fontSize : null,
                     color: isText ? el.style.color

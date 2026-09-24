@@ -524,7 +524,9 @@
                 brushCursor.style.display = 'block'; brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px';
             } else { brushCursor.style.display = 'none'; }
 
-            // テキストツールは「I」のカーソル。高さは文字サイズ×拡大率に追従する
+            // テキストツールは「I」のカーソル。高さは実際の1行の高さ×拡大率に追従する
+            // （09-24 Rayan様。文字サイズぶんの高さだと、実際にできる箱より低く、
+            //  打った文字がカーソルより上にずれて見えていた）
             // Shift 中は背景の文字選択に譲るので、自前の「I」は出さない
             // 浮かぶ帯や窓の上は、押せる所なので普通のカーソルを見せる（08-16 Rayan様）
             const showTextCursor = currentTool === 'text' && action !== 'pan' && !spaceHeld && !shiftHeld
@@ -533,7 +535,7 @@
                 && !isOverScrollbar(e);
             if (showTextCursor) {
                 const fs = parseFloat(textSizeInput.value) || 20;
-                textCursor.style.height = Math.max(8, fs * zoomLevel) + 'px';
+                textCursor.style.height = Math.max(8, window.textLineHeightPx(fs) * zoomLevel) + 'px';
                 textCursor.style.display = 'block';
                 textCursor.style.left = e.clientX + 'px'; textCursor.style.top = e.clientY + 'px';
             } else { textCursor.style.display = 'none'; }
@@ -726,7 +728,10 @@
                     window.currentLetterSpacing() ? window.currentLetterSpacing() + 'px' : 'normal',
                     window.currentLineSpacing());
                 // クリック作成は「カーソルの先端＝入力文字（キャレット）の左下」に合わせる
-                if (!isDrag) moveTextBottomLeftTo(newText, startX, startY);
+                // 当たりは縦棒の真ん中（09-24 Rayan様。ワープロやブラウザと同じ）。
+                // 押した高さが1行の真ん中に来るよう、行の高さの半分だけ下げて足元を合わせる。
+                if (!isDrag) moveTextBottomLeftTo(newText, startX,
+                    startY + window.textLineHeightPx(parseFloat(textSizeInput.value) || 20) / 2);
                 window.deselectCurrent();
                 selectedElements = [newText]; newText.classList.add('selected');
                 updateToolbar();

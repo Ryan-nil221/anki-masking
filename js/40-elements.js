@@ -253,8 +253,28 @@
             });
             if(saved) window.saveState();
         }
-        document.getElementById('btn-text-size-up').addEventListener('click', () => changeGlobalTextSize(1));
-        document.getElementById('btn-text-size-down').addEventListener('click', () => changeGlobalTextSize(-1));
+        // 上下のボタンは押しっぱなしで送り続ける（09-24 Rayan様）。間合いは上に出る帯や
+        // ページ送りと同じ（0.4秒待ってから0.09秒ごと）。
+        function holdToRepeat(btn, run) {
+            if (!btn) return;
+            let waitId = 0, repeatId = 0;
+            const stop = (e) => {
+                if (!waitId && !repeatId) return;
+                clearTimeout(waitId); clearInterval(repeatId);
+                waitId = repeatId = 0;
+                if (e) { try { btn.releasePointerCapture(e.pointerId); } catch (_) {} }
+            };
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                run();
+                try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+                waitId = setTimeout(() => { repeatId = setInterval(run, 90); }, 400);
+            });
+            ['pointerup', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
+            window.addEventListener('blur', () => stop());
+        }
+        holdToRepeat(document.getElementById('btn-text-size-up'), () => changeGlobalTextSize(1));
+        holdToRepeat(document.getElementById('btn-text-size-down'), () => changeGlobalTextSize(-1));
 
         // --- 文字と文字のすき間（字間） ---
         // 文字サイズと同じく、変えても「文字の左上」が動かないようにする。
@@ -313,8 +333,8 @@
             applySpacingToSelection(next);
         }
         window.changeGlobalLetterSpacing = changeGlobalLetterSpacing;
-        document.getElementById('btn-text-spacing-up').addEventListener('click', () => changeGlobalLetterSpacing(0.5));
-        document.getElementById('btn-text-spacing-down').addEventListener('click', () => changeGlobalLetterSpacing(-0.5));
+        holdToRepeat(document.getElementById('btn-text-spacing-up'), () => changeGlobalLetterSpacing(0.5));
+        holdToRepeat(document.getElementById('btn-text-spacing-down'), () => changeGlobalLetterSpacing(-0.5));
         textSpacingInput.addEventListener('input', () => applySpacingToSelection(currentLetterSpacing()));
 
         // --- 行と行のすき間（縦書きでは列と列） ---
@@ -345,6 +365,27 @@
             return window.shownToLine(v, parseFloat(textSizeInput.value) || 20);
         }
         window.currentLineSpacing = currentLineSpacing;
+        // 既定の文字の大きさは紙の幅から決める（09-24 Rayan様）。紙はウィンドウ幅に合わせて
+        // 描くので、20固定のままだと広い画面ほど紙に対して文字が小さく見えていた。
+        // 基準は「紙の幅922px（1280幅のノートPC）のとき20」。資料を読み込んだ時だけ入れ直す。
+        const PAPER_PER_TEXT = 46;
+        // つまみと破線の太さ。拡大率では変えず（画面上で一定）、紙が大きい端末では
+        // そのぶん太くする（09-24 Rayan様。大きい画面だと破線も丸も見えにくかった）。
+        window.refreshHandleScale = function refreshHandleScale() {
+            const w = workspace.offsetWidth || 922;
+            // 端数を残すと枠線の太さが切り捨てで1px扱いになるので、丸めてから渡す
+            const ps = Math.round(Math.max(1, Math.min(2.5, w / 922)) * 20) / 20;
+            workspace.style.setProperty('--ps', String(ps));
+            workspace.style.setProperty('--hs', String(ps / (zoomLevel || 1)));
+        };
+        window.applyDefaultTextSize = function applyDefaultTextSize() {
+            const w = workspace.offsetWidth;
+            if (!w) return;
+            textSizeInput.value = Math.max(10, Math.min(120, Math.round(w / PAPER_PER_TEXT)));
+        };
+        // その文字サイズで実際に使う1行の高さ（px）。「I」のカーソルの高さもこれに合わせる。
+        window.textLineHeightPx = (fontSize) =>
+            normalLineHeightRatio() * (fontSize || 20) + (currentLineSpacing() || 0);
         // 行のすき間は「箱の上端」を保つ（＝動かさない）。
         // 行の高さを増やすと1行目の上にも余白が付くので、文字の上端で揃えると
         // 箱そのものが上へずれ、上に浮かべている道具の帯も動いてしまう（09-08 Rayan様）。
@@ -371,8 +412,8 @@
             applyLineSpacingToSelection(shown);
         }
         window.changeGlobalLineSpacing = changeGlobalLineSpacing;
-        document.getElementById('btn-line-spacing-up').addEventListener('click', () => changeGlobalLineSpacing(1));
-        document.getElementById('btn-line-spacing-down').addEventListener('click', () => changeGlobalLineSpacing(-1));
+        holdToRepeat(document.getElementById('btn-line-spacing-up'), () => changeGlobalLineSpacing(1));
+        holdToRepeat(document.getElementById('btn-line-spacing-down'), () => changeGlobalLineSpacing(-1));
         lineSpacingInput.addEventListener('input', () => {
             // 打ち込みでも範囲から出さない（矢印と同じ 0〜LINE_SHOWN_MAX）
             const v = parseFloat(lineSpacingInput.value);

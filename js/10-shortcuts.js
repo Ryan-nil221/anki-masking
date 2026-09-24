@@ -977,7 +977,11 @@
             const centerY = (workspaceContainer.scrollTop + fy - oldMarginTop) / oldZoom;
 
             zoomLevel = newZoom; 
-            workspace.style.transform = `scale(${zoomLevel})`; 
+            workspace.style.transform = `scale(${zoomLevel})`;
+            // 掴みしろと取っ手は画面上の太さを一定にする（09-24 Rayan様）。
+            // 紙と一緒に伸び縮みすると、縮小時は細すぎて掴めず、拡大時は遠くから掴めてしまう。
+            workspace.style.setProperty('--uz', String(1 / (zoomLevel || 1)));
+            window.refreshHandleScale();
             zoomText.innerText = Math.round(zoomLevel * 100) + '%';
             
             const { newMarginLeft, newMarginTop } = refreshWorkspaceBounds();

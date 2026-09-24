@@ -33,10 +33,12 @@
 
             const left = parseFloat(data.left || 0);
             const top = parseFloat(data.top || 0);
+            // 幅が 'max-content' の時は、保存時に控えた実寸を使う（09-24 Rayan様）。
+            // 300px で折り返すと、画面で1行の文が書き出しでは何行にもなっていた。
             let width = parseFloat(data.width);
-            if (isNaN(width)) width = 300; 
+            if (isNaN(width)) width = parseFloat(data.boxWidth) || 300;
             let height = parseFloat(data.height);
-            if (isNaN(height)) height = 100;
+            if (isNaN(height)) height = parseFloat(data.boxHeight) || 100;
 
             ctx.save();
             ctx.translate(left, top);
@@ -526,8 +528,8 @@
                     if (window.isMasksHidden && (data.type === 'mask' || data.type === 'freehand-mask')) continue;
                     const left = parseFloat(data.left || 0);
                     const top = parseFloat(data.top || 0);
-                    let w = parseFloat(data.width); if (isNaN(w)) w = 300;
-                    let h = parseFloat(data.height); if (isNaN(h)) h = 100;
+                    let w = parseFloat(data.width); if (isNaN(w)) w = parseFloat(data.boxWidth) || 300;
+                    let h = parseFloat(data.height); if (isNaN(h)) h = parseFloat(data.boxHeight) || 100;
                     if (!yHit(top, h)) continue;
                     const ox = left, oy = top - pageTop; // E空間の要素原点
 
