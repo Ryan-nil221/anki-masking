@@ -188,22 +188,49 @@
                 }
                 
                 const dynamicScale = Math.min(RENDER_SCALE * targetZoom, 4.0);
-                
-                const canvas = pageDiv.querySelector('canvas:not(.drawing-canvas)');
-                canvas.width = viewport.width * dynamicScale; 
-                canvas.height = viewport.height * dynamicScale; 
-                
-                const textLayerDiv = pageDiv.querySelector('.textLayer');
-                textLayerDiv.style.width = viewport.width + 'px'; 
-                textLayerDiv.style.height = viewport.height + 'px'; 
-                textLayerDiv.style.setProperty('--scale-factor', viewport.scale);
-                
-                const scaledViewport = page.getViewport({ scale: window.pdfBaseScale * dynamicScale });
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport: scaledViewport }).promise;
 
+                // 拡大縮小の後の描き直しは、裏の canvas に描き終えてから表へ一度に写す（10-11 Taro様）。
+                // 表の canvas の大きさを先に変えると、描き終わるまで中身が消えて白く抜け、
+                // 古い細かさの絵から新しい絵へガクッと切り替わって見えていた。
+                // 続けて拡大縮小した時は、後から頼んだ描き直しだけを表に出す（古い方が遅れて上書きしないように）。
+                const seq = (pageDiv._renderSeq || 0) + 1;
+                pageDiv._renderSeq = seq;
+
+                const canvas = pageDiv.querySelector('canvas:not(.drawing-canvas)');
+                const off = document.createElement('canvas');
+                off.width = viewport.width * dynamicScale;
+                off.height = viewport.height * dynamicScale;
+
+                const scaledViewport = page.getViewport({ scale: window.pdfBaseScale * dynamicScale });
+                await page.render({ canvasContext: off.getContext('2d'), viewport: scaledViewport }).promise;
+
+                // 文字の層も裏で組んでから入れ替える（組んでいる間に選べる文字が消えないように）
+                const textLayerDiv = pageDiv.querySelector('.textLayer');
+                const nextLayer = document.createElement('div');
                 const textContent = await page.getTextContent();
-                textLayerDiv.textContent = ''; // 再描画（ズーム時など）で既存spanが二重に累積するのを防ぐ
-                pdfjsLib.renderTextLayer({ textContentSource: textContent, container: textLayerDiv, viewport: viewport, textDivs: [] });
+                await pdfjsLib.renderTextLayer({ textContentSource: textContent, container: nextLayer, viewport: viewport, textDivs: [] }).promise;
+                if (pageDiv._renderSeq !== seq) return;
+
+                // 既に絵がある時（拡大縮小の後）は、新しい絵を上に重ねて短くフェードさせてから写す。
+                // ぼやけた絵からくっきりした絵へパッと変わるのを和らげる。初めて描く時はそのまま写す。
+                if (canvas.width && canvas.height) {
+                    off.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;transition:opacity .18s ease-out;pointer-events:none;';
+                    canvas.after(off);
+                    off.getBoundingClientRect();
+                    off.style.opacity = '1';
+                    await new Promise(r => setTimeout(r, 200));
+                    off.remove();
+                    if (pageDiv._renderSeq !== seq) return;
+                }
+                canvas.width = off.width;
+                canvas.height = off.height;
+                canvas.getContext('2d').drawImage(off, 0, 0);
+                off.width = 0; off.height = 0;
+
+                textLayerDiv.style.width = viewport.width + 'px';
+                textLayerDiv.style.height = viewport.height + 'px';
+                textLayerDiv.style.setProperty('--scale-factor', viewport.scale);
+                textLayerDiv.replaceChildren(...nextLayer.childNodes);
 
                 // 手描きレイヤー（SVG）はベクターなのでズームで再描画不要。viewBoxだけ保証し、内容を再構築。
                 const drawSvg = pageDiv.querySelector('.drawing-svg');
