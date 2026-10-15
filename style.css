@@ -1005,6 +1005,29 @@
             #feedback-card { padding: 20px 18px 16px; }
             #fb-body { height: 110px; }
         }
+        /* ===== 新規作成の前の確認（10-15 Rayan様） ===== */
+        #newdoc-card {
+            box-sizing: border-box; width: min(520px, calc(100% - 32px));
+            background: var(--c-surface); border-radius: var(--r-lg);
+            box-shadow: var(--sh-lg); padding: 24px 26px 20px;
+        }
+        #newdoc-card h2 { margin: 0 0 18px; font-size: 19px; font-weight: 700; color: var(--c-text-strong); }
+        #newdoc-card .nd-lead { margin: 0 0 20px; font-size: 14px; line-height: 1.7; color: var(--c-text-sub); }
+        #newdoc-card .nd-foot { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+        #newdoc-card .nd-danger { color: #c0392b; }
+        #newdoc-card .nd-choices { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 18px; }
+        #newdoc-card .nd-choice {
+            display: grid; grid-template-columns: 32px 1fr; column-gap: 10px; align-items: center;
+            text-align: left; padding: 12px 14px; border-radius: var(--r-md, 10px); cursor: pointer;
+            border: 1px solid var(--c-border, #d6d9e0); background: var(--c-surface); color: var(--c-text-strong);
+            font: inherit;
+        }
+        #newdoc-card .nd-choice:hover, #newdoc-card .nd-choice:focus-visible { border-color: var(--c-accent); outline: none; }
+        #newdoc-card .nd-choice .material-symbols-outlined { grid-row: span 2; font-size: 26px; color: var(--c-accent); }
+        #newdoc-card .nd-choice b { font-size: 14.5px; }
+        #newdoc-card .nd-rec { margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; vertical-align: 2px; background: var(--c-accent); color: var(--c-on-accent); }
+        #newdoc-card .nd-choice small { font-size: 12px; line-height: 1.5; color: var(--c-text-muted); }
+
         .overlay-loading { color: white; font-size: 20px; font-weight: bold; flex-direction: column; gap: 10px; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
