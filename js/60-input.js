@@ -133,6 +133,17 @@
                 if (wrap && wrap.contains(e.target) && (e.target === editingTc || editingTc.contains(e.target))) {
                     return; // 文字の上：ブラウザに任せる（カーソル移動・範囲選択）
                 }
+                // 右の縁（最後の文字のすぐ後ろ）だけは編集を続け、押した所の近くへ文字カーソルを置く
+                // （10-15 Rayan様）。末尾にカーソルを置こうとして縁を押し、編集が終わってしまっていた。
+                // 左・上・下の縁は今までどおり「編集を終えて箱を選ぶ」。
+                if (wrap && e.target === wrap) {
+                    const cr = editingTc.getBoundingClientRect();
+                    if (e.clientX >= cr.right && e.clientY >= cr.top && e.clientY <= cr.bottom) {
+                        e.preventDefault();
+                        placeCaretFromPoint(editingTc, e.clientX, e.clientY);
+                        return;
+                    }
+                }
                 // 文字の外（外枠の余白）や別の箱を押した＝この編集は終わり。
                 // **明示的に blur する。** 下で preventDefault すると contentEditable は
                 // 自然には focus を失わず、編集が続いたまま次を選ぶことになる（08-01 実測）。

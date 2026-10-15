@@ -674,11 +674,15 @@
             margin: calc(-2.5px * var(--hs, 1)) 0 0 calc(-2.5px * var(--hs, 1));
             background: white; border: 1px solid var(--c-accent);
             border-radius: 50%; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-            cursor: ew-resize; pointer-events: auto;
+            cursor: ew-resize; pointer-events: none;
         }
-        /* 丸は小さいので、掴める範囲だけ外へ4px広げる（画面上で一定・09-24） */
+        /* 掴める範囲は箱の外側だけにする（10-15 Rayan様）。丸の中心は右端の線の上にあるので、
+           丸ごと当たりにすると箱の内側へ食い込み、最後の文字の後ろを押すと丸を掴んでしまっていた。
+           丸そのものは当たりを持たず、丸の中心から右へ広げたこの範囲だけで掴む（画面上で一定・09-24）。 */
         .text-edge-handle::after {
-            content: ''; position: absolute; inset: calc(-4px * var(--hs, 1));
+            content: ''; position: absolute; pointer-events: auto; cursor: ew-resize;
+            top: calc(-4px * var(--hs, 1)); bottom: calc(-4px * var(--hs, 1));
+            left: 50%; right: calc(-4px * var(--hs, 1));
         }
 
         /* --- 選んだテキストの上に出る道具の帯（08-16 Rayan様の案） ---
