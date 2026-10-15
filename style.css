@@ -206,6 +206,11 @@
             transition: 0.2s;
         }
         .dropdown-menu li:hover { background-color: var(--c-surface-3); color: var(--c-accent); }
+        /* 保存メニューの名前と説明（10-16 Rayan様・新規作成の確認の窓と揃える） */
+        .dropdown-menu li .menu-text { display: flex; flex-direction: column; gap: 2px; }
+        .dropdown-menu li .menu-text small { font-size: 11px; font-weight: 500; line-height: 1.4; color: var(--c-text-muted); }
+        #save-dropdown-menu { min-width: 400px; }
+        .dropdown-menu li .menu-rec { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 700; vertical-align: 1px; background: var(--c-accent); color: var(--c-on-accent); }
         /* メニュー内のリンク項目（使い方ページ）。他の項目と同じ当たり判定にするため
            li の padding を外し、a 側で埋める */
         .dropdown-menu li.menu-link { padding: 0; }

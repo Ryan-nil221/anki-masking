@@ -586,7 +586,7 @@
                             // 作業データが入っていないPDF＝ただのPDF。新規として開く
                             currentBackground = { type: 'pdf', dataURL };
                             await loadBackground(currentBackground);
-                            alert('このPDFには作業データが入っていません。新しいPDFとして開きました。\n（続きから編集するには「編集できるPDFで保存」で出したファイルを選んでください）');
+                            alert('このPDFには作業データが入っていません。新しいPDFとして開きました。\n（続きから編集するには「PDF（編集用）」で保存したファイルを選んでください）');
                         }
                         await persistBackground();
                         scheduleAutosave();
