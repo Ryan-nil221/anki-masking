@@ -306,7 +306,10 @@
                         if (window.currentPdfDoc) { try { await window.currentPdfDoc.destroy(); } catch (_) {} window.currentPdfDoc = null; }
                         const res = await fetch(bgData.dataURL);
                         const arrayBuffer = await res.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                        // 字形を埋め込んでいない日本語のPDF（Word などで作った試験問題に多い）は、文字の対応表が無いと
+                        // 文字だけが全部消える（10-21 Rayan様・簿記の模擬試験）。対応表と標準の書体は、同じ版の pdf.js から読む。
+                        const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/';   // cdnjs には対応表が無い
+                        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, cMapUrl: PDFJS_BASE + 'cmaps/', cMapPacked: true, standardFontDataUrl: PDFJS_BASE + 'standard_fonts/' }).promise;
                         pdfContainer.innerHTML = ''; 
                         
                         totalPdfPages = pdf.numPages; pageTotal.innerText = totalPdfPages; pageInput.max = totalPdfPages; pageInput.value = 1;
