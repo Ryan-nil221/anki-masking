@@ -932,6 +932,8 @@
         // 大きさの揃っていない資料だと、描画が進むにつれ紙が縮み、器だけが読み込み時の大きさで
         // residual として残る＝一番下まで送っても紙が終わっていて余白だけ、という状態になっていた
         // （136ページの資料・Rayan様の報告）。
+        const CLIP_MARGIN_OK = !!(window.CSS && CSS.supports && CSS.supports('overflow', 'clip')
+            && CSS.supports('overflow-clip-margin', '1px'));
         function refreshWorkspaceBounds() {
             const containerW = workspaceContainer.clientWidth;
             const containerH = workspaceContainer.clientHeight;
@@ -950,8 +952,17 @@
             const slackX = PAD_X + Math.max(0, (containerW - newScaledW) / 2);
             const slackY = PAD_Y + Math.max(0, (containerH - newScaledH) / 2);
 
-            workspaceWrapper.style.width = (newScaledW + slackX) + 'px';
-            workspaceWrapper.style.height = (newScaledH + slackY + BOTTOM_SLACK) + 'px';
+            const fullW = newScaledW + slackX;
+            const fullH = newScaledH + slackY + BOTTOM_SLACK;
+            // 紙の左と上へはみ出した写真も見せる（10-19 Rayan様）。切る線を左の余白の幅だけ外へ広げ、
+            // 右と下はその分だけ入れ物を縮めて、切る線とスクロールの範囲を今までと同じに保つ（style.css）。
+            const clipM = CLIP_MARGIN_OK ? slackX : 0;
+            workspaceWrapper.classList.toggle('clip-margin', CLIP_MARGIN_OK);
+            workspaceWrapper.style.setProperty('--wrap-m', clipM + 'px');
+            workspaceWrapper.style.setProperty('--wrap-w', fullW + 'px');
+            workspaceWrapper.style.setProperty('--wrap-h', fullH + 'px');
+            workspaceWrapper.style.width = Math.max(0, fullW - clipM) + 'px';
+            workspaceWrapper.style.height = Math.max(0, fullH - clipM) + 'px';
             workspaceWrapper.style.marginLeft = slackX + 'px';
             workspaceWrapper.style.marginTop = slackY + 'px';
 

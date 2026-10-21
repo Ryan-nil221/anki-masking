@@ -367,6 +367,15 @@
            そのぶん紙の下に空白が増え、70%では一番下まで送ると紙が画面から消えていた
            （Rayan様の報告）。入れ物の側で切って、範囲は入れ物の大きさだけで決める。 */
         #workspace-wrapper { position: relative; overflow: hidden; }
+        /* 紙の左と上へはみ出した写真も見せる（10-19 Rayan様）。切る線を外側へ --wrap-m だけ広げる。
+           右と下はその分だけ入れ物を縮めてあるので、切る線の位置は今までと同じ。左と上だけが広がる。
+           ::after は縮めた分を埋める見えない詰め物で、スクロールの範囲を今までと同じ大きさに保つ。
+           切る範囲の余白に対応していないブラウザでは付けない（今までどおり紙の端で切れるだけ）。 */
+        #workspace-wrapper.clip-margin { overflow: clip; overflow-clip-margin: var(--wrap-m, 0px); }
+        #workspace-wrapper.clip-margin::after {
+            content: ''; position: absolute; left: 0; top: 0; pointer-events: none;
+            width: var(--wrap-w, 0px); height: var(--wrap-h, 0px);
+        }
         /* 紙は拡大縮小を transform でかけている。transform はレイアウト上の大きさを変えないので、
            流れの中に置いたままだと**縮めても元の大きさの場所を取り続ける**。
            そのぶんスクロールの範囲が余り、縮小するほど紙の下に空白が増えていた

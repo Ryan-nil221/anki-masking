@@ -639,7 +639,15 @@
                 rawPenPoints.push({x: localX, y: localY});
                 liveStrokePath.setAttribute('d', livePathAppend(rawPenPoints));
             } else if (action === 'move' && (startRects.length > 0 || strokesDrag)) {
-                const dx = currentX - startX; const dy = currentY - startY; 
+                let dx = currentX - startX; let dy = currentY - startY;
+                // 写真だけを動かす時は、紙の外まで追う（10-19 Rayan様）。押さえた指の位置を紙の中に
+                // 押し込めてから差を取っていたので、左（上）へは掴んだ所が紙の端に来た所で止まっていた。
+                // 右（下）は写真が掴んだ所より先へ伸びている分だけはみ出せて、左右で食い違って見えた。
+                if (startRects.length > 0 && !strokesDrag
+                    && startRects.every(item => item.el.classList.contains('image-element'))) {
+                    dx = (e.clientX - rect.left) / zoomLevel - startX;
+                    dy = (e.clientY - rect.top) / zoomLevel - startY;
+                }
                 startRects.forEach(item => {
                     item.el.style.left = (item.left + dx) + 'px';
                     item.el.style.top = (item.top + dy) + 'px';
