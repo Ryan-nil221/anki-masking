@@ -128,10 +128,33 @@
         document.addEventListener('keyup', (e) => { if (e.key === 'Shift') setShiftHeld(false); });
         window.addEventListener('blur', () => setShiftHeld(false));
 
+        // 説明は黒い吹き出しだけで出す（10-22 Rayan様）。title のままだとブラウザも白い枠で同じ文を出し、
+        // 2つ重なる。黒い吹き出しが出るものだけ、title を data-tip へ移す（読み上げ用に aria-label も付ける）。
+        // 後から title を書き換える所（学習モードの切り替え等）も、見張って同じように移す。
+        const TIP_SEL = '.tool-switch label[title], .btn[title], .slider-label[title]';
+        const moveTip = (el) => {
+            const t = el.getAttribute('title');
+            if (t === null) return;
+            el.dataset.tip = t;
+            if (!el.hasAttribute('aria-label') || el.dataset.tipAria) { el.setAttribute('aria-label', t); el.dataset.tipAria = '1'; }
+            el.removeAttribute('title');
+        };
+        document.querySelectorAll(TIP_SEL).forEach(moveTip);
+        new MutationObserver((list) => {
+            for (const m of list) {
+                if (m.type === 'attributes') { if (m.target.matches && m.target.matches(TIP_SEL)) moveTip(m.target); }
+                else m.addedNodes.forEach(n => {
+                    if (n.nodeType !== 1) return;
+                    if (n.matches(TIP_SEL)) moveTip(n);
+                    n.querySelectorAll && n.querySelectorAll(TIP_SEL).forEach(moveTip);
+                });
+            }
+        }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['title'] });
+
         // 説明（黒い吹き出し）の消し忘れ対策。押した拍子に画面が動くと、カーソルが離れても
         // :hover が外れず吹き出しが残ることがある。押した時点で消し、実際に離れた時に戻す。
         document.addEventListener('pointerdown', (e) => {
-            const t = e.target.closest && e.target.closest('[title]');
+            const t = e.target.closest && e.target.closest('[data-tip]');
             if (t) t.classList.add('no-tip');
         }, true);
         document.addEventListener('pointerout', (e) => {

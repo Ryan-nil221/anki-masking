@@ -245,8 +245,8 @@
 
         /* 説明（ツールチップ）はボタンの中央に揃える。
            left を指定しないと、文字がボタンの左端から右へ伸びて中心がずれる（08-07 修正） */
-        .tool-switch label::after, .btn[title]::after, .slider-label[title]::after {
-            content: attr(title); position: absolute; top: -35px; left: 50%; background: var(--c-tooltip-bg);
+        .tool-switch label::after, .btn[data-tip]::after, .slider-label[data-tip]::after {
+            content: attr(data-tip); position: absolute; top: -35px; left: 50%; background: var(--c-tooltip-bg);
             color: #fff; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: var(--r-sm);
             white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
             transform: translate(-50%, 5px); z-index: 5000;
@@ -265,15 +265,15 @@
         .toggle input:checked + .toggle-icon { color: var(--c-accent); }
         .toggle:hover { background: var(--c-surface-3); }
         /* .btn のツールチップも表示する（従来はホバー時の opacity ルールが無く出ていなかった） */
-        .btn[title]:hover::after { opacity: 1; transform: translate(-50%, 0); }
+        .btn[data-tip]:hover::after { opacity: 1; transform: translate(-50%, 0); }
         /* ヘッダー内のボタンは上に出すと画面外に切れるため下向きに表示する */
-        header .btn[title]::after { top: calc(100% + 8px); }
+        header .btn[data-tip]::after { top: calc(100% + 8px); }
         /* 画面の右端に寄っているボタンは、中央揃えだと説明がはみ出す。右端を揃えて左へ伸ばす */
-        #floating-bottom-right .btn[title]::after,
+        #floating-bottom-right .btn[data-tip]::after,
         #btn-guide::after, #btn-header-menu::after {
             left: auto; right: 0; transform: translate(0, 5px);
         }
-        #floating-bottom-right .btn[title]:hover::after,
+        #floating-bottom-right .btn[data-tip]:hover::after,
         #btn-guide:hover::after, #btn-header-menu:hover::after { transform: translate(0, 0); }
         .tool-switch label:hover { background-color: var(--c-surface-3); color: var(--c-text); }
         .tool-switch input[type="radio"] { display: none; }
@@ -1255,7 +1255,7 @@
         /* --- ホバーが無い環境（指）での見た目の後始末 --- */
         @media (hover: none) {
             /* タップ後に出っぱなしになるツールチップを出さない */
-            .tool-switch label::after, .btn[title]::after, .slider-label[title]::after { display: none !important; }
+            .tool-switch label::after, .btn[data-tip]::after, .slider-label[data-tip]::after { display: none !important; }
             /* タップ後の「押されたまま」に見える表示を止める。選択中の色が2つに見える等 */
             .swatch:hover { transform: none; }
             .swatch.active { transform: scale(1.15); }
@@ -1391,11 +1391,11 @@
         body:not(.compact-ui) .tool-switch input[type="radio"]:checked + label { transform: translateX(2px); }
         /* ツールチップは上ではなく右へ。上に出すと1つ上のボタンに重なる */
         body:not(.compact-ui) .tool-switch label::after,
-        body:not(.compact-ui) .tool-switch .btn[title]::after {
+        body:not(.compact-ui) .tool-switch .btn[data-tip]::after {
             top: 50%; left: calc(100% + 10px); transform: translate(5px, -50%);
         }
         body:not(.compact-ui) .tool-switch label:hover::after,
-        body:not(.compact-ui) .tool-switch .btn[title]:hover::after { transform: translate(0, -50%); }
+        body:not(.compact-ui) .tool-switch .btn[data-tip]:hover::after { transform: translate(0, -50%); }
         /* 設定行はツールバーの右へ、縦に積んで開く。
            絶対配置にして、開いてもツールバー自体が動かないようにする（押し間違い防止）。
            縦の位置は「今選んでいるツールのアイコンの真横」（08-06・Rayan様の指示）。
