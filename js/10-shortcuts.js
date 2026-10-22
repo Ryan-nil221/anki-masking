@@ -183,8 +183,8 @@
             const radio = document.getElementById('tool-' + name);
             if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
         }
-        const TOOL_HOTKEYS = { '1':'select','2':'mask','3':'highlight','4':'text','5':'shape','6':'pen',
-                               'v':'select','m':'mask','h':'highlight','t':'text','g':'shape','p':'pen' };
+        // 道具の切り替えは数字だけ（10-22 Rayan様。文字のキーは外した）
+        const TOOL_HOTKEYS = { '1':'select','2':'mask','3':'highlight','4':'text','5':'shape','6':'pen' };
 
         function duplicateSelection() {
             if (selectedStroke) { duplicateSelectedStroke(); return; }
