@@ -5,49 +5,49 @@
            ========================================================= */
         :root {
             /* サーフェス（面） */
-            --c-canvas: #e5e7eb;        /* ワークスペースの背景（ページの外側） */
-            --c-body-bg: #f3f4f6;       /* アプリ全体の背景 */
+            --c-canvas: #f7f8fa;        /* ワークスペースの背景（ページの外側） */
+            --c-body-bg: #ffffff;       /* アプリ全体の背景 */
             --c-surface: #ffffff;       /* パネル・ボタン・カード */
-            --c-surface-2: #f9fafb;     /* わずかに沈んだ面／ホバー */
-            --c-surface-3: #f3f4f6;     /* インセット・ホバー塗り */
-            --c-glass: rgba(255, 255, 255, 0.95);      /* すりガラス風パネル */
-            --c-glass-border: rgba(229, 231, 235, 0.8);
+            --c-surface-2: #f4f6fa;     /* わずかに沈んだ面／ホバー */
+            --c-surface-3: #edf0f6;     /* インセット・ホバー塗り */
+            --c-glass: #ffffff;      /* すりガラス風パネル */
+            --c-glass-border: #e9ecf2;
             /* テキスト */
-            --c-text: #374151;
-            --c-text-strong: #111827;
-            --c-text-muted: #6b7280;
-            --c-text-sub: #4b5563;
-            --c-on-accent: #ffffff;     /* アクセント上の文字 */
+            --c-text: #28354f;
+            --c-text-strong: #0f1a33;
+            --c-text-muted: #8a93a6;
+            --c-text-sub: #4a5670;
+            --c-on-accent: #fff;     /* アクセント上の文字 */
             /* ボーダー */
-            --c-border: #e5e7eb;
-            --c-border-input: #d1d5db;
-            --c-border-strong: #9ca3af;
+            --c-border: #eceef3;
+            --c-border-input: #e2e6ee;
+            --c-border-strong: #b8c0d0;
             /* アクセント（ライト/ダーク共通） */
-            --c-accent: #3b82f6;
-            --c-accent-hover: #2563eb;
-            --c-accent-weak: rgba(59, 130, 246, 0.3);
-            --c-accent-tint: #eff6ff;   /* 青系ホバー塗り */
-            --c-success: #10b981;
-            --c-success-hover: #059669;
-            --c-danger: #ef4444;
-            --c-danger-border: #fca5a5;
-            --c-danger-bg: #fef2f2;
+            --c-accent: #2e4486;
+            --c-accent-hover: #24386f;
+            --c-accent-weak: rgba(46,68,134,.18);
+            --c-accent-tint: #e6ebf7;   /* 青系ホバー塗り */
+            --c-success: #2e4486;
+            --c-success-hover: #24386f;
+            --c-danger: #e0483a;
+            --c-danger-border: #f6cdc9;
+            --c-danger-bg: #fdf0ef;
             --c-danger-hover-bg: #fee2e2;
             --c-danger-hover-border: #f87171;
-            --c-project-bg: #eef2ff;
-            --c-project-text: #4338ca;
-            --c-project-border: #c7d2fe;
-            --c-project-hover-bg: #e0e7ff;
-            --c-project-hover-border: #a5b4fc;
+            --c-project-bg: transparent;
+            --c-project-text: #28354f;
+            --c-project-border: transparent;
+            --c-project-hover-bg: #f4f6fa;
+            --c-project-hover-border: transparent;
             /* 影 */
-            --sh-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --sh-panel: 0 1px 3px rgba(0,0,0,0.05);
-            --sh-md: 0 4px 15px rgba(0,0,0,0.1);
-            --sh-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --sh-sm: none;
+            --sh-panel: none;
+            --sh-md: 0 0 0 1px #eef0f4, 0 6px 18px -8px rgba(30,45,90,.16);
+            --sh-lg: 0 0 0 1px #eef0f4, 0 16px 36px -16px rgba(30,45,90,.22);
             /* 角丸スケール */
-            --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px; --r-pill: 100px;
+            --r-xs: 4px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 16px; --r-pill: 100px;
             /* ツールチップ */
-            --c-tooltip-bg: rgba(17, 24, 39, 0.85);
+            --c-tooltip-bg: #0f1a33;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -66,12 +66,14 @@
                 --c-border: #333842;
                 --c-border-input: #3a3f4a;
                 --c-border-strong: #565d6a;
-                --c-accent-tint: #1e3a5f;
+                --c-accent: #4a64b8;
+                --c-accent-hover: #5872c6;
+                --c-accent-tint: #243154;
                 --c-danger-bg: #3a1f1f;
                 --c-danger-hover-bg: #4a2626;
-                --c-project-bg: #26294a;
+                --c-project-bg: transparent;
                 --c-project-text: #c7d2fe;
-                --c-project-border: #3a3f6a;
+                --c-project-border: transparent;
                 --c-project-hover-bg: #2f3358;
                 --c-project-hover-border: #4a5088;
                 --sh-sm: 0 1px 2px rgba(0,0,0,0.4);
@@ -1088,8 +1090,8 @@
         #welcome-box .demo .cal {
             position: absolute; z-index: 2; white-space: nowrap;
             font-size: 11px; font-size: 1.9cqw; line-height: 1.3; font-weight: 700;
-            color: #1d4ed8; background: var(--c-surface);
-            border: 1px solid #93c5fd; border-radius: 5px; padding: .3em .6em;
+            color: #2e4486; background: var(--c-surface);
+            border: 1px solid #c5cee6; border-radius: 6px; padding: .3em .6em;
         }
         /* 左の道具の名前。段が細かいので、字を小さくして各段の高さに収める */
         #welcome-box .demo .cal-t {
@@ -1145,15 +1147,15 @@
         }
         #welcome-box .demo .cursor { animation: wc-cursor 5.6s infinite; }
         @keyframes wc-cursor {
-            0% { left: 46.137%; top: 74.8014%; }
-            19.643%, 24.99% { left: 36.4215%; top: 43.9579%; }
-            25% { left: 36.4215%; top: 43.9579%; }
-            44.643%, 49.99% { left: 35.9514%; top: 51.6688%; }
-            50% { left: 35.9514%; top: 51.6688%; }
-            69.643%, 74.99% { left: 37.3095%; top: 59.3796%; }
-            75% { left: 37.3095%; top: 59.3796%; }
-            94.643%, 99.99% { left: 46.137%; top: 74.8014%; }
-            100% { left: 46.137%; top: 74.8014%; }
+            0% { left: 46.4183%; top: 76.5731%; }
+            19.643%, 24.99% { left: 36.9677%; top: 45.8057%; }
+            25% { left: 36.9677%; top: 45.8057%; }
+            44.643%, 49.99% { left: 36.4682%; top: 53.4976%; }
+            50% { left: 36.4682%; top: 53.4976%; }
+            69.643%, 74.99% { left: 37.6201%; top: 61.1894%; }
+            75% { left: 37.6201%; top: 61.1894%; }
+            94.643%, 99.99% { left: 46.4183%; top: 76.5731%; }
+            100% { left: 46.4183%; top: 76.5731%; }
         }
         /* 動きを減らす設定の人には、隠したままの静止画として見せる */
         @media (prefers-reduced-motion: reduce) {
@@ -1513,3 +1515,68 @@
         body.bottom-stacked #btn-focus-mode {
             bottom: calc(var(--tools-h, 120px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
         }
+
+        /* =========================================================
+           見た目の更新（10-25 Rayan様の見本）
+           - 白い地、濃紺の丸いボタンは新規作成と保存だけ、データを開くは紺の枠
+           - すりガラス・光る縁・浮く動きをやめる
+           ========================================================= */
+        body, button, input, select, textarea { font-family: 'IBM Plex Sans', 'IBM Plex Sans JP', system-ui, sans-serif !important; font-feature-settings: 'palt'; -webkit-font-smoothing: antialiased; }
+        * { backdrop-filter: none !important; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'opsz' 24 !important; color: inherit; }
+        #app-header { background: var(--c-surface) !important; border-bottom: 1px solid var(--c-border) !important; box-shadow: none !important; }
+        #app-header h1 { font-weight: 600 !important; letter-spacing: .01em; color: var(--c-text-strong) !important; }
+        .btn { box-shadow: none !important; font-weight: 500 !important; transform: none !important; }
+        .btn-icon { border-radius: 999px !important; background: var(--c-surface) !important; border-color: var(--c-border-input) !important; color: var(--c-text) !important; }
+        .custom-file-upload.btn-primary, .btn-success { border-radius: 999px !important; background: var(--c-accent) !important; border-color: var(--c-accent) !important; color: var(--c-on-accent) !important; padding-left: 18px !important; padding-right: 18px !important; }
+        .btn-project { background: transparent !important; border-color: transparent !important; color: var(--c-text) !important; }
+        #workspace-outer, #workspace-container { background: var(--c-canvas) !important; }
+        .tool-switch { border-radius: var(--r-lg) !important; box-shadow: var(--sh-md) !important; border: none !important; background: var(--c-surface) !important; }
+        .tool-switch label { border-radius: 999px !important; color: var(--c-text) !important; transform: none !important; }
+        .tool-switch input[type=radio]:checked + label, .tool-switch input[type=radio]:checked + label.props-open {
+          background: var(--c-accent-tint) !important; color: var(--c-accent) !important; box-shadow: none !important; }
+        #floating-properties, .floating-ui { border: none !important; box-shadow: var(--sh-md) !important; border-radius: var(--r-lg) !important; background: var(--c-surface) !important; }
+        #btn-focus-mode { border: none !important; box-shadow: var(--sh-md) !important; background: var(--c-surface) !important; }
+        .floating-ui .btn-icon { border-color: var(--c-border-input) !important; }
+        #page-navigation input { background: var(--c-surface-3) !important; border-color: transparent !important; border-radius: var(--r-sm) !important; }
+        .pdf-page { box-shadow: 0 0 0 1px #e6e9f0, 0 10px 30px -18px rgba(30,45,90,.25) !important; border-radius: 0 !important; }
+        .dropdown-menu li:hover { color: var(--c-text-strong) !important; }
+        .dropdown-menu li .menu-rec, #newdoc-card .nd-rec { background: var(--c-accent-tint) !important; color: var(--c-accent) !important; }
+        .overlay { background: rgba(15,26,51,.4) !important; }
+        input[type=range] { accent-color: var(--c-accent); }
+        .btn-ghost, .btn-icon.btn-ghost, .tool-switch .btn-icon { background: transparent !important; border-color: transparent !important; }
+        .tool-switch .btn-icon:hover, .btn-ghost:hover { background: var(--c-surface-3) !important; }
+        /* データを開く：紺のアイコン＋細い紺の枠（10-25 Rayan様） */
+        .btn-project { border-radius: 999px !important; border: 1px solid var(--c-accent) !important; padding-left: 16px !important; padding-right: 18px !important; }
+        .btn-project .material-symbols-outlined { color: var(--c-accent) !important; }
+        .btn-project:hover { background: var(--c-accent-tint) !important; border-color: var(--c-accent) !important; }
+        .material-symbols-outlined.icon-filled { font-variation-settings: 'FILL' 1, 'wght' 500, 'opsz' 24 !important; }
+        .btn-danger, .btn-danger.btn-ghost, .tool-switch .btn-danger { color: var(--c-danger) !important; }
+        /* 紙の上の文字は元の書体のまま（書き出しも同じ書体で描くので、画面だけ変えるとずれる） */
+        .text-wrapper, .text-content { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-feature-settings: normal; }
+        /* 三角をやめて「︿﹀」の形にする（10-25 Rayan様）。線2本を擬似要素の角で描く */
+        #page-stepper button::before, .tb-stepper button::before {
+            width: 4px; height: 4px; border: solid var(--c-text-sub); border-width: 0 1.5px 1.5px 0;
+            border-left-color: var(--c-text-sub); border-right-color: var(--c-text-sub); margin-top: 0;
+        }
+        #page-stepper #btn-page-prev::before, .tb-stepper button:first-child::before { transform: translate(-50%, -25%) rotate(-135deg); }
+        #page-stepper #btn-page-next::before, .tb-stepper button:last-child::before { transform: translate(-50%, -75%) rotate(45deg); }
+        .tb-stepper button:first-child::before, .tb-stepper button:last-child::before { border-style: solid; border-color: var(--c-text-sub); border-width: 0 1.5px 1.5px 0; }
+        #btn-page-prev:hover::before, #btn-page-next:hover::before { border-color: var(--c-text); }
+        .chev-down {
+            display: inline-block; width: 6px; height: 6px; margin: 0 2px 3px 4px;
+            border: solid currentColor; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg);
+        }
+        /* 文字の大きさの上下：角丸の内側に収め、2つを寄せる（左右の余白は同じのまま） */
+        .tb-num { padding-left: 16px; padding-right: 16px; }
+        .tb-stepper { right: 6px; top: 6px; bottom: 6px; width: 10px; gap: 2px; }
+        .tb-stepper button:first-child::before { transform: translate(-50%, -10%) rotate(-135deg); }
+        .tb-stepper button:last-child::before { transform: translate(-50%, -90%) rotate(45deg); }
+        /* 押せる所は広く取り、矢印の見た目の位置は変えない（Rayan様「押しにくい」） */
+        .tb-stepper { right: 1px; top: 1px; bottom: 1px; width: 20px; gap: 0; }
+        .tb-stepper button { border-radius: var(--r-xs); }
+        .tb-stepper button:first-child::before { transform: translate(-50%, calc(-50% + 4px)) rotate(-135deg); }
+        .tb-stepper button:last-child::before { transform: translate(-50%, calc(-50% - 4px)) rotate(45deg); }
+        /* 倍率の数字は打ち込める。欄の枠は出さず、乗せた時と打っている間だけ薄い地を敷く */
+        #zoom-text { cursor: text; border-radius: var(--r-xs); padding: 2px 0; outline: none; }
+        #zoom-text:hover, #zoom-text:focus { background: var(--c-surface-3); }

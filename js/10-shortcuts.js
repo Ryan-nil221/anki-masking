@@ -1061,6 +1061,30 @@
         document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(zoomLevel - 0.1));
         document.getElementById('btn-zoom-reset').addEventListener('click', () => { setZoom(1.0); window.centerWorkspace(); });
 
+        // 倍率の数字はそのまま打ち替えられる（10-25 Rayan様「欄は出なくていい」）。
+        // 入力欄に替えず、文字の上で直接打つ。Enter か外を押すと決まり、Esc で元に戻す。
+        zoomText.contentEditable = 'true';
+        zoomText.spellcheck = false;
+        zoomText.title = '倍率を打ち込む';
+        zoomText.addEventListener('focus', () => {
+            // 数字だけを選んでおき、打てばすぐ置き換わるようにする
+            zoomText.innerText = String(Math.round(zoomLevel * 100));
+            const r = document.createRange(); r.selectNodeContents(zoomText);
+            const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        });
+        zoomText.addEventListener('keydown', (e) => {
+            e.stopPropagation();   // 数字キーで道具が切り替わらないように
+            if (e.key === 'Enter') { e.preventDefault(); zoomText.blur(); }
+            else if (e.key === 'Escape') { e.preventDefault(); zoomText.dataset.cancel = '1'; zoomText.blur(); }
+            else if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault();
+        });
+        zoomText.addEventListener('blur', () => {
+            const n = parseInt(zoomText.innerText.replace(/[^0-9]/g, ''), 10);
+            const cancel = zoomText.dataset.cancel === '1'; delete zoomText.dataset.cancel;
+            if (!cancel && n > 0) setZoom(n / 100);
+            zoomText.innerText = Math.round(zoomLevel * 100) + '%';   // 範囲の外（20〜500%）は端に寄せて出し直す
+        });
+
         // Ctrl + マウスホイールでカーソル位置を中心にズーム（トラックパッドのピンチも同扱い）
         workspaceContainer.addEventListener('wheel', (e) => {
             if (!e.ctrlKey) return;
