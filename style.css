@@ -1580,3 +1580,6 @@
         /* 倍率の数字は打ち込める。欄の枠は出さず、乗せた時と打っている間だけ薄い地を敷く */
         #zoom-text { cursor: text; border-radius: var(--r-xs); padding: 2px 0; outline: none; }
         #zoom-text:hover, #zoom-text:focus { background: var(--c-surface-3); }
+        /* 文字入りのボタン：IBM Plex Sans JP は字が約1px上に乗るので、文字を1px下げ、アイコンはその分だけ戻す（10-25 Rayan様） */
+        .btn:not(.btn-icon) { padding-top: 9px; padding-bottom: 7px; }
+        .btn:not(.btn-icon) > .material-symbols-outlined { margin-top: -1px; margin-bottom: 1px; }
