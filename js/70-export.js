@@ -6,9 +6,11 @@
             const key = Math.round(fontSizePx * 100);
             if (__lhCache.has(key)) return __lhCache.get(key);
             const probe = document.createElement('div');
-            probe.style.cssText = `position:absolute;left:-99999px;top:0;visibility:hidden;white-space:pre;line-height:normal;font-family:${TEXT_FONT_STACK};font-size:${fontSizePx}px;`;
+            probe.style.cssText = `position:absolute;left:-99999px;top:0;visibility:hidden;white-space:pre;line-height:normal;font-family:${TEXT_FONT_STACK};font-feature-settings:normal;font-size:${fontSizePx}px;`;
             probe.textContent = 'Mgあ';
-            (workspace || document.body).appendChild(probe);
+            // 拡大縮小の掛からない body で測る。紙（#workspace）の中に置くと、最初に測った時の
+            // 倍率が掛かったまま使い回され、箱・キャレット・書き出しの行間が膨らむ（10-25 Rayan様。250% で約2.5倍）
+            document.body.appendChild(probe);
             const lh = probe.getBoundingClientRect().height || fontSizePx * 1.2;
             probe.remove();
             __lhCache.set(key, lh);
