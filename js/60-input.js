@@ -974,6 +974,14 @@
             updateToolbar(); // 選択状態に応じてプロパティ表示を更新
         });
         
+        // 文字を打っている間は自前の「I」を隠す（10-25 Rayan様）。箱のすぐ外にマウスがあると
+        // 「I」が箱に重なって見える。ふつうのアプリと同じく、次にマウスを動かした時にまた出る。
+        document.addEventListener('keydown', (e) => {
+            if (!e.target.classList || !e.target.classList.contains('text-content')) return;
+            textCursor.style.display = 'none';
+            workspaceContainer.classList.remove('hide-cursor');
+        }, true);
+
         workspaceContainer.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; textCursor.style.display = 'none'; workspaceContainer.classList.remove('hide-cursor'); workspaceContainer.classList.remove('hide-cursor-all'); });
         
         document.addEventListener('pointerdown', function(e) {
