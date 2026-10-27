@@ -632,6 +632,10 @@
         div.highlight-freehand-wrapper svg { display: block; overflow: visible; }
         div.highlight-freehand-wrapper .fh-stroke { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: auto; cursor: pointer; }
         
+        /* iPad の Chrome などは、端末側で文字だけを大きくする（10-27 Rayan様）。行の高さの実測・
+           箱の大きさ・書き出しが食い違うので、ページの文字は書いた大きさのまま描かせる。
+           大きくしたい時はこのサイトの拡大を使う。 */
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         .text-wrapper { min-width: 30px; min-height: 0; font-size: 20px; padding: 2px 8px; cursor: move; -webkit-touch-callout: none; border-radius: 4px; }
         .text-wrapper.selected { background-color: rgba(255, 255, 255, 0.6); }
         .text-content { width: 100%; height: 100%; outline: none; white-space: pre-wrap; word-wrap: break-word; overflow: visible; pointer-events: none; font-weight: normal; text-orientation: upright; margin: 0;}
