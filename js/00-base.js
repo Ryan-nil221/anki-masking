@@ -133,6 +133,12 @@
 
         const imageInput = document.getElementById('imageInput');
         const projectInput = document.getElementById('projectInput');
+        // iPhone・iPad は知らない拡張子（.amk）を受け付ける種類に書くと、そのファイルを
+        // 灰色にして選ばせない（10-27 Rayan様。PCで保存した作業データが iPad で開けなかった）。
+        // 選ぶ所では絞らず、読む所で .amk と PDF を見分ける。iPad は Mac と名乗るので触れる指の数でも見る。
+        if (/iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)) {
+            projectInput.removeAttribute('accept');
+        }
         const uploadedImage = document.getElementById('uploaded-image');
         const pdfContainer = document.getElementById('pdf-container');
         const workspaceContainer = document.getElementById('workspace-container');
