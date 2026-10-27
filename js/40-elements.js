@@ -114,8 +114,12 @@
         window.createTextElement = function(left, top, width, height, content = '', fontSize = '20px', color = '#ef4444', textAlign = 'left', writingMode = 'horizontal-tb', letterSpacing = 'normal', lineSpacing = 0) {
             const wrapper = document.createElement('div'); wrapper.className = 'canvas-element text-wrapper';
             wrapper.style.left = left; wrapper.style.top = top;
+            // 高さの「中身なり」は max-content ではなく指定なし（auto）で持つ（10-27 Rayan様）。
+            // iPad の Safari は max-content の高さを空の箱を置いた時のまま伸ばさず、打った文字が
+            // 細い箱の下へはみ出していた。位置を決めた箱は auto でも中身なりに伸びる。
+            if (height === 'max-content') height = '';
             if (width) wrapper.style.width = width; if (height) wrapper.style.height = height;
-            wrapper.style.fontSize = fontSize; wrapper.style.color = color; 
+            wrapper.style.fontSize = fontSize; wrapper.style.color = color;
             wrapper.style.textAlign = textAlign;
             wrapper.style.writingMode = writingMode;
             wrapper.style.letterSpacing = letterSpacing || 'normal';
