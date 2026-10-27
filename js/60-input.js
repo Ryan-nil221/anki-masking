@@ -11,7 +11,9 @@
             if (pts.length < 2) return;
             const m = touchMid(pts);
             if (m.d < 1) return;
-            abortCurrentAction();               // 描きかけを畳んでからピンチへ
+            // 描きかけを畳んでからピンチへ。1本目の指で描き始めた線は残さない（10-27 Rayan様。
+            // ペンのまま2本指で送ると、1本目の指が触れた所に点が残っていた）
+            abortCurrentAction(true);
             focusTapMask = null; focusTapStart = null; // 2本指はめくりではない
             touchGestureActive = true;
             const r = workspaceContainer.getBoundingClientRect();
@@ -43,20 +45,36 @@
             if (!activeTouches.has(e.pointerId)) return;
             activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY, t: Date.now() });
             if (!touchGesture || activeTouches.size < 2) return;
-            const pts = [...activeTouches.values()];
-            const m = touchMid(pts);
+            // 指は1本ずつ知らせが来る。来るたびに動かすと、片方だけ進んだ途中の間隔で
+            // 拡大率が上下に揺れ、2本指で縦に送るとガクガクしていた（10-27 Rayan様）。
+            // 両方の指が進んだ後で、1コマに1回だけ動かす。
+            if (!touchGesture.frame) touchGesture.frame = requestAnimationFrame(applyTouchGesture);
+            e.preventDefault(); e.stopPropagation();
+        }, true);
+        // 間隔の変わり方がこれより小さいうちは拡大しない（送るだけ）。指をそろえて動かしても
+        // 間隔は少し揺れるので、それで拡大率が動かないようにする。
+        const PINCH_START_RATIO = 0.06;
+        function applyTouchGesture() {
+            const g = touchGesture;
+            if (!g) return;
+            g.frame = 0;
+            if (activeTouches.size < 2) return;
+            const m = touchMid([...activeTouches.values()]);
             const r = workspaceContainer.getBoundingClientRect();
             const midX = m.x - r.left, midY = m.y - r.top;
             // 2本指の間隔の変化＝拡大率。指の中点を動かさないように焦点を渡す
-            if (m.d > 1 && touchGesture.startDist > 1) {
-                setZoom(touchGesture.startZoom * (m.d / touchGesture.startDist), midX, midY);
+            if (m.d > 1 && g.startDist > 1) {
+                if (!g.zooming && Math.abs(m.d / g.startDist - 1) > PINCH_START_RATIO) {
+                    // 拡大を始めた所を起点にし直す。起点を変えないと、遊びの分だけ倍率が跳ぶ
+                    g.zooming = true; g.startDist = m.d; g.startZoom = zoomLevel;
+                }
+                if (g.zooming) setZoom(g.startZoom * (m.d / g.startDist), midX, midY);
             }
             // 中点の移動ぶんだけ紙を動かす（2本指ドラッグ＝スクロール）
-            workspaceContainer.scrollLeft -= (midX - touchGesture.prevMidX);
-            workspaceContainer.scrollTop -= (midY - touchGesture.prevMidY);
-            touchGesture.prevMidX = midX; touchGesture.prevMidY = midY;
-            e.preventDefault(); e.stopPropagation();
-        }, true);
+            workspaceContainer.scrollLeft -= (midX - g.prevMidX);
+            workspaceContainer.scrollTop -= (midY - g.prevMidY);
+            g.prevMidX = midX; g.prevMidY = midY;
+        }
 
         function endTouch(e) {
             if (e.pointerType !== 'touch') return;

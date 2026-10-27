@@ -395,9 +395,12 @@
         // 進行中の操作(action)を安全に畳む。pointercancel と、ウィンドウの
         // フォーカス喪失(blur)の両方から呼ぶ。blur を拾わないと、ブラウザ窓の外で
         // ポインタを離した時に pointerup が届かず、状態機械が固まっていた（08-02 修正）。
-        function abortCurrentAction() {
+        // discard＝描きかけのペンの線を残さずに捨てる（2本指の操作に移る時）
+        function abortCurrentAction(discard) {
             if (!action) return;
-            if (action === 'draw_pen' && activeDrawSvg) {
+            if (action === 'draw_pen' && activeDrawSvg && discard === true) {
+                if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
+            } else if (action === 'draw_pen' && activeDrawSvg) {
                 if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
                 if (activeCanvasIndex != null) {
                     const idx = parseInt(activeCanvasIndex);
