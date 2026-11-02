@@ -16,6 +16,18 @@
             catch (_) { /* 計測の失敗で操作を止めない */ }
         };
 
+        // ボタン経路とキー経路を計測で分けるための印。キーのハンドラは
+        // ボタンを click() で押しているので、ボタン側だけでは区別が付かない。
+        // click() の直前に markKeySource() を呼び、ボタン側で takeSource() を読む。
+        let keySourceAt = 0;
+        const nowMs = () => (window.performance && performance.now ? performance.now() : Date.now());
+        window.markKeySource = function() { keySourceAt = nowMs(); };
+        window.takeSource = function() {
+            const t = keySourceAt;
+            keySourceAt = 0;
+            return (nowMs() - t < 300) ? 'keyboard' : 'button';
+        };
+
         // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
         // （読み込み・復元の経路が3つあるので、代入は必ずここを通す）。
         window.setCurrentFileName = function(name) {
@@ -337,6 +349,7 @@
             clearRevealedMasks(); // めくった状態を持ち越さない
             document.body.classList.toggle('focus-mode');
             const icon = this.querySelector('.material-symbols-outlined');
+            window.track('focus_mode', { state: document.body.classList.contains('focus-mode') ? 'on' : 'off' });
             if (document.body.classList.contains('focus-mode')) {
                 icon.innerText = 'visibility_off';
                 this.title = '学習モードを終了';
@@ -347,6 +360,14 @@
             }
         });
         
+        // 「使い方」を開いた回数。ヘッダーのボタンと、狭い画面のメニューの両方。
+        // どちらも素のリンクなので、計測のためだけにここで拾う。
+        document.querySelectorAll('a[href="/guide/"]').forEach(a => {
+            a.addEventListener('click', () => {
+                window.track('open_guide', { source: a.id === 'btn-guide' ? 'header' : 'menu' });
+            });
+        });
+
         function setMasksHidden(hidden) {
             window.isMasksHidden = hidden;
             clearRevealedMasks(); // 一括表示に戻した時、めくった分だけ消えたままにしない
@@ -356,7 +377,10 @@
             if (maskRevealIcon) maskRevealIcon.innerText = hidden ? 'toggle_off' : 'toggle_on';
         }
         if (maskRevealToggle) {
-            maskRevealToggle.addEventListener('change', () => setMasksHidden(!maskRevealToggle.checked));
+            maskRevealToggle.addEventListener('change', () => {
+                window.track('toggle_masks', { state: maskRevealToggle.checked ? 'shown' : 'hidden' });
+                setMasksHidden(!maskRevealToggle.checked);
+            });
         }
 
         function hexToRgba(hex, alpha) {
@@ -464,10 +488,11 @@
                 if (cmdOrCtrl) {
                     if (e.key.toLowerCase() === 'z') {
                         e.preventDefault();
+                        window.markKeySource();
                         if (e.shiftKey) { document.getElementById('btn-redo').click(); } 
                         else { document.getElementById('btn-undo').click(); }
                     } else if (e.key.toLowerCase() === 'y') {
-                        e.preventDefault(); document.getElementById('btn-redo').click();
+                        e.preventDefault(); window.markKeySource(); document.getElementById('btn-redo').click();
                     }
                 }
             }

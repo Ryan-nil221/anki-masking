@@ -263,8 +263,9 @@
 
     // --- 開け閉め -----------------------------------------------------------
 
-    function open() {
+    function open(source) {
         if (btnFind.style.display === 'none') return;
+        window.track('open_find', { source: source || 'button' });
         bar.style.display = 'flex';
         input.focus();
         input.select();
@@ -316,6 +317,6 @@
         if (!cmdOrCtrl || e.key.toLowerCase() !== 'f') return;
         if (btnFind.style.display === 'none') return;
         e.preventDefault();
-        open();
+        open('keyboard');
     }, true);
 })();

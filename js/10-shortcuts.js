@@ -458,7 +458,10 @@
                 // 外枠を掴んだ時は消さない。それ以外（空きクリック等）の空箱は消す。
                 if (wrapper && wrapper !== preserveEmptyWrapper && !toFloating) wrapper.remove();
             }
-            else window.saveState();
+            else {
+                if (wrapper && wrapper.dataset.comma === '1') window.applyCommas(tc);
+                window.saveState();
+            }
             // 編集を抜けた後の後始末は、選択の付け替えが済んでから見る。
             setTimeout(() => {
                 const a = document.activeElement;
@@ -732,6 +735,8 @@
             document.getElementById('prop-text-size').style.display = showTextProps ? 'flex' : 'none';
             document.getElementById('prop-text-spacing').style.display = showTextProps ? 'flex' : 'none';
             document.getElementById('prop-line-spacing').style.display = showTextProps ? 'flex' : 'none';
+            // カンマモードはこれから置くテキストに効くので、テキストの道具中だけ出す（選んだ箱には効かない）
+            document.getElementById('prop-comma-mode').style.display = (currentTool === 'text') ? 'flex' : 'none';
             // 選択中のテキストの文字サイズと字間を入力欄に映す
             const selText = textEditableElements()[0];
             if (selText) {
@@ -809,6 +814,9 @@
 
         toolRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
+                if (currentTool !== e.target.value) {
+                    window.track('select_tool', { tool: e.target.value, source: e.isTrusted ? 'button' : 'keyboard' });
+                }
                 currentTool = e.target.value;
                 // ツールを選んだら設定行を開く（もう一度そのツールを押すと閉じる・08-07 Rayan様の指示）
                 if (window.openProps) window.openProps();
@@ -851,7 +859,10 @@
         maskTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         document.querySelectorAll('input[name="highlightType"]').forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         shapeTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
-        penModeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
+        penModeRadios.forEach(radio => { radio.addEventListener('change', (e) => {
+            window.track('select_tool', { tool: (e.target.value === 'eraser' ? 'eraser' : 'pen'), source: 'button' });
+            updateToolbar();
+        }); });
         
         window.__toolbarReady = true;
         updateToolbar();

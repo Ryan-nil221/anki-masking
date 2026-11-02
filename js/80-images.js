@@ -65,6 +65,7 @@
             overlayImageInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+                window.track('add_image', { source: 'button' });
                 const reader = new FileReader();
                 reader.onload = (event) => { insertImageToWorkspace(event.target.result); e.target.value = ''; };
                 reader.readAsDataURL(file);
@@ -87,6 +88,7 @@
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const blob = item.getAsFile();
                     const at = lastMouseWs ? { x: lastMouseWs.x, y: lastMouseWs.y } : null;
+                    window.track('add_image', { source: 'paste' });
                     const reader = new FileReader();
                     reader.onload = (event) => { insertImageToWorkspace(event.target.result, at); };
                     reader.readAsDataURL(blob);
@@ -128,6 +130,7 @@
                         x: Math.max(0, (e.clientX - rect.left) / zoomLevel),
                         y: Math.max(0, (e.clientY - rect.top) / zoomLevel)
                     };
+                    window.track('add_image', { source: 'drop' });
                     const reader = new FileReader();
                     reader.onload = (ev) => insertImageToWorkspace(ev.target.result, at);
                     reader.readAsDataURL(f);
