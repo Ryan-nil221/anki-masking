@@ -498,27 +498,3 @@
             });
             if (saved) window.saveState();
         });
-
-
-        // カンマモードの入り切り（10-10）。入れている間に置いた箱に印が付く（60-input.js）。
-        window.commaMode = false;
-
-        // 箱の中の数字に3桁ごとのカンマを入れる。整数部が4桁以上の数字だけが対象。
-        // 小数点の後ろ（1234.5678 の 5678）と、既にカンマで区切られた数字は触らない。
-        // 全角数字には全角の「，」を入れる。文字の飾り（太字など）を崩さないよう、文字の欠片ごとに直す。
-        window.applyCommas = function(root) {
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-            const nodes = [];
-            while (walker.nextNode()) nodes.push(walker.currentNode);
-            nodes.forEach(node => {
-                const before = node.nodeValue;
-                const after = before.replace(/(^|[^0-9０-９.,．，])([0-9０-９]{4,})/g, (m, pre, digits) => {
-                    const sep = /[０-９]/.test(digits) ? '，' : ',';
-                    return pre + digits.replace(/(?=(?:[0-9０-９]{3})+$)(?!^)/g, sep);
-                });
-                if (after !== before) node.nodeValue = after;
-            });
-        };
-        document.querySelectorAll('input[name="commaMode"]').forEach(r => {
-            r.addEventListener('change', () => { if (r.checked) window.commaMode = (r.value === 'on'); });
-        });
