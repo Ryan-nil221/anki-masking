@@ -829,6 +829,8 @@
         .shape-element svg { pointer-events: none; display: block; overflow: visible; }
         .shape-element svg * { pointer-events: none; }
         .shape-element .shape-hit { pointer-events: stroke; cursor: pointer; }
+        /* 塗りつぶしの図形は中を押しても掴める（11-07 Rayan様） */
+        .shape-element[data-filled="1"] .shape-hit { pointer-events: all; }
         .shape-element.selected .shape-hit { cursor: move; }
         .shape-element .resize-handle { pointer-events: auto; }
         
@@ -1587,3 +1589,27 @@
         /* 文字入りのボタン：IBM Plex Sans JP は字が約1px上に乗るので、文字を1px下げ、アイコンはその分だけ戻す（10-25 Rayan様） */
         .btn:not(.btn-icon) { padding-top: 9px; padding-bottom: 7px; }
         .btn:not(.btn-icon) > .material-symbols-outlined { margin-top: -1px; margin-bottom: 1px; }
+
+        /* ===== 暗記マーカーの結合（11-07 Rayan様・案A） ===== */
+        /* 2つ以上選んだ時だけ、選んだ枠の右上に浮かべる。紙の拡大に関係なく同じ大きさで出す */
+        #merge-pill {
+            position: absolute; z-index: 9999; display: none; align-items: center; gap: 6px;
+            height: 34px; padding: 0 14px 0 11px; margin: 0;
+            transform: scale(var(--uz, 1)) translate(-100%, calc(-100% - 8px)); transform-origin: 0 0;
+            background: var(--c-surface); color: var(--c-accent); border: 1px solid var(--c-border); border-radius: 17px;
+            box-shadow: 0 2px 8px rgba(20, 30, 60, 0.12); font: 600 13.5px 'IBM Plex Sans JP', 'IBM Plex Sans', sans-serif;
+            white-space: nowrap; cursor: pointer;
+        }
+        #merge-pill:hover { background: var(--c-surface-2); }
+        #merge-pill .material-symbols-outlined { font-size: 19px; }
+        /* 結合した物を選んでいる時は、1つの物として実線の枠1つにし、1つずつのつまみは出さない */
+        #multi-sel-box.merged { border: 1.5px solid var(--c-accent); }
+        #workspace.merged-sel .mask.selected .resize-handle { display: none !important; }
+        #workspace.merged-sel .mask.selected::before { display: none; }
+        /* マウスを乗せてめくる時は、仲間も一緒にめくる（:hover と同じ決まり） */
+        @media (hover: hover) and (pointer: fine) {
+            .mask.grp-hover:not(.selected) { opacity: 0; }
+            #workspace-container.tool-mask .mask.grp-hover:not(.selected) { opacity: 1; }
+            body.focus-mode #workspace-container.tool-mask .mask.grp-hover:not(.selected) { opacity: 0; }
+        }
+        .mini-switch label .fill-icon { display: block; }

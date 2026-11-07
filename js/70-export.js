@@ -67,12 +67,15 @@
                 ctx.stroke(new Path2D(data.pathD));
             } else if (data.type === 'shape') {
                 ctx.strokeStyle = data.color;
+                ctx.fillStyle = data.color;
                 ctx.lineWidth = parseFloat(data.strokeWidth || 3);
                 ctx.beginPath();
                 if (data.shapeType === 'rect') {
+                    if (data.filled) ctx.fillRect(0, 0, width, height);
                     ctx.strokeRect(0, 0, width, height);
                 } else if (data.shapeType === 'circle') {
                     ctx.ellipse(width/2, height/2, width/2, height/2, 0, 0, Math.PI * 2);
+                    if (data.filled) ctx.fill();
                     ctx.stroke();
                 } else if (data.shapeType === 'line') {
                     if (data.lineDir === '/') {
@@ -549,9 +552,11 @@
                         body.push(L.pushGraphicsState(), L.setGraphicsState(getMul()), L.setStrokingColor(L.rgb(c.r, c.g, c.b)), L.setLineWidth(parseFloat(data.strokeWidth || 20)), L.setLineCap(L.LineCapStyle.Round), L.setLineJoin(L.LineJoinStyle.Round), ...svgPathToOps(L, data.pathD, ox, oy), L.stroke(), L.popGraphicsState());
                     } else if (data.type === 'shape') {
                         const c = parseCssColor(data.color, '#ef4444');
-                        const seg = [L.pushGraphicsState(), L.setStrokingColor(L.rgb(c.r, c.g, c.b)), L.setLineWidth(parseFloat(data.strokeWidth || 3))];
+                        const seg = [L.pushGraphicsState(), L.setStrokingColor(L.rgb(c.r, c.g, c.b)), L.setFillingColor(L.rgb(c.r, c.g, c.b)), L.setLineWidth(parseFloat(data.strokeWidth || 3))];
+                        // 塗りつぶしの図形は、塗ってから同じ色で縁を描く（画面と同じ見た目）
+                        const paint = data.filled ? L.fillAndStroke() : L.stroke();
                         if (data.shapeType === 'rect') {
-                            seg.push(L.rectangle(ox, oy, w, h), L.stroke());
+                            seg.push(L.rectangle(ox, oy, w, h), paint);
                         } else if (data.shapeType === 'circle') {
                             const K = 0.5522847498, rx = w / 2, ry = h / 2, mxc = ox + rx, myc = oy + ry;
                             seg.push(L.moveTo(mxc, oy));
@@ -559,7 +564,7 @@
                             seg.push(L.appendBezierCurve(ox + w, myc + K * ry, mxc + K * rx, oy + h, mxc, oy + h));
                             seg.push(L.appendBezierCurve(mxc - K * rx, oy + h, ox, myc + K * ry, ox, myc));
                             seg.push(L.appendBezierCurve(ox, myc - K * ry, mxc - K * rx, oy, mxc, oy));
-                            seg.push(L.stroke());
+                            seg.push(paint);
                         } else if (data.shapeType === 'line') {
                             if (data.lineDir === '/') { seg.push(L.moveTo(ox, oy + h), L.lineTo(ox + w, oy)); }
                             else { seg.push(L.moveTo(ox, oy), L.lineTo(ox + w, oy + h)); }

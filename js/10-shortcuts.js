@@ -207,6 +207,7 @@
                 window.bringToFront(clone);
                 clones.push(clone);
             });
+            window.remapGroups(clones);
             alignPastedToCursor(clones);
             window.deselectCurrent();
             selectedElements = clones;
@@ -306,6 +307,7 @@
                 window.bringToFront(clone);
                 clones.push(clone);
             });
+            window.remapGroups(clones);
             alignPastedToCursor(clones);
             window.deselectCurrent();
             selectedElements = clones;
@@ -543,7 +545,11 @@
                     saved = true;
                 } else if (selectedElement.classList.contains('shape-element')) {
                     const shapeNode = selectedElement.querySelector('svg > *');
-                    if (shapeNode) { shapeNode.setAttribute('stroke', color); saved = true; }
+                    if (shapeNode) {
+                        shapeNode.setAttribute('stroke', color);
+                        if (selectedElement.dataset.filled === '1') shapeNode.setAttribute('fill', color);
+                        saved = true;
+                    }
                 }
                 // マスキング（暗記マーカー）は色を変えない
             });
@@ -720,6 +726,10 @@
             document.getElementById('prop-mask-reveal').style.display = (currentTool === 'mask') ? 'flex' : 'none';
             document.getElementById('prop-highlight-type').style.display = (currentTool === 'highlight') ? 'flex' : 'none';
             document.getElementById('prop-shape-type').style.display = (currentTool === 'shape') ? 'flex' : 'none';
+            // 塗りつぶし／線だけ。直線を選んでいる間は塗る所が無いので出さない（11-07 Rayan様）
+            const shapeKind = (document.querySelector('input[name="shapeType"]:checked') || {}).value;
+            const shapeFilled = (document.querySelector('input[name="shapeFill"]:checked') || {}).value === 'fill';
+            document.getElementById('prop-shape-fill').style.display = (currentTool === 'shape' && shapeKind !== 'line') ? 'flex' : 'none';
             const penModeNow = document.querySelector('input[name="penMode"]:checked') ? document.querySelector('input[name="penMode"]:checked').value : 'pen';
             const isErasing = (currentTool === 'pen' && penModeNow === 'eraser');
             const hasSel = selectedElements.length > 0 || !!selectedStroke || selectedStrokes.length > 0;
@@ -746,7 +756,9 @@
             document.getElementById('prop-pen-mode').style.display = (currentTool === 'pen') ? 'flex' : 'none';
             
             const hasWidthSel = selectionHasWidth();
-            document.getElementById('prop-pen-width').style.display = (['pen', 'shape'].includes(currentTool) || (currentTool === 'mask' && maskType === 'free') || (currentTool === 'highlight' && highlightType === 'free') || hasWidthSel) ? 'flex' : 'none';
+            // 塗りつぶしの図形を置く時は線の太さが要らない
+            const shapeNeedsWidth = currentTool === 'shape' && !(shapeFilled && shapeKind !== 'line');
+            document.getElementById('prop-pen-width').style.display = (currentTool === 'pen' || shapeNeedsWidth || (currentTool === 'mask' && maskType === 'free') || (currentTool === 'highlight' && highlightType === 'free') || hasWidthSel) ? 'flex' : 'none';
             
             // 濃さスライダーは、ハイライト/ペンツール中に加えて、ハイライト要素を選択中も出す
             const opacitySelectable = selectedElements.some(el => el.classList.contains('highlight-box') || el.classList.contains('highlight-freehand-wrapper'));
@@ -854,6 +866,7 @@
         maskTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         document.querySelectorAll('input[name="highlightType"]').forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         shapeTypeRadios.forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
+        document.querySelectorAll('input[name="shapeFill"]').forEach(radio => { radio.addEventListener('change', () => { updateToolbar(); }); });
         penModeRadios.forEach(radio => { radio.addEventListener('change', (e) => {
             window.track('select_tool', { tool: (e.target.value === 'eraser' ? 'eraser' : 'pen'), source: 'button' });
             updateToolbar();

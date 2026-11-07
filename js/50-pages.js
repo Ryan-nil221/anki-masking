@@ -525,14 +525,15 @@
                 projectData.elements.forEach(data => {
                     let el;
                     if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height, data.color);
-                    else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir);
+                    else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir, data.filled);
                     else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                     else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                     else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                     else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                     else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                     
-                    // 写真は保存された重なり順を使わない（いつも一番下・09-11 Rayan様）
+                    if (data.group) el.dataset.group = data.group;
+                // 写真は保存された重なり順を使わない（いつも一番下・09-11 Rayan様）
                     if (data.zIndex && data.type !== 'image') {
                         el.style.zIndex = data.zIndex;
                         if (parseInt(data.zIndex) > window.globalZIndex) window.globalZIndex = parseInt(data.zIndex);

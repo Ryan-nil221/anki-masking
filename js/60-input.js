@@ -94,7 +94,8 @@
             focusTapMask = null; focusTapStart = null;
             // 動かさずに離した＝タップ。暗記マーカーの上ならめくる
             if (m && m.isConnected && moved <= TAP_SLOP && !window.isMasksHidden) {
-                m.classList.toggle('revealed');
+                // 結合したマーカーは仲間ごとめくる
+                window.toggleRevealGroup(m);
             }
         });
 
@@ -296,8 +297,10 @@
                 if (additive) {
                     if (typeof deselectStroke === 'function') deselectStroke();
                     if (draggableTarget.classList.contains('selected')) {
-                        draggableTarget.classList.remove('selected');
-                        selectedElements = selectedElements.filter(el => el !== draggableTarget);
+                        // 結合したマーカーは仲間ごと外す
+                        const grp = window.groupOf(draggableTarget);
+                        grp.forEach(el => el.classList.remove('selected'));
+                        selectedElements = selectedElements.filter(el => !grp.includes(el));
                         updateToolbar();
                         e.preventDefault(); e.stopPropagation();
                         return;
@@ -325,6 +328,8 @@
                     draggableTarget.classList.add('selected');
                     selectedElements = [draggableTarget];
                 }
+                // 結合したマーカーは1つ掴めば仲間も一緒に選ぶ
+                window.expandGroupSelection();
                 selectedElements.forEach(el => window.bringToFront(el));
                 
                 if (selectedElements.length === 1 && selectedElements[0].classList.contains('text-wrapper')) {
@@ -423,7 +428,8 @@
                 const shapeType = document.querySelector('input[name="shapeType"]:checked').value;
                 const strokeW = penWidthInput.value;
                 const col = toolColors['shape'];
-                currentDrawingShape = window.createShapeElement(startX+'px', startY+'px', '0px', '0px', shapeType, col, strokeW, '\\');
+                const filled = (document.querySelector('input[name="shapeFill"]:checked') || {}).value === 'fill';
+                currentDrawingShape = window.createShapeElement(startX+'px', startY+'px', '0px', '0px', shapeType, col, strokeW, '\\', filled);
                 currentDrawingShape.style.pointerEvents = 'none';
             } else if (currentTool === 'highlight') {
                 if (currentHighlightType() === 'rect') {
@@ -847,6 +853,8 @@
                             }
                         }
                     });
+                    // 結合したマーカーは、一部だけ囲んでも仲間ごと選ぶ
+                    window.expandGroupSelection();
                     // ペン線（canvasDrawings のストローク）も範囲選択に含める
                     if (!additive) selectedStrokes = [];
                     document.querySelectorAll('.drawing-svg').forEach(svg => {
@@ -973,6 +981,8 @@
                         window.deselectCurrent();
                         only.classList.add('selected');
                         selectedElements = [only];
+                        // 結合したマーカーなら、絞っても仲間は残す
+                        window.expandGroupSelection();
                     }
                 }
             }

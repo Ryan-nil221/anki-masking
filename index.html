@@ -321,6 +321,16 @@
                         </div>
                     </span>
 
+                    <!-- 図形を塗りつぶすか、線だけにするか（11-07 Rayan様の見本）。直線の時は出さない -->
+                    <span class="prop-group" id="prop-shape-fill">
+                        <div class="mini-switch">
+                            <input type="radio" id="shape-fill-on" name="shapeFill" value="fill">
+                            <label for="shape-fill-on" title="塗りつぶし"><svg class="fill-icon" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true"><path d="M3.5 17.5V10A6.5 6.5 0 0 1 10 3.5H17.5V17.5Z" fill="currentColor"/></svg></label>
+                            <input type="radio" id="shape-fill-off" name="shapeFill" value="line" checked>
+                            <label for="shape-fill-off" title="線だけ"><svg class="fill-icon" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true"><path d="M3.5 17.5V10A6.5 6.5 0 0 1 10 3.5H17.5V17.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></label>
+                        </div>
+                    </span>
+
                     <span class="prop-group" id="prop-pen-mode">
                         <div class="mini-switch">
                             <input type="radio" id="pen-mode-draw" name="penMode" value="pen" checked>
@@ -643,5 +653,6 @@
     <script src="js/85-find.js"></script>
     <script src="js/86-textbar.js"></script>
     <script src="js/87-multisel.js"></script>
+    <script src="js/87-merge.js"></script>
     <script src="js/88-feedback.js"></script>
     <script src="js/89-newdoc.js"></script>

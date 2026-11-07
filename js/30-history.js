@@ -36,6 +36,9 @@
                     strokeWidth: (isFreehandMask || isFreehandHighlight) ? el.querySelector('path').getAttribute('stroke-width') : (isShape ? el.querySelector('svg > *')?.getAttribute('stroke-width') : null),
                     shapeType: isShape ? el.dataset.shapeType : null,
                     lineDir: isShape ? el.dataset.lineDir : null,
+                    filled: (isShape && el.dataset.filled === '1') ? true : null,
+                    // 結合した暗記マーカーの印（11-07 Rayan様）
+                    group: el.dataset.group || null,
                     dataUrl: isImage ? el.querySelector('img').src : null
                 };
             });
@@ -283,13 +286,14 @@
             state.elements.forEach(data => {
                 let el;
                 if (data.type === 'mask') el = window.createMaskElement(data.left, data.top, data.width, data.height, data.color);
-                else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir);
+                else if (data.type === 'shape') el = window.createShapeElement(data.left, data.top, data.width, data.height, data.shapeType, data.color, data.strokeWidth, data.lineDir, data.filled);
                 else if (data.type === 'freehand-mask') el = window.createFreehandMaskElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                     else if (data.type === 'freehand-highlight') el = window.createFreehandHighlightElement(data.left, data.top, data.width, data.height, data.pathD, data.strokeWidth, data.color);
                 else if (data.type === 'highlight') el = window.createHighlightElement(data.left, data.top, data.width, data.height, data.backgroundColor);
                 else if (data.type === 'image') el = window.createImageElement(data.left, data.top, data.width, data.height, data.dataUrl);
                 else el = window.createTextElement(data.left, data.top, data.width, data.height, data.content, data.fontSize, data.color, data.textAlign, data.writingMode, data.letterSpacing, data.lineSpacing); 
                 
+                if (data.group) el.dataset.group = data.group;
                 // 写真は保存された重なり順を使わない（いつも一番下・09-11 Rayan様）
                 if (data.zIndex && data.type !== 'image') {
                     el.style.zIndex = data.zIndex;
@@ -314,11 +318,14 @@
             return Math.max(parseFloat(strokeWidth) || 2, 14);
         }
 
-        window.createShapeElement = function(left, top, width, height, shapeType, color, strokeWidth, lineDir) {
+        window.createShapeElement = function(left, top, width, height, shapeType, color, strokeWidth, lineDir, filled) {
             const wrapper = document.createElement('div');
             wrapper.className = `canvas-element shape-element`;
             wrapper.dataset.shapeType = shapeType;
             wrapper.dataset.lineDir = lineDir || '\\';
+            // 塗りつぶし（11-07 Rayan様）。直線には塗る所が無いので付けない
+            const isFilled = !!filled && shapeType !== 'line';
+            if (isFilled) wrapper.dataset.filled = '1';
             wrapper.style.left = left; wrapper.style.top = top;
             wrapper.style.width = width; wrapper.style.height = height;
             
@@ -346,7 +353,7 @@
                 }
             }
             
-            shapeNode.setAttribute('fill', 'none');
+            shapeNode.setAttribute('fill', isFilled ? color : 'none');
             shapeNode.setAttribute('stroke', color);
             shapeNode.setAttribute('stroke-width', strokeWidth);
             shapeNode.setAttribute('vector-effect', 'non-scaling-stroke');
@@ -357,7 +364,8 @@
             // 透明で太い同じ形をもう1枚重ねて、それだけで判定を取る（見た目には出ない）。
             const hitNode = shapeNode.cloneNode(false);
             hitNode.setAttribute('class', 'shape-hit');
-            hitNode.setAttribute('fill', 'none');
+            // 塗った図形は中を押しても掴める
+            hitNode.setAttribute('fill', isFilled ? 'rgba(0,0,0,0)' : 'none');
             hitNode.setAttribute('stroke', 'rgba(0,0,0,0)');
             hitNode.setAttribute('stroke-width', shapeHitWidth(strokeWidth));
             hitNode.setAttribute('vector-effect', 'non-scaling-stroke');
