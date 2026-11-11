@@ -260,13 +260,67 @@
             return (typeof structuredClone === 'function') ? structuredClone(v) : JSON.parse(JSON.stringify(v));
         }
 
+        // 控えが1つ積まれた時、1つ前と見比べて「何をした結果か」を言い当てる。
+        // 計測（何の後に取り消しが多いか）にだけ使う。文字や画像の中身は見ない。
+        const LABEL_BY_TYPE = {
+            'mask': 'mask', 'freehand-mask': 'mask',
+            'highlight': 'highlight', 'freehand-highlight': 'highlight',
+            'text': 'text', 'shape': 'shape', 'image': 'image'
+        };
+        function countByType(elements) {
+            const c = {};
+            (elements || []).forEach(e => { const k = LABEL_BY_TYPE[e.type] || 'text'; c[k] = (c[k] || 0) + 1; });
+            return c;
+        }
+        function countStrokes(pages) {
+            return (pages || []).reduce((n, page) => n + ((page && page.length) || 0), 0);
+        }
+        function strokeToolAdded(prev, next) {
+            const pp = prev.canvasCommandsArray || [], np = next.canvasCommandsArray || [];
+            for (let i = 0; i < np.length; i++) {
+                const a = (pp[i] || []).length, b = (np[i] || []).length;
+                if (b > a) {
+                    const cmd = np[i][b - 1] || {};
+                    return (cmd.tool === 'highlight') ? 'highlight_stroke' : 'pen_stroke';
+                }
+            }
+            return 'pen_stroke';
+        }
+        function describeChange(prev, next) {
+            if (!prev) return 'other';
+            const nn = (next.elements || []).length;
+            const ps = countStrokes(prev.canvasCommandsArray), ns = countStrokes(next.canvasCommandsArray);
+
+            const pc = countByType(prev.elements), nc = countByType(next.elements);
+            const grew = Object.keys(nc).find(k => (nc[k] || 0) > (pc[k] || 0));
+            if (grew) return 'add_' + grew;
+            const shrank = Object.keys(pc).find(k => (pc[k] || 0) > (nc[k] || 0));
+            if (shrank) return 'delete';
+
+            if (ns > ps) return strokeToolAdded(prev, next);
+            if (ns < ps) return 'eraser';
+
+            for (let i = 0; i < nn; i++) {
+                const a = (prev.elements || [])[i] || {}, b = (next.elements || [])[i] || {};
+                if (a.width !== b.width || a.height !== b.height) return 'resize';
+                if (a.left !== b.left || a.top !== b.top) return 'move';
+                if (a.content !== b.content) return 'text_edit';
+                if (JSON.stringify(a) !== JSON.stringify(b)) return 'style';
+            }
+            if (JSON.stringify(prev.canvasCommandsArray) !== JSON.stringify(next.canvasCommandsArray)) return 'style';
+            return 'other';
+        }
+
         window.saveState = function() {
             const elements = serializeElements();
             const canvasCommandsArray = deepCloneCommands(window.canvasDrawings);
             const canvasZIndexes = Array.from(workspace.querySelectorAll('.drawing-svg')).map(c => c.style.zIndex);
 
             window.historyArray = window.historyArray.slice(0, window.historyIndex + 1);
-            window.historyArray.push({ elements, canvasCommandsArray, canvasZIndexes });
+            const entry = { elements, canvasCommandsArray, canvasZIndexes };
+            try { entry.label = describeChange(window.historyArray[window.historyIndex], entry); }
+            catch (_) { entry.label = 'other'; }
+            window.historyArray.push(entry);
             window.historyIndex++;
 
             const MAX_HISTORY = 50;

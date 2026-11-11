@@ -429,9 +429,19 @@
         });
 
         document.getElementById('btn-undo').addEventListener('click', () => { 
-            if (window.historyIndex > 0) { window.track('undo', { source: window.takeSource() }); window.historyIndex--; restoreState(window.historyIndex); }
+            if (window.historyIndex > 0) {
+                const undone = (window.historyArray[window.historyIndex] || {}).label || 'other';
+                window.track('undo', { source: window.takeSource(), target: undone });
+                window.historyIndex--; restoreState(window.historyIndex);
+            }
         });
-        document.getElementById('btn-redo').addEventListener('click', () => { if (window.historyIndex < window.historyArray.length - 1) { window.track('redo', { source: window.takeSource() }); window.historyIndex++; restoreState(window.historyIndex); } });
+        document.getElementById('btn-redo').addEventListener('click', () => {
+            if (window.historyIndex < window.historyArray.length - 1) {
+                const redone = (window.historyArray[window.historyIndex + 1] || {}).label || 'other';
+                window.track('redo', { source: window.takeSource(), target: redone });
+                window.historyIndex++; restoreState(window.historyIndex);
+            }
+        });
         
         document.getElementById('btn-duplicate').addEventListener('click', () => duplicateSelection());
 
@@ -452,6 +462,10 @@
                     renderStrokesToSVG(svg, []);
                 });
                 window.deselectCurrent(); window.saveState();
+                // 全部消すは見分けが付かない（最後の1本を消しゴムで消した時と同じ形になる）ので、
+                // ここで控えに印を書き足す。計測の target に使う。
+                const last = window.historyArray[window.historyIndex];
+                if (last) last.label = 'clear_all';
             } 
         });
 
