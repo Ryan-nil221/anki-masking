@@ -1618,3 +1618,17 @@
             body.focus-mode #workspace-container.tool-mask .mask.grp-hover:not(.selected) { opacity: 0; }
         }
         .mini-switch label .fill-icon { display: block; }
+
+        /* スマホで PC と同じ並びを縮めて出す時（phone-desktop・11-15）は、浮いている部品の影を小さくする。
+           iPhone は縮めた画面で大きくぼかした影を描くと、影の外側の端に細い黒い線が出る
+           （11-15 Rayan様。道具の帯・ページ送り・学習モードの丸の右と下に線が出ていた） */
+        html.phone-desktop {
+            --sh-md: 0 0 0 1px #eef0f4, 0 2px 6px rgba(30,45,90,.14);
+            --sh-lg: 0 0 0 1px #eef0f4, 0 2px 8px rgba(30,45,90,.16);
+        }
+        @media (prefers-color-scheme: dark) {
+            html.phone-desktop {
+                --sh-md: 0 2px 6px rgba(0,0,0,0.45);
+                --sh-lg: 0 2px 8px rgba(0,0,0,0.5);
+            }
+        }
