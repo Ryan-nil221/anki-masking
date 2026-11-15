@@ -61,7 +61,16 @@
         // --- 狭い画面（compact-ui）のUI集約 ---------------------------------
         // 画面が狭い時だけ body に compact-ui を付ける。CSS側の畳み込みと、
         // 「プロパティ行は設定ボタンで開く」挙動の両方がこのフラグを見る。
-        const compactMQ = window.matchMedia('(max-width: 640px), (orientation: landscape) and (max-height: 500px)');
+        const compactMQRaw = window.matchMedia('(max-width: 640px), (orientation: landscape) and (max-height: 500px)');
+        // スマホで PC と同じ並びを縮めて出す時（index.html の頭で phone-desktop を付ける・11-15 Rayan様）は、
+        // 幅が 640 を切っても狭い画面用に畳まない
+        const compactMQ = {
+            get matches() { return !document.documentElement.classList.contains('phone-desktop') && compactMQRaw.matches; },
+            addEventListener(t, f) {
+                compactMQRaw.addEventListener ? compactMQRaw.addEventListener(t, f) : compactMQRaw.addListener(f);
+                window.addEventListener('phonedesktopchange', f);   // 縦横を変えた時
+            },
+        };
         window.isCompactUI = () => compactMQ.matches;
         // プロパティ行（色・太さ・大きさ）はツールを選んだ時点で開き、
         // 同じツールをもう一度クリックすると閉じる（Rayan様の指示・08-07）。
@@ -120,12 +129,19 @@
         // **押した時点で閉じる**（09-08 Rayan様）。元は離した時に見ていたが、線を引くような
         // 長押しの間ずっと開いたままで、手を離してから閉じるのが遅く見えた。
         // 置いてある物を掴んだ時だけは、その物の設定行を出したままにする。押した先で分かる。
+        // 閉じるために押しただけ（動かさずに離した）なら、暗記マーカー・ペン・蛍光ペンは何も置かない
+        // （11-15 Rayan様。閉じるつもりのクリックでマーカーが置かれ、すぐ取り消されていた）。
+        // ドラッグして描いた時は今まで通り置く。テキストはクリックで箱を置くのが本来の操作なので外す。
+        // 印だけここで付け、離した時（60-input.js）に動いた量を見て決める。
+        window.propsCloseTap = null;
         document.addEventListener('pointerdown', (e) => {
+            window.propsCloseTap = null;
             const t = e.target;
             if (!propsOpen || !(t instanceof Element)) return;
             if (!t.closest('#workspace-container') || t.closest('.floating-ui')) return;
             if (t.closest('.canvas-element') || t.closest('.drawing-svg') || t.id === 'multi-sel-box') return;
             setPropsOpen(false);
+            if (['mask', 'pen', 'highlight'].includes(currentTool)) window.propsCloseTap = { x: e.clientX, y: e.clientY };
         }, true);
 
         // CDN(pdf.js)が読み込めなくても他機能（画像モード等）は動くようガード

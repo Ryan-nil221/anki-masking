@@ -129,7 +129,8 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .header-title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .header-brand { display: flex; align-items: center; gap: 8px; }
-        .header-logo { height: 26px; width: auto; object-fit: contain; }
+        /* 文字（暗記マスキング）の黒い所の真ん中に合わせる。枠どうしで真ん中をそろえると、ロゴが約1.3px下に見えた（11-15 Rayan様） */
+        .header-logo { height: 26px; width: auto; object-fit: contain; position: relative; top: -1.3px; }
         h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--c-text-strong); letter-spacing: -0.5px; }
 
         /* 縦ディバイダー（ヘッダー等の区切り線・旧インラインstyleを共通化） */
@@ -1255,9 +1256,11 @@
                 -webkit-user-select: none !important; user-select: none !important;
             }
             .image-element img, .canvas-element { -webkit-touch-callout: none; }
-            /* UI の連打がダブルタップ拡大と誤解されないようにする（キャンバスのピンチは残る） */
+            /* UI の上では、ブラウザの拡大（ピンチ・ダブルタップ）を効かせない（11-15 Rayan様。
+               道具の帯や新規作成の所で指を2本置くと、画面ごと拡大されていた）。
+               紙の上の拡大はこのサイト自身が受け持つので、そちらは今まで通り。 */
             #app-header, #floating-tools-container, .floating-ui, #btn-focus-mode,
-            .dropdown-menu, #pdf-sidebar, #restore-banner { touch-action: manipulation; }
+            .dropdown-menu, #pdf-sidebar, #restore-banner { touch-action: pan-x pan-y; }
         }
 
         /* --- ホバーが無い環境（指）での見た目の後始末 --- */
@@ -1314,40 +1317,42 @@
 
         /* --- 狭い画面：UIが画面外に溢れて押せなくなるのを防ぐ --- */
         @media (max-width: 640px) {
+            /* スマホで PC と同じ並びを縮めて出す時（phone-desktop・11-15）は、幅が 640 を切っても
+               この畳み方をしない。PC と同じ並びのまま大きく見せるため */
             /* 中央寄せの固定幅をやめ、画面幅いっぱいに置いて折り返せるようにする */
-            #floating-tools-container {
+            html:not(.phone-desktop) #floating-tools-container {
                 left: 0; right: 0; transform: none;
                 gap: 8px;
             }
-            .tool-switch {
+            html:not(.phone-desktop) .tool-switch {
                 flex-wrap: wrap; justify-content: center;
                 max-width: calc(100% - 16px);
             }
             /* プロパティ行は折り返すと縦を食うので、横スクロールで全項目に届くようにする */
-            #floating-properties {
+            html:not(.phone-desktop) #floating-properties {
                 flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
                 max-width: calc(100% - 16px); padding: 6px 8px;
                 -webkit-overflow-scrolling: touch;
             }
-            .prop-group { flex: 0 0 auto; }
+            html:not(.phone-desktop) .prop-group { flex: 0 0 auto; }
             /* 下部の3つ（ツールバー・学習モード・ズーム）は狭い画面だと同じ場所に重なって
                押せなくなる。ツールバーの実高さ（--tools-h・JSが更新）のぶん上へ逃がす。 */
-            #floating-bottom-right {
+            html:not(.phone-desktop) #floating-bottom-right {
                 bottom: calc(var(--tools-h, 170px) + 40px + env(safe-area-inset-bottom, 0px));
             }
             /* 学習モードボタンはズームUIとも横に並べられない（ズームUIが画面幅いっぱい）ので、
                さらにもう一段上に置く */
-            #btn-focus-mode {
+            html:not(.phone-desktop) #btn-focus-mode {
                 bottom: calc(var(--tools-h, 170px) + var(--br-h, 52px) + 50px + env(safe-area-inset-bottom, 0px));
             }
-            #app-header { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+            html:not(.phone-desktop) #app-header { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
             /* 広い画面では学習モードでもヘッダーを残す（08-15 Rayan様の指示）。
                狭い画面は画面の2割強を取られるので、ここだけはたたんで閲覧に使う */
-            body.focus-mode #app-header { display: none; }
-            h1 { font-size: 17px; }
-            #current-file-name { max-width: 130px; }
+            html:not(.phone-desktop) body.focus-mode #app-header { display: none; }
+            html:not(.phone-desktop) h1 { font-size: 17px; }
+            html:not(.phone-desktop) #current-file-name { max-width: 130px; }
             /* PDFのページ一覧は重ねて出す。押し出すと作業領域が潰れる */
-            #pdf-sidebar {
+            html:not(.phone-desktop) #pdf-sidebar {
                 position: absolute; top: 0; left: 0; width: min(220px, 72vw); height: 100%;
                 z-index: 1500; box-shadow: 4px 0 16px rgba(0,0,0,0.25);
             }

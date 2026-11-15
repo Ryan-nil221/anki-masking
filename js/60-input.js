@@ -76,6 +76,10 @@
             g.prevMidX = midX; g.prevMidY = midY;
         }
 
+        // iPhone・iPad の Safari は、指2本で画面ごと拡大する（gesture 系の知らせ）。CSS で止めきれないので
+        // ここで止める（11-15 Rayan様）。紙の上の拡大は上の pointer の処理で別に行うので影響しない。
+        ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+
         function endTouch(e) {
             if (e.pointerType !== 'touch') return;
             if (!activeTouches.has(e.pointerId)) return;
@@ -744,6 +748,15 @@
             if (!action) return;
             let stateChanged = false;
             if (action === 'pan') { action = null; workspaceContainer.classList.remove('panning'); return; }
+            // 設定の画面を閉じるために押しただけなら、描きかけを捨てて何も置かない（00-base.js）
+            const closeTap = window.propsCloseTap;
+            window.propsCloseTap = null;
+            if (closeTap && Math.hypot(e.clientX - closeTap.x, e.clientY - closeTap.y) < TAP_SLOP
+                && ['draw', 'draw_pen', 'draw_freehand_mask', 'draw_freehand_highlight'].includes(action)) {
+                abortCurrentAction(true);
+                updateToolbar();
+                return;
+            }
             
             const rect = workspace.getBoundingClientRect(); let currentX = Math.max(0, Math.min((e.clientX - rect.left) / zoomLevel, workspace.offsetWidth)); let currentY = Math.max(0, Math.min((e.clientY - rect.top) / zoomLevel, workspace.offsetHeight));
 

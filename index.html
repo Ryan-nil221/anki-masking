@@ -3,6 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+        // スマホ（画面の短い辺が 600 未満で指で触る端末）は、PC と同じ並びを少し縮めて見せる（11-15 Rayan様）。
+        // ページの幅を 620 として描かせ、端末がそれを画面幅に縮める（11-15 Rayan様の言う大きさに合わせて 820→745→620 と詰めた）。ブラウザの「PC版サイトを表示」
+        // （幅 980）より6割ほど大きい見た目になる。幅 640 未満でも狭い画面用には畳まない（00-base.js・style.css）。iPad と PC は今まで通り。
+        // 横向きは高さが足りないので、今まで通りの形（端末の幅のまま・狭い画面用の並び）に戻す。
+        (function () {
+            var s = Math.min(screen.width, screen.height);
+            if (!(s < 600 && window.matchMedia && matchMedia('(pointer: coarse)').matches)) return;
+            var meta = document.querySelector('meta[name="viewport"]');
+            var portrait = matchMedia('(orientation: portrait)');
+            function apply() {
+                meta.setAttribute('content', portrait.matches ? 'width=620, viewport-fit=cover' : 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+                document.documentElement.classList.toggle('phone-desktop', portrait.matches);
+                window.dispatchEvent(new Event('phonedesktopchange'));
+            }
+            apply();
+            if (portrait.addEventListener) portrait.addEventListener('change', apply); else portrait.addListener(apply);
+        })();
+    </script>
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <!-- SEO：狙う言葉は「赤シートの代わり」。実物の赤シート（赤字＋緑シート）とは仕組みが違うので
          「赤シートです」とは名乗らない。名乗ると検索意図とズレて離脱され、かえって順位が落ちる。
