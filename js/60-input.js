@@ -115,6 +115,7 @@
             }
             // 中ボタン、またはスペース押し＋左クリックで、どのツール中でもパン
             if (e.button === 1 || (spaceHeld && e.button === 0)) {
+                window.track('pan', { source: e.button === 1 ? 'mouse' : 'keyboard' });
                 action = 'pan'; startX = e.clientX; startY = e.clientY;
                 startRect = { scrollLeft: workspaceContainer.scrollLeft, scrollTop: workspaceContainer.scrollTop };
                 workspaceContainer.classList.add('panning');

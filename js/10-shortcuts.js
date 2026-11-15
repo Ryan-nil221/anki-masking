@@ -187,6 +187,8 @@
         const TOOL_HOTKEYS = { '1':'select','2':'mask','3':'highlight','4':'text','5':'shape','6':'pen' };
 
         function duplicateSelection() {
+            const source = window.takeSource();
+            if (selectedStroke || selectedElements.length) window.track('duplicate', { source });
             if (selectedStroke) { duplicateSelectedStroke(); return; }
             if (!selectedElements.length) return;
             // 貼り付けと同じく、複製もカーソル位置に置く（選択範囲の左上をカーソルに合わせる）
@@ -284,6 +286,7 @@
             window.saveState();
         }
         function pasteClipboard() {
+            if (clipboardStroke || internalClipboard.length) window.track('paste_items', { source: 'keyboard' });
             if (clipboardStroke) { pasteStroke(); return; }
             if (!internalClipboard.length) return;
             let dx, dy;
@@ -362,6 +365,7 @@
         document.addEventListener('copy', (e) => {
             if (isTypingTarget(e.target)) return;
             if (!selectedElements.length && !selectedStroke) return;
+            window.track('copy', { source: 'keyboard' });
             copySelection();
             markClipboard(e.clipboardData);
             e.preventDefault();
@@ -369,6 +373,7 @@
         document.addEventListener('cut', (e) => {
             if (isTypingTarget(e.target)) return;
             if (!selectedElements.length && !selectedStroke) return;
+            window.track('cut', { source: 'keyboard' });
             cutSelection();
             markClipboard(e.clipboardData);
             e.preventDefault();
@@ -392,6 +397,7 @@
             // Ctrl+S = .amk保存（ブラウザのページ保存を抑止）
             if (cmdOrCtrl && e.key.toLowerCase() === 's') {
                 e.preventDefault();
+                window.markKeySource();
                 document.getElementById('btn-save-project-menu').click();
                 return;
             }
@@ -412,7 +418,7 @@
 
             if (isTyping) return;
 
-            if (cmdOrCtrl && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
+            if (cmdOrCtrl && e.key.toLowerCase() === 'd') { e.preventDefault(); window.markKeySource(); duplicateSelection(); return; }
             // Ctrl+C / Ctrl+X / Ctrl+V はいずれも preventDefault せず、既定の copy/cut/paste
             // イベントに委ねる。ここで潰すと OS クリップボードが書き換わらず、前にコピーした
             // 画像が残り続けて貼り付け時にそちらが優先されてしまう。
@@ -427,6 +433,7 @@
                 drawingBox.style.display = 'none'; drawingBox.style.backgroundColor = ''; selectionBox.style.display = 'none';
                 if (liveStrokePath && liveStrokePath.parentNode) liveStrokePath.parentNode.removeChild(liveStrokePath);
                 action = null; liveStrokePath = null; freehandScale = null; strokeScale = null;
+                window.track('escape', { source: 'keyboard', state: hadSelection ? 'deselect' : (currentTool === 'select' ? 'none' : 'to_select_tool') });
                 if (!hadSelection) window.returnToSelectTool();
                 return;
             }
@@ -438,6 +445,7 @@
                 if (e.key === 'ArrowUp') dy = -step; else if (e.key === 'ArrowDown') dy = step;
                 else if (e.key === 'ArrowLeft') dx = -step; else dx = step;
                 if (selectedStroke) nudgeSelectedStroke(dx, dy); else nudgeSelection(dx, dy);
+                window.trackBurst('nudge', { source: 'keyboard', state: e.shiftKey ? 'big' : 'small' });
                 return;
             }
 
@@ -1076,9 +1084,9 @@
 
         window.addEventListener('resize', () => { if(uploadedImage.src || totalPdfPages > 0) setZoom(zoomLevel); });
 
-        document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(zoomLevel + 0.1));
-        document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(zoomLevel - 0.1));
-        document.getElementById('btn-zoom-reset').addEventListener('click', () => { setZoom(1.0); window.centerWorkspace(); });
+        document.getElementById('btn-zoom-in').addEventListener('click', () => { window.trackBurst('zoom', { source: 'button', state: 'in' }); setZoom(zoomLevel + 0.1); });
+        document.getElementById('btn-zoom-out').addEventListener('click', () => { window.trackBurst('zoom', { source: 'button', state: 'out' }); setZoom(zoomLevel - 0.1); });
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => { window.track('zoom', { source: 'button', state: 'reset' }); setZoom(1.0); window.centerWorkspace(); });
 
         // 倍率の数字はそのまま打ち替えられる（10-25 Rayan様「欄は出なくていい」）。
         // 入力欄に替えず、文字の上で直接打つ。Enter か外を押すと決まり、Esc で元に戻す。
@@ -1100,7 +1108,7 @@
         zoomText.addEventListener('blur', () => {
             const n = parseInt(zoomText.innerText.replace(/[^0-9]/g, ''), 10);
             const cancel = zoomText.dataset.cancel === '1'; delete zoomText.dataset.cancel;
-            if (!cancel && n > 0) setZoom(n / 100);
+            if (!cancel && n > 0) { window.track('zoom', { source: 'type', state: 'set' }); setZoom(n / 100); }
             zoomText.innerText = Math.round(zoomLevel * 100) + '%';   // 範囲の外（20〜500%）は端に寄せて出し直す
         });
 
@@ -1112,6 +1120,7 @@
             const fx = e.clientX - rect.left;
             const fy = e.clientY - rect.top;
             const step = e.deltaY < 0 ? 0.1 : -0.1;
+            window.trackBurst('zoom', { source: 'wheel', state: step > 0 ? 'in' : 'out' });
             setZoom(zoomLevel + step, fx, fy);
         }, { passive: false });
 

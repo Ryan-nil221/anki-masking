@@ -28,6 +28,15 @@
             return (nowMs() - t < 300) ? 'keyboard' : 'button';
         };
 
+        // 続けて起きる操作（矢印キーで動かす・拡大縮小）は、押すたびではなく
+        // 止まってから1回だけ送る。中身（params）が同じものを1まとまりとする。
+        const bursts = {};
+        window.trackBurst = function(name, params, ms) {
+            const key = name + ':' + JSON.stringify(params || {});
+            clearTimeout(bursts[key]);
+            bursts[key] = setTimeout(() => { delete bursts[key]; window.track(name, params); }, ms || 600);
+        };
+
         // 編集中のファイル名。名前を変えたらヘッダーの表示も一緒に直す
         // （読み込み・復元の経路が3つあるので、代入は必ずここを通す）。
         window.setCurrentFileName = function(name) {
@@ -471,6 +480,7 @@
         document.addEventListener('keydown', function(e) {
             if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedElements.length > 0 || selectedStroke || selectedStrokes.length)) {
                 if (!e.target.classList.contains('text-content') && e.target.tagName.toLowerCase() !== 'input') {
+                    window.track('delete', { source: 'keyboard' });
                     if (selectedStroke) { deleteSelectedStroke(); }
                     else {
                         let changed = false;

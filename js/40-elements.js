@@ -446,6 +446,7 @@
         document.getElementById('btn-duplicate').addEventListener('click', () => duplicateSelection());
 
         document.getElementById('btn-delete').addEventListener('click', () => {
+            window.track('delete', { source: 'button' });
             if (selectedStroke) { deleteSelectedStroke(); return; }
             let changed = false;
             if (selectedElements.length > 0) { selectedElements.forEach(el => el.remove()); changed = true; }

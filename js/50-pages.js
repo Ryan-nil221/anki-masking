@@ -486,6 +486,7 @@
         });
 
         document.getElementById('btn-save-project-menu').addEventListener('click', () => {
+            const saveSource = window.takeSource();   // 保存の処理が重いと印の時間切れになるので先に読む
             saveDropdownMenu.classList.remove('show');
             if (!currentBackground) {
                 alert("まずは画像かPDFを新規作成で開いてください。");
@@ -508,7 +509,7 @@
                 a.click();
                 // すぐ捨てると保存が途中で切られることがある。他の書き出しと同じく遅らせる
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
-                window.track('save_document', { method: 'amk' });
+                window.track('save_document', { method: 'amk', source: saveSource });
             } catch (e) {
                 console.error(e);
                 alert("保存エラーが発生しました。");
