@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<title>PDFに無料で書き込む方法｜テキスト入力も手書きもブラウザだけ</title>
+<meta name="description" content="PDFにテキスト・手書き・蛍光ペンを無料で書き込めます。覚えたい所を塗れば、赤シートの代わりにも。インストール不要で、ファイルは外に送りません。">
+<link rel="canonical" href="https://ankimasking.com/guide/pdf-write/">
+
+<meta property="og:url" content="https://ankimasking.com/guide/pdf-write/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PDFに無料で書き込む方法｜テキスト入力も手書きもブラウザだけ">
+<meta property="og:description" content="PDFにテキスト・手書き・蛍光ペンを無料で書き込めます。覚えたい所を塗れば、赤シートの代わりにも。インストール不要で、ファイルは外に送りません。">
+<meta property="og:site_name" content="暗記マスキング">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://ankimasking.com/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="../../favicon.png">
+
+<style>
+  /* /guide/ と同じトークン。トップの style.css は body を固定するため読み込めない */
+  :root {
+    --c-bg: #f8fafc; --c-surface: #ffffff; --c-surface-2: #f1f5f9;
+    --c-text: #1f2937; --c-text-strong: #0f172a; --c-text-muted: #64748b;
+    --c-border: #e2e8f0; --c-accent: #2e4486; --c-accent-hover: #24386f;
+    --c-accent-tint: #e6ebf7; --c-on-accent: #ffffff;
+    --r-md: 8px; --r-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --c-bg: #0f1115; --c-surface: #1f2228; --c-surface-2: #262a31;
+      --c-text: #e5e7eb; --c-text-strong: #f9fafb; --c-text-muted: #9ca3af;
+      --c-border: #333842; --c-accent-tint: #243154;
+      --c-accent: #4a64b8; --c-accent-hover: #5872c6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--c-bg); color: var(--c-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", Meiryo, Roboto, sans-serif;
+    line-height: 1.85; font-size: 16px; -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--c-accent); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-header {
+    position: sticky; top: 0; z-index: 10; background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .site-header .inner {
+    max-width: 760px; margin: 0 auto; padding: 6px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .site-header img { width: 22px; height: 22px; }
+  .site-header .name { font-weight: 800; font-size: 16px; color: var(--c-text-strong); text-decoration: none; }
+  .site-header .spacer { flex: 1; }
+  .btn-app {
+    background: var(--c-accent); color: var(--c-on-accent); text-decoration: none;
+    font-weight: 700; font-size: 13.5px; padding: 6px 16px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .btn-app:hover { background: var(--c-accent-hover); }
+
+  .crumb { font-size: 13.5px; color: var(--c-text-muted); margin: 16px 0 0; }
+  .crumb a { text-decoration: none; }
+
+  h1 {
+    font-size: 30px; line-height: 1.45; letter-spacing: -0.5px; font-weight: 900;
+    color: var(--c-text-strong); margin: 10px 0 8px;
+  }
+  .lead { font-size: 17px; color: var(--c-text-muted); margin: 0 0 8px; }
+  h2 {
+    font-size: 23px; font-weight: 800; color: var(--c-text-strong);
+    margin: 56px 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border);
+  }
+  h3 { font-size: 18px; font-weight: 800; color: var(--c-text-strong); margin: 34px 0 6px; }
+  p { margin: 0 0 16px; }
+
+  /* 実際の画面。写真は1枚で、暗記マーカーとカーソルはCSSで重ねて動かしている */
+  /* 注釈を写真の外に出すため、この図だけ本文の幅からはみ出させる */
+  .shot {
+    margin: 6px 0 30px; margin-left: 50%; transform: translateX(-50%);
+    width: min(calc(100vw - 32px), 1220px);
+  }
+  .stage { padding: 6% 14% 4%; }
+  .shot figcaption {
+    margin: 10px 0 0; text-align: center;
+    font-size: 13.5px; color: var(--c-text-muted); line-height: 1.6;
+  }
+  .demo {
+    position: relative; line-height: 0; container-type: inline-size;
+    background: var(--c-surface);
+  }
+  .demo img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+  }
+  .demo .m {
+    position: absolute; background: #111; border-radius: 2px;
+    /* transition は付けない。付けるとキーフレームの指示に0.28秒かけて追従し、
+       カーソルが着いた後に外れる（＝外れるのが遅い）。 */
+  }
+  /* 写真の外側に置く注釈。文字は写真の幅に合わせて伸び縮みさせる */
+  .demo .cal {
+    position: absolute; z-index: 2; white-space: nowrap;
+    font-size: 11px; font-size: 1.9cqw; line-height: 1.3; font-weight: 700;
+    color: #2e4486; background: var(--c-surface);
+    border: 1px solid #c5cee6; border-radius: 6px; padding: .3em .6em;
+  }
+  /* 左の道具の名前。段が細かいので、字を小さくして各段の高さに収める */
+  .demo .cal-t {
+    font-size: 11px; font-size: 1.75cqw; line-height: 1.25;
+    padding: .22em .5em; font-weight: 700;
+  }
+  .demo .cal-lines {
+    position: absolute; left: -25%; top: -14%; width: 150%; height: 130%;
+    z-index: 1; pointer-events: none;
+  }
+  /* 幅が足りない画面では注釈をたたみ、写真だけを本文幅で見せる */
+  @media (max-width: 760px) {
+    .shot { margin-left: 0; transform: none; width: auto; }
+    .stage { padding: 0; }
+    .demo .cal, .demo .cal-lines { display: none; }
+  }
+
+  .demo .cursor {
+    position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -2px;
+    pointer-events: none;
+    transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .demo .m1 { animation: reveal1 5.6s infinite; }
+  @keyframes reveal1 {
+    0%, 14.107% { opacity: 1; }
+    15.178%, 25.893% { opacity: 0; }
+    26.964%, 100% { opacity: 1; }
+  }
+  .demo .m2 { animation: reveal2 5.6s infinite; }
+  @keyframes reveal2 {
+    0%, 39.107% { opacity: 1; }
+    40.178%, 50.893% { opacity: 0; }
+    51.964%, 100% { opacity: 1; }
+  }
+  .demo .m3 { animation: reveal3 5.6s infinite; }
+  @keyframes reveal3 {
+    0%, 64.107% { opacity: 1; }
+    65.178%, 75.893% { opacity: 0; }
+    76.964%, 100% { opacity: 1; }
+  }
+  .demo .m5 { animation: reveal4 5.6s infinite; }
+  @keyframes reveal4 {
+    0%, 89.107% { opacity: 1; }
+    90.178%, 99.4% { opacity: 0; }
+    99.9%, 100% { opacity: 1; }
+  }
+  .demo .cursor { animation: cursor 5.6s infinite; }
+  @keyframes cursor {
+    0% { left: 46.4183%; top: 76.5731%; }
+    19.643%, 24.99% { left: 36.9677%; top: 45.8057%; }
+    25% { left: 36.9677%; top: 45.8057%; }
+    44.643%, 49.99% { left: 36.4682%; top: 53.4976%; }
+    50% { left: 36.4682%; top: 53.4976%; }
+    69.643%, 74.99% { left: 37.6201%; top: 61.1894%; }
+    75% { left: 37.6201%; top: 61.1894%; }
+    94.643%, 99.99% { left: 46.4183%; top: 76.5731%; }
+    100% { left: 46.4183%; top: 76.5731%; }
+  }
+
+  /* 動きを減らす設定の人には、隠したままの静止画として見せる */
+  @media (prefers-reduced-motion: reduce) {
+    .demo .m, .demo .cursor { animation: none; }
+    .demo .cursor { display: none; }
+  }
+
+  .cta { text-align: center; margin: 22px 0 36px; }
+  .cta a {
+    display: inline-block; background: var(--c-accent); color: var(--c-on-accent);
+    text-decoration: none; font-weight: 800; font-size: 17px;
+    padding: 15px 36px; border-radius: 999px;
+  }
+  .cta a:hover { background: var(--c-accent-hover); }
+  .cta small { display: block; margin-top: 10px; color: var(--c-text-muted); font-size: 13px; }
+  .cta-card { display:block; width:100%; max-width:280px; height:auto; margin:0 auto 18px; border-radius:16px; box-shadow:0 6px 20px rgba(17,24,60,.12); }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps > li {
+    counter-increment: s; position: relative; padding: 0 0 4px 52px; margin-bottom: 26px;
+  }
+  ol.steps > li::before {
+    content: counter(s); position: absolute; left: 0; top: 2px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--c-accent); color: var(--c-on-accent);
+    font-weight: 800; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.steps h3 { margin: 3px 0 4px; }
+  ol.steps p { margin: 0; }
+
+  .table-scroll {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--c-border); border-radius: var(--r-lg);
+    background: var(--c-surface);
+  }
+  .cmp { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 15px; }
+  .cmp th, .cmp td {
+    padding: 13px 16px; text-align: left; vertical-align: top;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: none; }
+  .cmp thead th { font-size: 14px; font-weight: 800; background: var(--c-surface-2); color: var(--c-text-muted); }
+  .cmp thead th.ours { background: var(--c-accent); color: var(--c-on-accent); font-size: 15px; }
+  .cmp tbody th { width: 22%; font-weight: 700; color: var(--c-text-strong); background: var(--c-surface-2); }
+  .cmp td.ours { background: var(--c-accent-tint); color: var(--c-text-strong); font-weight: 600; }
+  .cmp td.other { color: var(--c-text-muted); }
+
+  details {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 10px;
+  }
+  details summary {
+    cursor: pointer; font-weight: 700; color: var(--c-text-strong); list-style: none;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '＋'; color: var(--c-accent); font-weight: 800; flex: 0 0 auto; }
+  details[open] summary::after { content: '−'; }
+  details p { margin: 12px 0 0; font-size: 15px; }
+
+  .note {
+    background: var(--c-accent-tint); border-left: 4px solid var(--c-accent);
+    padding: 14px 18px; border-radius: 0 var(--r-md) var(--r-md) 0; margin: 20px 0;
+    font-size: 15px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+
+  .more { margin: 0; padding: 0; list-style: none; }
+  .more li {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 10px;
+  }
+  .more a { font-weight: 700; text-decoration: none; }
+  .more span { display: block; font-size: 14px; color: var(--c-text-muted); }
+
+  footer {
+    border-top: 1px solid var(--c-border); margin-top: 60px; padding: 24px 20px 40px;
+    text-align: center; color: var(--c-text-muted); font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 25px; }
+    h2 { font-size: 20px; }
+    body { font-size: 15.5px; }
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Y444L4XDF3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Y444L4XDF3');
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <img src="../../favicon.png" alt="">
+    <a href="/" class="name">暗記マスキング</a>
+    <span class="spacer"></span>
+    <a href="/" class="btn-app">アプリを開く</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="crumb"><a href="/">ホーム</a> ＞ <a href="/guide/">使い方</a> ＞ PDFに書き込む</p>
+
+  <h1>PDFに無料で書き込む方法</h1>
+  <p class="lead">
+    配られたPDFの課題やプリントに、答えやメモを書き込みたい。でも、そのためにソフトを入れるのは面倒。
+    そんなときは、ブラウザでPDFを開くだけで書き込めます。テキストの入力も、手書きも、蛍光ペンも使えます。
+    <strong>無料</strong>で、登録もインストールも要りません。
+    覚えたい所を塗って隠せば、<strong>赤シートの代わり</strong>にもなります。
+  </p>
+
+  <figure class="shot">
+   <div class="stage">
+    <div class="demo">
+      <img src="screenshot.jpg" width="1564" height="784" fetchpriority="high"
+           alt="暗記マスキングで、理科の課題プリントのPDFに書き込んだ画面。答えの欄に赤いテキストで光合成・葉緑体・道管と入力し、提出日を赤いペンで丸く囲み、まとめの一文に黄色の蛍光ペンを引いている。最後の答えは黒く塗って隠している。">
+    </div>
+   </div>
+    <figcaption>課題プリントのPDFに書き込んだところです。答えはテキストで入力し、提出日はペンで囲み、まとめには蛍光ペンを引いています。最後の答えだけ、暗記マーカーで隠しています。</figcaption>
+  </figure>
+
+  <div class="cta">
+    <a href="/">暗記マスキングを開く</a>
+    <small>登録不要・インストール不要・無料</small>
+  </div>
+
+
+  <h2>書き込めるもの</h2>
+  <ul>
+    <li><strong>テキスト</strong>：キーボードで文字を入力します。横書きも縦書きもでき、文字の大きさと色は後から変えられます。</li>
+    <li><strong>手書き</strong>：ペンで自由に書きます。マウスでも、タブレットのペンでも書けます。消しゴムで消せます。</li>
+    <li><strong>蛍光ペン</strong>：大事な所に線を引きます。</li>
+    <li><strong>図形</strong>：四角・丸・直線を置けます。</li>
+    <li><strong>画像</strong>：写真や図を、PDFの上に貼り付けられます。</li>
+  </ul>
+  <p>
+    書いたものは、どれも後から動かしたり、大きさを変えたり、消したりできます。
+    書き間違えても、元のPDFには何も残りません。
+  </p>
+
+  <h2>書き込む手順</h2>
+  <ol class="steps">
+    <li>
+      <h3>PDFを開く</h3>
+      <p>「新規作成」から、書き込みたいPDFを選びます。何ページあってもそのまま開けます。
+      写真で撮ったプリントでも構いません。</p>
+    </li>
+    <li>
+      <h3>書き込む</h3>
+      <p>左に並んだ道具から、テキストやペンを選んで紙の上に書きます。
+      置いた位置は後から動かせます。</p>
+    </li>
+    <li>
+      <h3>PDFとして保存する</h3>
+      <p>右上の「保存」から「PDF／画像」を選ぶと、書き込んだ状態のPDFができます。
+      そのまま印刷したり、課題として提出したりできます。</p>
+    </li>
+  </ol>
+
+  <h2>保存したPDFについて</h2>
+  <ul>
+    <li><strong>印刷しても消えません。</strong>書き込みはPDFのページそのものに描き込まれるので、どのPDFアプリで開いても同じように見えます。</li>
+    <li><strong>元の文字はそのままです。</strong>もとのPDFにあった文字は、これまでどおり選んでコピーしたり、検索したりできます。</li>
+    <li><strong>透かしは入りません。</strong>ロゴなどが勝手に入ることはなく、使える回数の制限もありません。</li>
+    <li><strong>続きから直せる保存もあります。</strong>「保存」から「PDF（編集用）」を選んでおくと、あとで「データを開く」から開いたとき、書き込みを動かしたり消したりできます。</li>
+  </ul>
+
+  <h2>ファイルは外に送られません</h2>
+  <p>
+    PDFの読み込みも、書き込みも、保存も、すべてお使いのパソコンのブラウザの中で行います。
+    ファイルをどこかのサーバーへ送ることはありません。
+    学校の課題や、人に見せたくない書類にも使えます。
+  </p>
+
+  <h2>覚えたい所を隠せば、赤シートの代わりにも</h2>
+  <p>
+    書き込むだけでなく、覚えたい語句を<strong>暗記マーカー</strong>で黒く塗って隠せます。
+    隠した所はカーソルを合わせたときだけ見えるので、PDFがそのまま暗記シートになります。
+    赤シートと違って、印刷された黒い文字でも隠せます。
+  </p>
+  <p>
+    詳しいやり方は<a href="/guide/pdf-red-sheet/">PDFを赤シートで隠す方法</a>にまとめています。
+  </p>
+
+  <h2>ほかのやり方と比べる</h2>
+  <div class="table-scroll">
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Edge（Windowsに入っている）</th>
+          <th>PDFの無料ソフト</th>
+          <th>ネットの無料ツール</th>
+          <th class="ours">暗記マスキング</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th>入れるもの</th>
+          <td class="other">なし</td>
+          <td class="other">ソフトのインストール</td>
+          <td class="other">なし</td>
+          <td class="ours">なし</td></tr>
+        <tr><th>ファイル</th>
+          <td class="other">パソコンの中</td>
+          <td class="other">パソコンの中</td>
+          <td class="other">相手のサーバーへ送る</td>
+          <td class="ours">パソコンの中</td></tr>
+        <tr><th>書き込み</th>
+          <td class="other">手書き・蛍光ペン・テキスト</td>
+          <td class="other">ソフトによる</td>
+          <td class="other">ツールによる</td>
+          <td class="ours">テキスト（縦書きも）・手書き・蛍光ペン・図形・画像</td></tr>
+        <tr><th>隠して暗記</th>
+          <td class="other">できない</td>
+          <td class="other">できない</td>
+          <td class="other">できない</td>
+          <td class="ours">できる</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p>
+      Windowsで、少しだけ手書きやメモを足したいなら、最初から入っているEdgeでも足ります。
+      縦書きで書きたい、図形や画像も置きたい、覚える所を隠したい、という人には暗記マスキングが向いています。
+    </p>
+  </div>
+
+  <div class="cta">
+    <a href="/">暗記マスキングを開く</a>
+    <small>登録不要・インストール不要・無料</small>
+  </div>
+
+  <h2>よくある質問</h2>
+
+  <details>
+    <summary>印刷すると、書き込みが消えませんか</summary>
+    <p>消えません。「PDF／画像」で保存したPDFは、書き込みがページそのものに描き込まれています。
+    どのPDFアプリで開いても、印刷しても、画面で見たとおりに出ます。</p>
+  </details>
+
+  <details>
+    <summary>書き込んだ文字は、あとからコピーできますか</summary>
+    <p>「PDF／画像」で保存したPDFでは、書き込んだテキストは絵として入るため、文字としては選べません。
+    もとのPDFにあった文字は、これまでどおり選べます。
+    あとで書き込みを直したいときは、「PDF（編集用）」で保存しておいてください。</p>
+  </details>
+
+  <details>
+    <summary>縦書きで書けますか</summary>
+    <p>書けます。テキストを選ぶと出る帯から、横書きと縦書きを切り替えられます。</p>
+  </details>
+
+  <details>
+    <summary>Google クラスルームの課題に使えますか</summary>
+    <p>使えます。配られたPDFをパソコンに保存してから開いて書き込み、「PDF／画像」で保存したPDFを課題に添付して提出してください。</p>
+  </details>
+
+  <details>
+    <summary>スマホでも使えますか</summary>
+    <p>開くことはできますが、今のところパソコンで使うことを想定して作っています。
+    細かい書き込みは、パソコンの方がやりやすいです。</p>
+  </details>
+
+  <details>
+    <summary>お金はかかりますか</summary>
+    <p>かかりません。会員登録もインストールも要らず、ブラウザで開いてすぐ使えます。</p>
+  </details>
+
+  <h2>あわせて読む</h2>
+  <ul class="more">
+    <li>
+      <a href="/guide/pdf-red-sheet/">PDFを赤シートで隠す方法</a>
+      <span>PDFの答えを隠して暗記する、3つのやり方の比べ方と手順</span>
+    </li>
+    <li>
+      <a href="/guide/red-sheet-alternative/">赤シートの代わりになるもの</a>
+      <span>忘れた・無くしたときに家にあるもので代用する方法と、印刷された黒い文字を隠すやり方</span>
+    </li>
+    <li>
+      <a href="/guide/">暗記マスキングの使い方</a>
+      <span>画面の見方と、それぞれの道具の使い方</span>
+    </li>
+  </ul>
+
+</div>
+
+<footer>
+  <a href="/">暗記マスキング</a>　|　<a href="/guide/">使い方</a>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "PDFに無料で書き込む方法",
+      "description": "PDFにテキスト・手書き・蛍光ペンを無料で書き込めます。覚えたい所を塗れば、赤シートの代わりにも。インストール不要で、ファイルは外に送りません。",
+      "image": [
+        {
+          "@type": "ImageObject",
+          "url": "https://ankimasking.com/guide/pdf-write/screenshot.jpg",
+          "width": 1564,
+          "height": 784
+        }
+      ],
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://ankimasking.com/guide/pdf-write/"
+      },
+      "datePublished": "2026-11-19",
+      "dateModified": "2026-11-19",
+      "author": {
+        "@type": "Organization",
+        "name": "暗記マスキング",
+        "url": "https://ankimasking.com/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "暗記マスキング",
+        "url": "https://ankimasking.com/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "ホーム",
+          "item": "https://ankimasking.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "使い方",
+          "item": "https://ankimasking.com/guide/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "PDFに無料で書き込む方法"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "印刷すると、書き込みが消えませんか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "消えません。「PDF／画像」で保存したPDFは、書き込みがページそのものに描き込まれています。どのPDFアプリで開いても、印刷しても、画面で見たとおりに出ます。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "書き込んだ文字は、あとからコピーできますか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "「PDF／画像」で保存したPDFでは、書き込んだテキストは絵として入るため、文字としては選べません。もとのPDFにあった文字は、これまでどおり選べます。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "縦書きで書けますか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "書けます。テキストを選ぶと出る帯から、横書きと縦書きを切り替えられます。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Google クラスルームの課題に使えますか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "使えます。配られたPDFをパソコンに保存してから開いて書き込み、「PDF／画像」で保存したPDFを課題に添付して提出してください。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "スマホでも使えますか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "開くことはできますが、今のところパソコンで使うことを想定して作っています。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "お金はかかりますか",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "かかりません。会員登録もインストールも要らず、ブラウザで開いてすぐ使えます。"
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>
